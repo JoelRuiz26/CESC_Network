@@ -11,7 +11,7 @@
 ## Set working directory --- ---
 setwd("~/2_Prepro_Data_TCGA/A7_A9/")
 
-#load(file = "~/2_Prepro_Data_TCGA/A7_A9/1_Prepro_Data_RNA_HPV.RData")
+load(file = "~/2_Prepro_Data_TCGA/A7_A9/1_Prepro_Data_RNA_HPV.RData")
 
 ## Packages required --- ---
 library(tidyselect)
@@ -454,10 +454,11 @@ pdf("QCreport_after_HPV.pdf")
 QCreport(noiseqData_after, samples = NULL, factor = "HPV_clade", norm = T)
 dev.off()
 
+
 ###Save data
   #Final counts as TSV
 Final_A7_A9 <- counts_after_norm %>% 
-  as.data.frame() %>% column_to_rownames(var = "Gene") #[1] 11351   268
+  as.data.frame() %>% rownames_to_column(var = "Gene") #[1] 11351   269 
 vroom::vroom_write(Final_A7_A9, file = "~/2_Prepro_Data_TCGA/A7_A9/Final_A7_A9.tsv", delim = "\t")
 
   #Factors
@@ -468,6 +469,15 @@ vroom::vroom_write(Factors_A7_A9, file = "~/2_Prepro_Data_TCGA/A7_A9/Factors_A7_
 Myannot_A7_A9 <- myannot_after_norm %>% as.data.frame() #[1] 11351     8
 vroom::vroom_write(Myannot_A7_A9, file = "~/2_Prepro_Data_TCGA/A7_A9/Myannot_A7_A9.tsv", delim = "\t")
 
+#Annotated counts
+Annotation <- Myannot_A7_A9 %>% select(feature,hgnc_symbol) #[1] 11351     2
+#all(Annotation$feature %in% Final_A7_A9$Gene) #[1] TRUE
+#dim(Final_A7_A9) #1] 11351   269
+Final_A7_A9_Annot <-Final_A7_A9 %>% left_join(Annotation, by = c("Gene"="feature")) %>% 
+  as.data.frame() %>% select(last_col(), everything()) %>% column_to_rownames(.,var = "Gene") #[1] 11351   269
+#dim(Final_A7_A9_Annot) #[1] 11351   269
+vroom::vroom_write(Final_A7_A9_Annot, file = "~/2_Prepro_Data_TCGA/A7_A9/Final_A7_A9_Annot.tsv", delim = "\t")
+
 #Objet for DGE
 saveRDS(noiseqData_after_norm, file = "noiseqData_after_norm_A7A9.rds")
 
@@ -476,12 +486,17 @@ Final_A7_A9_NW <- Final_A7_A9 %>% mutate(gene = rownames(Final_A7_A9), .before =
 # Save as TSV
 vroom::vroom_write(Final_A7_A9_NW, file = "~/2_Prepro_Data_TCGA/A7_A9/Final_A7_A9_NW.tsv", delim = "\t")
 
-   #A7
+  #A7
 Factors_A7 <- Factors_A7_A9 %>% filter(HPV_clade=="A7") #[1] 66  4
 Final_A7_NW <- Final_A7_A9 %>% select(Factors_A7$specimenID) %>% 
   mutate(gene = rownames(Final_A7_A9), .before = 1) #[1] 11351    67 (+1)
   # Save as TSV
 vroom::vroom_write(Final_A7_NW, file = "~/2_Prepro_Data_TCGA/A7_A9/Final_A7_NW.tsv", delim = "\t")
+  #Annoted
+Final_A7_Annot <-Final_A7_NW %>% left_join(Annotation, by = c("gene"="feature")) %>% 
+  as.data.frame() %>% select(last_col(), everything()) %>% column_to_rownames(.,var = "gene") #[1] 11351   269
+#dim(Final_A7_Annot) #[1] 11351    67
+vroom::vroom_write(Final_A7_Annot, file = "~/2_Prepro_Data_TCGA/A7_A9/Final_A7_Annot.tsv", delim = "\t")
 
   #A9
 Factors_A9 <- Factors_A7_A9 %>% filter(HPV_clade=="A9") #[1] 202   4
@@ -489,7 +504,11 @@ Final_A9_NW <- Final_A7_A9 %>% select(Factors_A9$specimenID) %>%
   mutate(gene = rownames(Final_A7_A9), .before = 1) #[1] 11351   203 (+1)
   # Save as TSV
 vroom::vroom_write(Final_A9_NW, file = "~/2_Prepro_Data_TCGA/A7_A9/Final_A9_NW.tsv", delim = "\t")
-
+  #Annoted
+Final_A9_Annot <-Final_A9_NW %>% left_join(Annotation, by = c("gene"="feature")) %>% 
+  as.data.frame() %>% select(last_col(), everything()) %>% column_to_rownames(.,var = "gene") #[1] 11351   269
+#dim(Final_A7_Annot) #[1] 11351    67
+vroom::vroom_write(Final_A9_Annot, file = "~/2_Prepro_Data_TCGA/A7_A9/Final_A9_Annot.tsv", delim = "\t")
 
 #Save_image
 save.image(file = "~/2_Prepro_Data_TCGA/A7_A9/1_Prepro_Data_RNA_HPV.RData")
