@@ -25,14 +25,14 @@ HPV_IDsample <- vroom('0_HPV_genotypes.tsv')
 
 ###Clean table (Select only HPV positive and remove multiple-infection)
 TCGA_HPV <- HPV_IDsample %>% 
-  select(1,6) %>% #Select only col TCGAID and HPV_type
-  slice(2:305) %>% #Cause the first line was wrong, i delete this
-  filter(HPV_estimated!="negative") %>%  #Select only the HPV_positive
-  mutate(HPV_true = str_replace(HPV_estimated, "^HPV\\d+\\s+", "") %>% 
+  dplyr::select(1,6) %>% #Select only col TCGAID and HPV_type
+  dplyr::slice(2:305) %>% #Cause the first line was wrong, i delete this
+  dplyr:: filter(HPV_estimated!="negative") %>%  #Select only the HPV_positive
+  dplyr:: mutate(HPV_true = str_replace(HPV_estimated, "^HPV\\d+\\s+", "") %>% 
       str_trim()
       ) %>% #Create a col that exclude the error in conversion step from pdf
   #^exclude HPV\\d+ two digits \\ plus space(s) and after delete any space
-  mutate(tipos_HPV = str_extract_all(HPV_true,"HPV\\d+") %>% #Create new column
+  dplyr::mutate(tipos_HPV = str_extract_all(HPV_true,"HPV\\d+") %>% #Create new column
            #that extract everything after "HPV\\d+ folowed by two digits
            lapply(paste, collapse=", ") %>% #and put in the other culumn the HPV
            #type. In the case of multiple HPV, it separates with ","
@@ -41,8 +41,8 @@ TCGA_HPV <- HPV_IDsample %>%
   arrange(HPV_true) #ArrangeHPV number
 #Seleccionar solo los que contengan un solo tipo de HPV y cortar la tabla
 TCGA_HPV_mono <- TCGA_HPV %>% 
-  filter(!str_detect(tipos_HPV, ",")) %>% 
-  select(1,4)
+  dplyr::filter(!str_detect(tipos_HPV, ",")) %>% 
+  dplyr::select(1,4)
 #head(TCGA_HPV_mono) #275   2
 #  `TCGA Case ID` tipos_HPV   
 #1 TCGA-HM-A4S6   HPV16    
@@ -65,8 +65,8 @@ HPV_Distrib <- TCGA_HPV_mono %>%
 
 # First 2 digits in %
 HPV_Distrib$percent <- sprintf("%.2f", HPV_Distrib$percent)
-write.table(x=HPV_Distrib, file = "1_1_HPV_Distrib.tsv",append=FALSE, quote=FALSE,
-            sep="\t", row.names = FALSE, col.names = TRUE)
+#write.table(x=HPV_Distrib, file = "1_1_HPV_Distrib.tsv",append=FALSE, quote=FALSE,
+#            sep="\t", row.names = FALSE, col.names = TRUE)
 
 #Anexar los clados filogenéticos: Referencia: Rader JS, Tsaih SW, Fullin D,
   #Murray MW, Iden M, Zimmermann MT, Flister MJ. Genetic variations in human 
@@ -91,8 +91,8 @@ TCGA_HPV_Clades <- TCGA_HPV_mono %>%
 #4 TCGA-MA-AA3W   HPV16     A9                
 #5 TCGA-VS-A9UQ   HPV16     A9   
 
-write.table(x=TCGA_HPV_Clades, file = "1_2_HPV_Clades.tsv",append=FALSE, quote=FALSE,
-            sep="\t", row.names = FALSE, col.names = TRUE)
+#write.table(x=TCGA_HPV_Clades, file = "1_2_HPV_Clades.tsv",append=FALSE, quote=FALSE,
+#            sep="\t", row.names = FALSE, col.names = TRUE)
 
 #Clades distribution
 samples_caldes <- nrow(TCGA_HPV_Clades)
@@ -106,8 +106,8 @@ HPV_Clades_dist <- TCGA_HPV_Clades %>%
 # FIrst 2 digit in percent
 HPV_Clades_dist$percent <- sprintf("%.2f", HPV_Clades_dist$percent)
 
-write.table(x=HPV_Clades_dist, file = "1_3_HPV_Clade_Distrib.tsv",append=FALSE, quote=FALSE,
-            sep="\t", row.names = FALSE, col.names = TRUE)
+#write.table(x=HPV_Clades_dist, file = "1_3_HPV_Clade_Distrib.tsv",append=FALSE, quote=FALSE,
+#            sep="\t", row.names = FALSE, col.names = TRUE)
 
 
 ###Graph HPV distribution in the samples
@@ -136,6 +136,19 @@ Graph_distribution <- ggplot(HPV_Distrib, aes(x = reorder(tipos_HPV, -frec), y =
 print(Graph_distribution)
 
 # SAve graph in png and PDF
-ggsave("1_4Graph_HPV_Distrib_Bar.png", plot = Graph_distribution, width = 20, height = 12, units = "in", dpi = 300)
-ggsave("1_4Graph_HPV_Distrib_Bar.pdf", plot = Graph_distribution, width = 20, height = 12, units = "in", dpi = 300)
+ggsave("1_2_Graph_HPV_Distrib_Bar.png", plot = Graph_distribution, width = 20, height = 12, units = "in", dpi = 300)
+#ggsave("1_2_Graph_HPV_Distrib_Bar.pdf", plot = Graph_distribution, width = 20, height = 12, units = "in", dpi = 300)
+
+#Save master table
+HPV_Distrib <- HPV_Distrib %>%
+  dplyr::mutate(HPV = trimws(tipos_HPV))
+TCGA_HPV_Clades <- TCGA_HPV_Clades %>%
+  mutate(tipos_HPV = trimws(tipos_HPV))
+
+#Join
+merged_data <- TCGA_HPV_Clades %>%
+  left_join(HPV_Distrib, by = c("tipos_HPV" = "tipos_HPV")) %>% dplyr::select(1:5)
+
+write.table(x=merged_data, file = "1_1_HPV_Clade_Distrib.tsv",append=FALSE, quote=FALSE,
+            sep="\t", row.names = FALSE, col.names = TRUE)
 
