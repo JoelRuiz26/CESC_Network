@@ -1,8 +1,7 @@
-# Script: Preprocess TCGA-CESC RNA-Seq data adapted from https://github.com/CSB-IG/SGCCA/blob/main/prepro-mRNA.R
-#                                       and adapted from https://github.com/CSB-IG/SGCCA/blob/main/prepro-mRNA.R
-#For further details of how NOISeq works, go to https://www.bioconductor.org/packages/release/bioc/vignettes/NOISeq/inst/doc/NOISeq.pdf
-# Author: Joel Ruiz Hernandez
-# Contact: jjrhernandez@gmail.com
+# Script: Preprocess TCGA-CESC RNA-Seq data from NOISeq  https://www.bioconductor.org/packages/release/bioc/vignettes/NOISeq/inst/doc/NOISeq.pdf
+                            #adapted from https://github.com/CSB-IG/SGCCA/blob/main/prepro-mRNA.R
+                            #and adapted from https://github.com/paulinapglz99/ROSMAP_RNASeq_networks/blob/main/2.pre-pro-mRNA.R
+# Contact: ruizhenandezjoel@gmail.com
 # Description: This script preprocesses RNA-Seq data from the TCGA-CESC project. Only tumor samples HPV high risk positive
 #              Steps include quality control (QC), bias detection, correction, and normalization
 #Input: Metadata and unstranded counts
@@ -11,10 +10,9 @@
 ## Set working directory --- ---
 setwd("~/2_Prepro_Data_TCGA/A7_A9/")
 
-load(file = "~/2_Prepro_Data_TCGA/A7_A9/1_Prepro_Data_RNA_HPV.RData")
+#load(file = "~/2_Prepro_Data_TCGA/A7_A9/1_Prepro_Data_RNA_HPV.RData")
 
 ## Packages required --- ---
-library(tidyselect)
 library(biomaRt)
 library(NOISeq)
 library(edgeR)
@@ -22,31 +20,56 @@ library(EDASeq)
 library(ggplot2)
 library(vroom)
 library(tidyverse)
-#Seed for reproducibility
+#Seed for myCD
 set.seed(123)
 
-### 1) Input data --- ---
+### 1) Input data
   #Load data
-metadata <- vroom(file = "~/1_Get_Data_TCGA/1_2_Metadata.tsv") #[1] 278   8
-unstranded_counts <- vroom(file = "~/1_Get_Data_TCGA/1_1_unstranded_counts.tsv") #[1] 60660   279 (1 col add for gene names)
+metadata <- vroom(file = "~/1_Get_Data_TCGA/1_2_Metadata.tsv") #[1] 278   10
+# A tibble: 6 × 10
+#specimenID      cases.submitter_id sample_type figo_stage race  primary_diagnosis HPV_type HPV_clade  frec
+#<chr>           <chr>              <chr>       <chr>      <chr> <chr>             <chr>    <chr>     <dbl>
+#1 TCGA-C5-A1M5-0… TCGA-C5-A1M5       Primary Tu… Stage IB   white Squamous cell ca… HPV33    A9            8
+#2 TCGA-EK-A2R9-0… TCGA-EK-A2R9       Primary Tu… Stage IB1  white Squamous cell ca… HPV33    A9            8
+#3 TCGA-EA-A5O9-0… TCGA-EA-A5O9       Primary Tu… Stage IB2  white Squamous cell ca… HPV16    A9          166
+#4 TCGA-C5-A902-0… TCGA-C5-A902       Primary Tu… Stage IB2  blac… Squamous cell ca… HPV16    A9          166
+#5 TCGA-C5-A8XH-0… TCGA-C5-A8XH       Primary Tu… Stage IB1  white Squamous cell ca… HPV16    A9          166
+#6 TCGA-C5-A3HL-0… TCGA-C5-A3HL       Primary Tu… Stage IB2  white Squamous cell ca… HPV16    A9          166
 
-  # Define factors correctly: Tumor samples (A7 and A9)
+unstranded_counts <- vroom(file = "~/1_Get_Data_TCGA/1_1_unstranded_counts.tsv") #[1] 60660   279 (1 col add for gene names)
+## A tibble: 6 × 279
+#gene           TCGA-C5-A1M5-01A-11R…¹ TCGA-EK-A2R9-01A-11R…² TCGA-EA-A5O9-01A-11R…³ TCGA-C5-A902-01A-11R…⁴
+#<chr>                           <dbl>                  <dbl>                  <dbl>                  <dbl>
+#1 ENSG000000000…                   6914                  10140                  10179                   2140
+#2 ENSG000000000…                      5                      1                      0                      1
+#3 ENSG000000004…                   3793                   4078                   1839                   3096
+#4 ENSG000000004…                   1380                    752                    426                    647
+#5 ENSG000000004…                   1129                    541                    933                    581
+#6 ENSG000000009…                    869                   1040                    162                    414
+
+# Define factors: Tumor samples (A7 and A9)
 factors <- metadata %>% 
   dplyr::select(specimenID,HPV_clade, sample_type, HPV_type) %>% 
   dplyr::filter(!HPV_clade=="otro", !HPV_type=="HPV70", !sample_type=="Solid Tissue Normal") %>% #HPV 70 It's A7 but not high risk
   as.data.frame()   #[1] 268   4  (268 tumor samples with HPV A7 and A9 high risk)
+#specimenID HPV_clade   sample_type HPV_type
+#1 TCGA-C5-A1M5-01A-11R-A13Y-07        A9 Primary Tumor    HPV33
+#2 TCGA-EK-A2R9-01A-11R-A18M-07        A9 Primary Tumor    HPV33
+#3 TCGA-EA-A5O9-01A-11R-A28H-07        A9 Primary Tumor    HPV16
+#4 TCGA-C5-A902-01A-11R-A37O-07        A9 Primary Tumor    HPV16
+#5 TCGA-C5-A8XH-01A-11R-A37O-07        A9 Primary Tumor    HPV16
+#6 TCGA-C5-A3HL-01A-11R-A213-07        A9 Primary Tumor    HPV16
 
-  #Count matrix (samples only included in factors)
+#Count matrix (samples only included in factors)
 counts <- as.data.frame(unstranded_counts) %>% 
   dplyr::select(gene, factors$specimenID)#[1] 60660   269 (col -1, rownames)
 
-  #Clean data
+#Clean data
 #keep only transcript id not version numbers
 counts <- counts %>% mutate(gene = str_remove(gene, "\\..*$")) 
 #Delete cero counts
 counts <- counts[rowSums(counts[,-1]) != 0, ] 
-#%>%  column_to_rownames(var = "gene") #[1] 56385   269
-
+#%>%  column_to_rownames(var = "gene") #[1] 56372   269
 
   #Generate mart object
     #Annnotate GC content, length & biotype per transcript
@@ -58,16 +81,16 @@ myannot <- getBM(attributes = c("ensembl_gene_id",
                  filters = "ensembl_gene_id", 
                  values = counts$gene,  # annotate the genes in the count matrix 
                  mart = mart)
-    # Rename the column for clarity
+    # Rename the column
 myannot <- myannot %>% dplyr::rename(feature = ensembl_gene_id)  #[1] 56081     7
   # Add length column
 myannot$length <- abs(myannot$end_position - myannot$start_position) #[1] 56081     8
     #filter transcripts without annotation
 myannot <-  myannot[myannot$hgnc_id!="" & myannot$hgnc_symbol != "", ] #[1]  38610     8
     #Duplicates
-myannot <-  myannot[!duplicated(myannot$feature), ]  #[1] 38607   8
+myannot <-  myannot[!duplicated(myannot$feature), ]  #[1] 38675   8
     #synchronization
-counts <- counts[counts$gene%in%myannot$feature,] #[1] 38607   269
+counts <- counts[counts$gene%in%myannot$feature,] #[1] 38675   269
 matched_samples <- factors$specimenID[factors$specimenID %in% colnames(counts)]
 factors <- factors %>% filter(specimenID %in% matched_samples)
 counts <- counts %>% dplyr::select(gene, all_of(matched_samples))
@@ -133,14 +156,14 @@ noiseqData_beforeNormal <- NOISeq::readData(data = counts,
     # 3.1.1) Biodetection plot: 
     #Detecting an enrichment in the sample of any other biotype
 mybiodetection_HPV <- dat(noiseqData_beforeNormal, type = "biodetection", factor = "HPV_clade" )
-png("1_Biodetection_HPV_persample.png")
+png("1_1_Biodetection_HPV_persample.png")
 par(mfrow = c(1, 2))
 explo.plot(mybiodetection_HPV,
            plottype = "persample", #type of plot
            samples = c(1,2))
 dev.off()  
 
-png("1_Biodetection_HPV_comparison.png", width = 900, height = 350) # Ajusta el width
+png("1_1_Biodetection_HPV_comparison.png", width = 900, height = 350) # Ajusta el width
 par(mfrow = c(1, 2))
 explo.plot(mybiodetection_HPV,
            plottype = "comparison",
@@ -158,7 +181,7 @@ dev.off()
 
     # 3.2.1) Count distribution per sample  
 mycountsbio_HPV = dat(noiseqData_beforeNormal, type = "countsbio", factor = "HPV_clade")
-png("2_Counts_distribution_HPV_clade.png",width = 500, height = 520)
+png("1_2_Counts_distribution_HPV_clade.png",width = 500, height = 520)
 explo.plot(mycountsbio_HPV,
            plottype = "boxplot", #type of plot
            samples = 1:2)
@@ -167,7 +190,7 @@ dev.off()
   # 3.2.2) Sensitivity ploT: check for low count genes
     #Low counts may introduce noise in the data that makes more difficult to extract the relevant information,
 
-png("3_LowCounts_HPV.png", width=500, height=520)
+png("1_3_LowCounts_HPV.png", width=500, height=520)
 par(cex.axis=16,    # Aumentar tamaño de los ejes
     cex.lab=16,     # Aumentar tamaño de las etiquetas
     cex.main=24,      # Aumentar tamaño del título
@@ -178,7 +201,7 @@ explo.plot(mycountsbio_HPV,
 dev.off()
 
   # Plot global distribution of CPM 
-png("4_lowCountThres.png", width=800, height=600)
+png("1_4_lowCountThres.png", width=800, height=600)
 hist_values <- hist(rowMeans(cpm(counts, log=TRUE)), 
                     ylab="Número de genes", 
                     xlab="Media de log CPM", 
@@ -204,7 +227,7 @@ dev.off()
     #If the model p-value is significant and R2 value is high (more than 70%), the
     #expression depends on the feature length and the curve shows the type of dependence.
 mylengthbias_HPV = dat(noiseqData_beforeNormal, factor = "HPV_clade", type = "lengthbias")
-png("5_Length_bias_HPV.png", width=1300, height=550)
+png("1_5_Length_bias_HPV.png", width=1300, height=550)
 par(cex.axis=1.5,   
     cex.lab=1.5,     
     cex.main=2)
@@ -215,7 +238,7 @@ dev.off()
   # Relationship between the gene GC content and the expression values
   # If the model p-value is signifficant and R2 value is high (more than 70%), the expression will depend on
   #the feature GC content and the curve will show the type of dependence.
-png("6_GC_HPV.png", width=1300, height=550)
+png("1_6_GC_HPV.png", width=1300, height=550)
 myGCbias_HPV = dat(noiseqData_beforeNormal, factor = "HPV_clade", type = "GCbias")
 par(cex.axis=1.5,   
     cex.lab=1.5,     
@@ -240,7 +263,7 @@ table(mycd@dat$DiagnosticTest[, "Diagnostic Test"])
     #FAILED PASSED
     #264      3 
 
-png("7_Mvalues_mycd.png", width=1000, height=600)
+png("1_7_Mvalues_mycd.png", width=1000, height=600)
 par(cex.axis=1.5,   
     cex.lab=1.5,     
     cex.main=2)
@@ -250,12 +273,12 @@ dev.off()
   # 3.4) PCA
   #used to visualize if the experimental samples are clustered according to the experimental desig
 myPCA_HPV = dat(noiseqData_beforeNormal, type = "PCA", norm = F,logtransf = F)
-png("8_PCA_Ori_hpv.png")
+png("1_8_PCA_Ori_hpv.png")
 explo.plot(myPCA_HPV, plottype= "scores", factor = "HPV_clade")
 dev.off()
 
   #3.5) Quality Control report
-QCreport(noiseqData_beforeNormal, samples = NULL, factor = "HPV_clade", norm = FALSE)
+#QCreport(noiseqData_beforeNormal, samples = NULL, factor = "HPV_clade", norm = FALSE)
 
 ### 4) Solve biases: Normalization, Low-count fltering & Batch efect correction --- ---
   # 4.1)Normalization
@@ -269,7 +292,7 @@ count_filtered <- filtered.data(counts, factor = "HPV_clade",
   #CPM=1 <- 11351 features are to be kept for differential expression analysis with filtering method 1
  
   #Compare distribution
-png("9_lowCountThres_after_HPV.png", width=800, height=600)
+png("1_9_0_lowCountThres_after_HPV.png", width=800, height=600)
 hist_values <- hist(rowMeans(cpm(count_filtered, log=TRUE)), 
                     ylab="Número de genes", 
                     xlab="Media de log CPM", 
@@ -321,68 +344,12 @@ ffTMMARSyn_HPV=ARSyNseq(noiseqData_after, factor = "HPV_clade", batch = F,
                            norm = "n",  logtransf = T)
 
 myPCA_after_norm = dat(ffTMMARSyn_HPV, type = "PCA", norm = T,logtransf = T)
-png("10_myPCA_HPV_norm.png")
+png("1_9_1_myPCA_HPV_norm.png")
 explo.plot(myPCA_after_norm, plottype = "scores", factor = "HPV_clade")
 dev.off()
 #save
-saveRDS(myPCA_after_norm, "myPCA_HPV_norm.rds")
+#saveRDS(myPCA_after_norm, "myPCA_HPV_norm.rds")
 print(explo.plot(myPCA_after_norm, plottype = "scores", factor = "HPV_clade"))
-
-##Same PCA but make step by step (optional)
-#Extract the expression matrix
-norm_ARSyn <- exprs(ffTMMARSyn_HPV)# [1] 11245   271
-# Build the transposed matrix for PCA
-pca_norm_ARSyn <- norm_ARSyn %>% 
-  t()  # Transpose the matrix
-# Perform PCA using `prcomp`
-pca_norm_ARSyn <- prcomp(pca_norm_ARSyn, retx = TRUE, center = TRUE, scale. = FALSE)
-#Convert PCA results to a data frame
-pca_norm_ARSyn_df <- pca_norm_ARSyn$x %>% as.data.frame()
-
-#Calculate variance explained by each principal component (PC)
-variance_table_norm_ARSyn <- data.frame(
-  PC = 1:length(pca_norm_ARSyn$sdev),  # Principal component number
-  Variance_Percentage = pca_norm_ARSyn$sdev^2 / sum(pca_norm_ARSyn$sdev^2) * 100,  # Percentage of variance explained
-  cumulative_percentage = cumsum(pca_norm_ARSyn$sdev^2 / sum(pca_norm_ARSyn$sdev^2) * 100))  # Cumulative variance
-
-#Elbow_plot
-# Calculate the differences between consecutive variance percentages
-variance_diff <- diff(variance_table_norm_ARSyn$Variance_Percentage)
-# Calculate the second difference to find the "elbow" (largest change in the slope)
-second_diff <- diff(variance_diff)
-# Find the index of the maximum second difference (elbow point)
-elbow_index <- which.max(second_diff) + 1  # Adding 1 because diff reduces the length by 1
-# Print the number of components where the elbow occurs
-cat("The elbow point is at PC", elbow_index, "with", 
-    round(variance_table_norm_ARSyn$Variance_Percentage[elbow_index], 2), "% variance explained.\n")
-#Highlight the elbow point in the elbow plot
-elbow_plot <- ggplot(variance_table_norm_ARSyn, aes(x = PC, y = Variance_Percentage)) +
-  geom_line(color = "blue") +
-  geom_point(color = "red") +
-  geom_vline(xintercept = elbow_index, linetype = "dashed", color = "green") +
-  labs(title = "Elbow Plot of PCA",
-       x = "Principal Component (PC)",
-       y = "Variance Percentage (%)") +
-  theme_minimal()
-# Save the plot as a PNG file
-ggsave("11_elbow_plot_HPV.png", elbow_plot, width = 6, height = 4)
-
-# Plot PC2 vs PC1 colored by sample type, without specimen names
-PC2_PC1_norm_ARSyn_HPV <- pca_norm_ARSyn_df %>% 
-  ggplot() +
-  aes(x = PC2, y = PC1, colour = factors$HPV_clade) +
-  geom_point() +
-  labs(title = "PCA Scatterplot by sample type",
-       subtitle = "PC2 vs PC1", 
-       x = paste("PC2 (", sprintf("%.2f", variance_table_norm_ARSyn$Variance_Percentage[2]), "%)"),
-       y = paste("PC1 (", sprintf("%.2f", variance_table_norm_ARSyn$Variance_Percentage[1]), "%)")) +
-  theme_minimal() +
-  theme(legend.title = element_blank())
-
-print(PC2_PC1_norm_ARSyn_HPV)
-
-# Save the plot as a PNG file
-ggsave("12_PC1_PC2_norm_ARSyn_HPV.png", PC2_PC1_norm_ARSyn_HPV , width = 6, height = 4)
 
 #FINALY QUALITY CHECK
 #Synchronization
@@ -398,7 +365,7 @@ noiseqData_after_norm = NOISeq::readData(data = counts_after_norm , gc = myannot
 mycountsbio_after_norm = dat(noiseqData_after_norm, type = "countsbio", factor = "HPV_clade",
                              norm=T)
 
-png("13_CountsFinal_HPV.png",width = 500, height = 520)
+png("1_9_2_CountsFinal_HPV.png",width = 500, height = 520)
 explo.plot(mycountsbio_after_norm, plottype = "boxplot",samples=1:2)
 dev.off()
 
@@ -408,7 +375,7 @@ myGCcontent_after <- dat(noiseqData_after_norm, k = 0, type = "GCbias",
 #Residual standard error: 413.8 on 47 degrees of freedom
 #Multiple R-squared:  0.5393,	Adjusted R-squared:  0.4608 
 #F-statistic: 6.876 on 8 and 47 DF,  p-value: 5.935e-06
-png("14_GCbiasFinal_HPV.png",width=1300, height=550)
+png("1_9_3_GCbiasFinal_HPV.png",width=1300, height=550)
 par(cex.axis=1.5,   
     cex.lab=1.5,     
     cex.main=2)
@@ -422,7 +389,7 @@ mylenBias_sample <- dat(noiseqData_after_norm, k = 0, type = "lengthbias",
 #Multiple R-squared:  0.1274,	Adjusted R-squared:  -0.02117 
 #F-statistic: 0.8575 on 8 and 47 DF,  p-value: 0.5583
 
-png("15_lengthbiasFinal_HPV.png", width=1300, height=550)
+png("1_9_4_lengthbiasFinal_HPV.png", width=1300, height=550)
 par(cex.axis=1.5,   
     cex.lab=1.5,     
     cex.main=2)
@@ -431,7 +398,7 @@ dev.off()
 
 # Sensitivity ploT: check for low count genes
 #Low counts may introduce noise in the data that makes more dificult to extract the relevant information,
-png("16_LowCounts_HPV_norm.png", width=500, height=520)
+png("1_9_5_LowCounts_HPV_norm.png", width=500, height=520)
 par(cex.axis=8,    # Aumentar tamaño de los ejes
     cex.lab=8,     # Aumentar tamaño de las etiquetas
     cex.main=12,      # Aumentar tamaño del título
@@ -442,7 +409,7 @@ explo.plot(mycountsbio_after_norm,
 dev.off()
 
 
-png("15_Mvalues_mycd_after_norm.png", width=1000, height=600)
+png("1_9_6_Mvalues_mycd_after_norm.png", width=1000, height=600)
 par(cex.axis=1.5,   
     cex.lab=1.5,     
     cex.main=2)
@@ -450,10 +417,9 @@ explo.plot(mycd_after, samples = c(250:261))
 dev.off()
 
 #Quality Control report of normalized data
-pdf("QCreport_after_HPV.pdf")
-QCreport(noiseqData_after, samples = NULL, factor = "HPV_clade", norm = T)
-dev.off()
-
+#pdf("QCreport_after_HPV.pdf")
+#QCreport(noiseqData_after, samples = NULL, factor = "HPV_clade", norm = T)
+#dev.off()
 
 ###Save data
   #Final counts as TSV
