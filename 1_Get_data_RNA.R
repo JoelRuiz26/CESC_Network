@@ -1,7 +1,7 @@
 # Download and prepare data from TCGA
 # Joel Ruiz Hernandez
-# Contact: jjrhernandez@gmail.com
-# Description: This script downloads RNA-Seq data from the TCGA-CESC project and create metadata.
+# Contact: ruizhenandezjoel@gmail.com
+# Description: This script downloads RNA-Seq data from the TCGA-CESC project and create a metadata.
 # Output: A count matrix (TCGA_CESC_Data_matrix) saved as a TSV file.
 
 ## Set working directory
@@ -57,17 +57,19 @@ unstranded <- as_tibble(unstranded, rownames = "gene")
 #3 ENSG00000000419.13                           3793                           4078
 
 
-
 ##Create metadata --- ---
-
 #Add HPV type 
-HPV_TCGA <- vroom(file = "~/0_HPV_Distribution/1_2_HPV_Clades.tsv")  #[1] 275   3
+HPV_TCGA <- vroom(file = "~/0_HPV_Distribution/1_1_HPV_Clade_Distrib.tsv")  #[1] 275   5
 #head(HPV_TCGA)
-#`TCGA Case ID` tipos_HPV Clado_filogenetico
-#<chr>          <chr>     <chr>             
-#1 TCGA-HM-A4S6   HPV16     A9                
-#2 TCGA-ZJ-AAXD   HPV16     A9                
-#3 TCGA-EA-A43B   HPV16     A9 
+# A tibble: 6 × 5
+#  `TCGA Case ID` tipos_HPV Clado_filogenetico  frec percent
+#<chr>          <chr>     <chr>              <dbl>   <dbl>
+#1 TCGA-HM-A4S6   HPV16     A9                   166    60.4
+#2 TCGA-ZJ-AAXD   HPV16     A9                   166    60.4
+#3 TCGA-EA-A43B   HPV16     A9                   166    60.4
+#4 TCGA-MA-AA3W   HPV16     A9                   166    60.4
+#5 TCGA-VS-A9UQ   HPV16     A9                   166    60.4
+#6 TCGA-MY-A5BF   HPV16     A9                   166    60.4
 
 #CLinical info
 Clinical_info <- GDCquery_clinic("TCGA-CESC","clinical") %>% 
@@ -80,10 +82,12 @@ Metadata <- Output_query_TCGA %>%
             ~ ifelse(sample_type == "Solid Tissue Normal", "Solid Tissue Normal", .)) %>% 
   dplyr::rename(specimenID =  cases) %>% dplyr::rename(HPV_type = tipos_HPV) %>% 
   dplyr::rename(HPV_clade = Clado_filogenetico)
-#[1] 278   8
+#[1] 278   10
+
 #colnames(Metadata)
-#[1] "specimenID"         "cases.submitter_id" "sample_type"        "figo_stage"         "race"              
-#[6] "primary_diagnosis"  "HPV_type"           "HPV_clade" 
+# [1] "specimenID"         "cases.submitter_id" "sample_type"        "figo_stage"        
+#[5] "race"               "primary_diagnosis"  "HPV_type"           "HPV_clade"         
+#[9] "frec"               "percent" 
 
 #Filter unstranded with the cases in Metadata
 Cases_metadata <- Metadata %>% pull(specimenID)
@@ -102,13 +106,13 @@ CladeHPV_specimenID <- Metadata %>%
 #  1    68   202        3     5
 
 ##Save metadata
-Metadata <- as_tibble(Metadata)
-vroom_write(Metadata, "1_2_Metadata.tsv", delim = "\t")
+Metadata <- as_tibble(Metadata) #This Metadata still contains HPV clade 'other', posible high risk and SNT. #More filter is requiered
+vroom_write(Metadata, "1_2_Metadata.tsv", delim = "\t")    
 
 ## Save count matrix
 unstranded_counts <- as_tibble(unstranded_counts)
 vroom_write(unstranded_counts, "1_1_unstranded_counts.tsv", delim = "\t")
 
 #Save work space
-save.image(file = "1_Image_data_RNA.RData")
+save.image(file = "0_Image_data_RNA.RData")
 
