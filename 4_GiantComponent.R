@@ -1,106 +1,138 @@
-#Find minimum giant component with max mutual information in CC networks
-#Joel Ruiz Hernandez  
-#Input: two coexpression networks sorted by MI
-#Output: -Edges with giant component is formed and nodes that contain the subgraph
-#        -Graph of growing network and threshold of subraph that contains giant component
-
-#Load libraries
-library(igraph)
+# Load required libraries
 library(dplyr)
 library(vroom)
-library(ggplot2)
+library(igraph)
 
-#load(file = "~/5_Global_Analisis/1_GiantComponent.RData")
-
-### Load networks ###
-A7_Full <- vroom(file = "~/5_Global_Analisis/0_1_Final_A7_Annot.sort",
-                 col_names = c("GenA", "GenB", "MI")) %>% na.omit()
-A9_Full <- vroom(file = "~/5_Global_Analisis/0_1_Final_A9_Annot.sort",
-                 col_names = c("GenA", "GenB", "MI")) %>% na.omit()
-#Posibles enlaces : 128,845,201
-#Full edges in both networks:  64,416,925
-
-### Set the minimum Giant Component in your Networks  ###
-total_nodes <- length(unique(c(A7_Full$GenA, A7_Full$GenB))) #11351 Both networks
-giant_threshold <- floor(0.5 * total_nodes) + 2  #5677
-
-
-### Function to calculate total nodes and GC each edge  ###
-#(Dataframe output is used for graph)#
-calculate_metrics <- function(edgelist, max_links = 100000) { #Explore thresholds as you need
-                  #The threshold must have in Largest_Component the giant_threshold
-  results <- lapply(1:max_links, function(i) {
-    graph <- graph_from_data_frame(edgelist[1:i, ], directed = FALSE)
-    c(
-      Links = i,
-      Total_Genes = vcount(graph),
-      Largest_Component = max(components(graph)$csize)
-    )
-  })
-  return(as.data.frame(do.call(rbind, results)))
+# Function to analyze the network without reordering (assuming input is already sorted)
+analyze_network <- function(file_path, max_rows = 2000000) {
+  # Load the edge list (up to max_rows rows)
+  edge_list <- vroom(file_path, 
+                     col_names = c("GenA", "GenB", "MI"),
+                     show_col_types = FALSE) %>%
+    na.omit() %>%
+    slice(1:max_rows)  # Limit number of rows if necessary
+  
+  # Get all unique nodes in the network
+  all_nodes <- unique(c(edge_list$GenA, edge_list$GenB))
+  total_nodes <- length(all_nodes)
+  
+  # Determine cutoff row where all nodes are covered
+  covered_nodes <- character()
+  cutoff_row <- NA
+  
+  for (i in 1:nrow(edge_list)) {
+    covered_nodes <- unique(c(covered_nodes, edge_list$GenA[i], edge_list$GenB[i]))
+    
+    if (length(covered_nodes) == total_nodes) {
+      cutoff_row <- i
+      break
+    }
+  }
+  
+  # Return a structured summary
+  return(list(
+    network_name = tools::file_path_sans_ext(basename(file_path)),
+    total_nodes = total_nodes,
+    cutoff_row = cutoff_row,
+    covered_nodes = length(covered_nodes),
+    coverage_percent = round(length(covered_nodes) / total_nodes * 100, 2),
+    sample_size = nrow(edge_list)
+  ))
 }
-# Calcular métricas para ambas redes
-metrics_A7 <- calculate_metrics(A7_Full, max_links = 100000)
-metrics_A9 <- calculate_metrics(A9_Full, max_links = 100000)
 
+# Analyze both networks
+results_A7 <- analyze_network("~/4_MI/ARACNE-multicore/launch/Final_A7_Annot.sort")
+results_A9 <- analyze_network("~/4_MI/ARACNE-multicore/launch/Final_A9_Annot.sort")
 
-### Subnetwork that contains the minimum Giant component in the full network  ###
+# ==================================
+# PRINT REPORTS TO CONSOLE
+# ==================================
 
-#See cut off
-giant_link_A7 <- metrics_A7 %>% 
-  filter(Largest_Component >= giant_threshold) %>% 
-  slice(1)
-# Links  Total_Genes Largest_Component
-# 26485  6469        5679
-giant_link_A9 <- metrics_A9 %>% 
-  filter(Largest_Component >= giant_threshold) %>% 
-  slice(1)
-# Links  Total_Genes Largest_Component
-# 39532  6428        5677
+# Function to generate and print a detailed report
+generate_report <- function(results) {
+  report <- paste0(
+    "\n════════════════════════════════════\n",
+    " NETWORK ANALYSIS REPORT - ", results$network_name, "\n",
+    "════════════════════════════════════\n",
+    "• Total unique nodes: ", results$total_nodes, "\n",
+    "• Rows analyzed: ", results$sample_size, "\n",
+    "• Cutoff row found: ", 
+    ifelse(is.na(results$cutoff_row), "NOT COMPLETE", results$cutoff_row), "\n",
+    "• Nodes covered: ", results$covered_nodes, "/", results$total_nodes, "\n",
+    "• Coverage percent: ", results$coverage_percent, "%\n",
+    "════════════════════════════════════\n"
+  )
+  
+  # Print to console only
+  cat(report)
+  
+  return(invisible(report))
+}
 
-#Slice subnetwork
-Subnetwork_A7 <- A7_Full %>% dplyr::slice(1:giant_link_A7$Links)
-Subnetwork_A9 <- A9_Full %>% dplyr::slice(1:giant_link_A9$Links)
+# Print the reports
+generate_report(results_A7)
+generate_report(results_A9)
 
-# Save graphs
-graph_A7 <- graph_from_data_frame(d = Subnetwork_A7, directed = FALSE)
-E(graph_A7)$weight <- Subnetwork_A7$MI
-write_graph(graph_A7, file = "~/5_Global_Analisis/1_Subnetwork_A7.graphml", format = "graphml")
+# ==================================
+# SAVE R OBJECTS (OPTIONAL)
+# ==================================
+# Uncomment the following line if you want to save the R environment
+save.image(file = "~/5_Global_Analisis/1_Subnetworks/ARACNE_fullnetworks/Results_cut_A7A9.RData")
 
-graph_A9 <- graph_from_data_frame(d = Subnetwork_A9, directed = FALSE)
-E(graph_A9)$weight <- Subnetwork_A9$MI
-write_graph(graph_A9, file = "~/5_Global_Analisis/1_Subnetwork_A9.graphml", format = "graphml")
+# ==================================
+# VERIFYING NODE COVERAGE THRESHOLD
+# ==================================
 
-#save image
-save.image(file = "~/5_Global_Analisis/1_GiantComponent.RData")
+# Load top 600,000 rows for A7
+A7 <- vroom(file = "~/4_MI/ARACNE-multicore/launch/Final_A7_Annot.sort",
+            col_names = c("GenA", "GenB", "MI"), show_col_types = FALSE) %>%
+  slice(1:600000)
 
-### Graph growing of conected component in network  ###
-GC_graph <- ggplot() +
-  geom_line(data = metrics_A7, aes(x = Links, y = Largest_Component, color = "VPH-A7"), size = 1) +
-  geom_line(data = metrics_A9, aes(x = Links, y = Largest_Component, color = "VPH-A9"), size = 1) +
-  geom_hline(aes(yintercept = giant_threshold, 
-                 linetype = "Componente gigante mínimo"), 
-             color = "black", size = 0.5) +
-  scale_x_continuous(expand = c(0, 0)) +
-  scale_y_continuous(expand = c(0, 0)) +
-  scale_color_manual(values = c("VPH-A7" = "blue", "VPH-A9" = "red")) +
-  scale_linetype_manual(values = c("Componente gigante mínimo" = "dashed")) +
-  labs(
-    title = "Componente más grande conectado en redes de coexpresión de cáncer cervicouterino",
-    x = "Enlaces",
-    y = "Genes del componente más grande",
-    color = "Red",
-    linetype = "") +
-  theme_classic() +
-  theme(
-    text = element_text(size = 12, family = "Times New Roman"),
-    axis.title = element_text(size = 14, face = "bold"),
-    plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
-    legend.position = "top",
-    legend.title = element_text(size = 14, face = "bold"),
-    legend.text = element_text(size = 12),
-    axis.line = element_line(size = 0.5, color = "black"))
-#Save
-ggsave(filename = "~/5_Global_Analisis/1_GC_A7A9.png", plot = GC_graph)
+# Extract edges up to threshold (cutoff row)
+A7_th <- A7 %>% slice(1:341747)
+all_nodes_A7 <- unique(c(A7_th$GenA, A7_th$GenB))
+length(all_nodes_A7)  # Should be 11240
 
+# One row before threshold
+A7_under_th <- A7 %>% slice(1:341746)
+length(unique(c(A7_under_th$GenA, A7_under_th$GenB)))  # Should be 11239
 
+# Same verification for A9
+A9 <- vroom(file = "~/4_MI/ARACNE-multicore/launch/Final_A9_Annot.sort",
+            col_names = c("GenA", "GenB", "MI"), show_col_types = FALSE) %>%
+  slice(1:600000)
+
+A9_th <- A9 %>% slice(1:549320)
+length(unique(c(A9_th$GenA, A9_th$GenB)))  # Should be 11240
+
+A9_under_th <- A9 %>% slice(1:549319)
+length(unique(c(A9_under_th$GenA, A9_under_th$GenB)))  # Should be 11239
+
+# ==================================
+# ANALYZE CONNECTED COMPONENTS
+# ==================================
+
+# Function to calculate connected components
+get_connected_components <- function(edge_list_df) {
+  # Create an undirected graph
+  g <- graph_from_data_frame(edge_list_df, directed = FALSE)
+  
+  # Compute connected components
+  comps <- components(g)
+  
+  return(list(
+    number_components = comps$no,
+    membership = comps$membership,
+    component_sizes = comps$csize
+  ))
+}
+
+# Apply to A7 network
+A7_components <- get_connected_components(A7_th)
+cat("Number of connected components in A7:", A7_components$number_components, "\n")
+#Number of connected components in A7: 1 
+
+# Apply to A9 network
+A9_components <- get_connected_components(A9_th)
+cat("Number of connected components in A9:", A9_components$number_components, "\n")
+#Number of connected components in A9: 1 
