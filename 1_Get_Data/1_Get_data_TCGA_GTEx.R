@@ -17,7 +17,6 @@ library(tidyverse)
 library(vroom)
 
 # ===================== PART 1: GTEx (CERVIX UTERI) ===================== #
-message(">>> Downloading GTEx Cervix Uteri raw counts...")
 
 # Manually download RSE object from GTEx
 rse_cervix <- create_rse_manual(
@@ -34,14 +33,6 @@ counts_matrix <- assays(rse_cervix)[["raw_counts"]]
 # Check dimensions
 dim(counts_matrix)
 # [1] 63856    19
-head(counts_matrix[1:5, 1:5])
-# Example:
-#                            Sample1     Sample2     Sample3     Sample4     Sample5
-# ENSG00000278704.1              0           0           0           0           0
-# ENSG00000277400.1              0           0           0           0           0
-# ENSG00000274847.1              0           0           0           0           0
-# ENSG00000277428.1              0           0           0           0           0
-# ENSG00000276256.1              0           0           0           0           0
 
 # Check annotation version
 metadata(rse_cervix)$annotation
@@ -52,10 +43,9 @@ gtex_meta <- as.data.frame(colData(rse_cervix))
 colnames(gtex_meta)
 
 # Save raw counts as .rds
-saveRDS(counts_matrix, file = "/GTEx_Cervix_raw_counts.rds")
+saveRDS(counts_matrix, file = "/1_GTEx_Cervix_raw_counts.rds")
 
 # ===================== PART 2: TCGA-CESC ===================== #
-message(">>> Downloading TCGA-CESC data and building metadata...")
 
 # Define sample types
 sample_types <- c("Primary Tumor", "Solid Tissue Normal")
