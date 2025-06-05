@@ -1,128 +1,88 @@
-################################################################################
-# Script: Integrate and Harmonize TCGA and GTEx Expression Data (Counts + Metadata)
-# Author: Joel Ruiz Hernandez contact: josejoelruizhernandez@gmail.com
-# Date: 20/12/2024
+# ============================================================ #
+# Title: Harmonize Raw RNA-Seq Counts from TCGA-CESC and GTEx
 # Description:
-#   This script performs a secure and traceable integration of RNA-seq gene 
-#   expression count matrices from TCGA (CESC) and GTEx (Cervix Uteri), using
-#   GENCODE v26 as reference for gene ID validation. The output includes a unified
-#   count matrix and harmonized sample metadata.
+#   This script merges raw gene expression data from TCGA-CESC and GTEx 
+#   (cervix uteri), standardizes gene identifiers, filters, and 
+#   constructs a unified expression matrix and metadata table.
+# Author: Joel Ruiz Hernández
+# Contact: josejoelruizhernandez@gmail.com
+# Date: 2025-04-05
+# ============================================================ #
 
-# INPUT:
-#   - TCGA metadata:          "~/1_Get_Data_TCGA/1_2_Metadata.tsv"
-#   - TCGA counts (unstranded): "~/1_Get_Data_TCGA/1_1_unstranded_counts.tsv"
-#   - GTEx raw counts (RDS): "~/1_Get_Data_TCGA/GTEx_Cervix_raw_counts.rds"
-#
-# OUTPUT:
-#   - Combined count matrix:   "~/1_Get_Data_TCGA/2_combined_counts_TCGA_GTEx.rds"
-#   - Combined sample metadata:"~/1_Get_Data_TCGA/2_combined_metadata_TCGA_GTEx.rds"
-################################################################################
-
-# ========================= #
-# Load Required Libraries   #
-# ========================= #
-
+# ===================== LOAD REQUIRED LIBRARIES ===================== #
+library(recount3)
+library(SummarizedExperiment)
+library(TCGAbiolinks)
 library(tidyverse)
-library(biomaRt)
 library(vroom)
+library(stringr)
 
-# ============================ #
-# Load Input Data             #
-# ============================ #
+# ===================== PART 1: LOAD AND PREPARE COUNT MATRICES ===================== #
 
-metadata_TCGA <- vroom(file = "~/1_Get_Data_TCGA/1_2_Metadata.tsv")                 # [278 x 8]
-unstranded_counts_TCGA <- vroom(file = "~/1_Get_Data_TCGA/1_1_unstranded_counts.tsv") # [60660 x 279]
-raw_counts_GTEx <- readRDS("~/1_Get_Data_TCGA/GTEx_Cervix_raw_counts.rds")           # [63856 x 19]
+# Load TCGA and GTEx raw counts
+tcga <- vroom("~/1_Get_Data_TCGA/1_1_unstranded_counts.tsv")
+gtex <- readRDS("~/1_Get_Data_TCGA/1_GTEx_Cervix_raw_counts.rds") %>%
+  as.data.frame() %>%
+  rownames_to_column("gene")
 
-# NOTE:
-# - GTEx uses: GRCh38 + GENCODE v26
-# - TCGA uses: GRCh38 + GENCODE v22
-# - Although both use GRCh38, using different GENCODE versions may cause 
-#   mismatches in gene IDs, pseudogenes, and annotation discrepancies.
+# Standardize gene IDs (remove Ensembl version suffix)
+tcga <- tcga %>% mutate(gene = str_remove(gene, "\\..*$"))
+gtex <- gtex %>% mutate(gene = str_remove(gene, "\\..*$"))
 
-# ========================================= #
-# Step 1: Connect to Ensembl v100 (GENCODE v26)
-# ========================================= #
+# Remove genes with zero expression across all samples
+tcga <- tcga[rowSums(tcga[,-1]) > 0, ]
+gtex <- gtex[rowSums(gtex[,-1]) > 0, ]
 
-ensembl_v26 <- useEnsembl("genes", dataset = "hsapiens_gene_ensembl", version = 100)
+# Keep only intersecting genes
+genes_comunes <- intersect(tcga$gene, gtex$gene)
+tcga <- tcga %>% filter(gene %in% genes_comunes) %>% arrange(gene)
+gtex <- gtex %>% filter(gene %in% genes_comunes) %>% arrange(gene)
 
-# ===================================================== #
-# Step 2: Extract all valid GENCODE v26 gene IDs (with version)
-# ===================================================== #
+# Ensure same gene order
+stopifnot(all(tcga$gene == gtex$gene))
 
-genes_validos_v26 <- getBM(
-  attributes = c("ensembl_gene_id_version"),
-  mart = ensembl_v26
-) %>%
-  pull(ensembl_gene_id_version) %>%
-  unique()
+# Combine count matrices
+tcga_mat <- tcga %>% column_to_rownames("gene")
+gtex_mat <- gtex %>% column_to_rownames("gene")
+combined_counts <- cbind(tcga_mat, gtex_mat) %>%
+  as.data.frame() %>%
+  rownames_to_column("gene")
 
-# ================================================================= #
-# Step 3: Filter TCGA genes to keep only those present in GENCODE v26
-# ================================================================= #
+# ===================== PART 2: BUILD COMBINED METADATA ===================== #
 
-tcga_genes_full <- unstranded_counts_TCGA$gene
-tcga_valid <- tcga_genes_full %in% genes_validos_v26
-tcga_counts_filtered <- unstranded_counts_TCGA[tcga_valid, ]
-# Result: From 60660 to 58185 rows (~4% excluded)
+# Step 1: Load TCGA metadata and remove unused columns
+metadata_tcga <- vroom("~/1_Get_Data_TCGA/1_2_Metadata.tsv") %>%
+  select(-race, -frec, -percent)
 
-# ================================================================= #
-# Step 4: Filter GTEx genes to keep only those present in GENCODE v26
-# ================================================================= #
+# Step 2: Identify GTEx samples from count matrix
+combined_samples <- colnames(combined_counts)[-1]  # remove gene column
+gtex_samples <- setdiff(combined_samples, metadata_tcga$specimenID)
 
-gtex_genes_full <- rownames(raw_counts_GTEx)
-gtex_valid <- gtex_genes_full %in% genes_validos_v26
-gtex_counts_filtered <- raw_counts_GTEx[gtex_valid, ]
-# Result: 43596 genes retained
+# Step 3: Append GTEx metadata rows
+metadata_tcga <- metadata_tcga %>%
+  bind_rows(
+    tibble(specimenID = gtex_samples, cases.submitter_id = gtex_samples) %>%
+      mutate(across(-c(specimenID, cases.submitter_id), ~ "Solid Tissue Normal"))
+  )
 
-# ======================================================== #
-# Step 5: Identify the exact intersecting genes (with version)
-# ======================================================== #
+# Step 4: Filter HPV and add 'source' column
+metadata_tcga <- metadata_tcga %>%
+  filter(!HPV_clade %in% "otro", !HPV_type %in% "HPV70") %>%
+  mutate(
+    HPV_clade = recode(HPV_clade, "A7" = "A7_clade", "A9" = "A9_clade"),
+    source = if_else(specimenID %in% gtex_samples, "GTEX", "TCGA")
+  ) %>%
+  select(specimenID, source, everything())
 
-common_genes_exact <- intersect(
-  tcga_counts_filtered$gene,
-  rownames(gtex_counts_filtered)
-)
-# Result: 36919 common genes
+metadata_tcga <- metadata_tcga %>%
+  mutate(across(everything(), ~replace_na(.x, "Solid Tissue Normal")))
 
-# ========================================================== #
-# Step 6: Subset both matrices by common genes (same order)
-# ========================================================== #
+# ===================== PART 3: FINALIZE AND SAVE ===================== #
 
-tcga_final <- tcga_counts_filtered %>%
-  filter(gene %in% common_genes_exact) %>%
-  column_to_rownames("gene") %>%
-  as.matrix()
+# Filter count matrix by valid metadata samples
+combined_counts <- combined_counts %>%
+  select(gene, all_of(metadata_tcga$specimenID))
 
-gtex_final <- gtex_counts_filtered[common_genes_exact, ]
-
-# ============================================== #
-# Step 7: Combine the filtered matrices by column
-# ============================================== #
-
-stopifnot(identical(rownames(tcga_final), rownames(gtex_final)))  # Ensure gene order matches
-combined_counts <- cbind(tcga_final, gtex_final)
-dim(combined_counts)  # [36919 x 297]
-
-# ====================================== #
-# Step 8: Save the combined count matrix
-# ====================================== #
-
-#saveRDS(combined_counts, "~/1_Get_Data_TCGA/2_combined_counts_TCGA_GTEx.rds")
-
-####Get universe for enrichment
-#raw_counts_GTEx <- raw_counts_GTEx %>% as.data.frame()
-#genes <- rownames(raw_counts_GTEx) %>% as.character()
-#ensembl <- useEnsembl(biomart = "genes", dataset = "hsapiens_gene_ensembl", version = 100)
-
-#annot_universe <- getBM(
-#  attributes = c("ensembl_gene_id_version", "ensembl_gene_id", "hgnc_symbol"),
-#  filters = "ensembl_gene_id_version",
-#  values = genes,
-#  mart = ensembl)%>% filter(hgnc_symbol != "") #VOLVER A CORRER
-
-#dim(annot_universe) #[1] 24546     3
-#length(unique(annot_universe$hgnc_symbol))
-#[1] 21435
-#saveRDS(annot_universe,file = "~/3_DGE/DESeq2/annot_universe_24546.rds")
-
+# Save results
+saveRDS(metadata_tcga, file = "~/1_Get_Data_TCGA/2_Harmoni_metadata_TCGA_GTEx.rds")
+saveRDS(combined_counts, file = "~/1_Get_Data_TCGA/2_Harmoni_counts_TCGA_GTEx.rds")
