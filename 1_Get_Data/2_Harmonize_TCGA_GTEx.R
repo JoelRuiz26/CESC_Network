@@ -8,7 +8,7 @@
 # Contact: josejoelruizhernandez@gmail.com
 # Date: 2025-04-05
 # ============================================================ #
-
+setwd("~/CESC_Network_local/1_Get_Data/")
 # ===================== LOAD REQUIRED LIBRARIES ===================== #
 library(recount3)
 library(SummarizedExperiment)
@@ -17,26 +17,35 @@ library(tidyverse)
 library(vroom)
 library(stringr)
 
-# ===================== PART 1: LOAD AND PREPARE COUNT MATRICES ===================== #
+# ===================== LOAD AND PREPARE COUNT MATRICES ===================== #
 
 # Load TCGA and GTEx raw counts
-tcga <- vroom("~/1_Get_Data_TCGA/1_1_unstranded_counts.tsv")
-gtex <- readRDS("~/1_Get_Data_TCGA/1_GTEx_Cervix_raw_counts.rds") %>%
+tcga <- vroom("~/CESC_Network_local/1_Get_Data/1_1_unstranded_counts.tsv")
+gtex <- readRDS("~/CESC_Network_local/1_Get_Data/1_3_GTEx_Cervix_raw_counts.rds") %>%
   as.data.frame() %>%
   rownames_to_column("gene")
 
 # Standardize gene IDs (remove Ensembl version suffix)
+# Remove Ensembl version suffix
 tcga <- tcga %>% mutate(gene = str_remove(gene, "\\..*$"))
 gtex <- gtex %>% mutate(gene = str_remove(gene, "\\..*$"))
 
-# Remove genes with zero expression across all samples
-tcga <- tcga[rowSums(tcga[,-1]) > 0, ]
-gtex <- gtex[rowSums(gtex[,-1]) > 0, ]
+# Collapse duplicated genes by summing counts
+tcga <- tcga %>%
+  group_by(gene) %>%
+  summarise(across(everything(), sum), .groups = "drop")
+
+gtex <- gtex %>%
+  group_by(gene) %>%
+  summarise(across(everything(), sum), .groups = "drop")
 
 # Keep only intersecting genes
-genes_comunes <- intersect(tcga$gene, gtex$gene)
+genes_comunes <- intersect(tcga$gene, gtex$gene) 
+#length(genes_comunes) #[1] 57562
 tcga <- tcga %>% filter(gene %in% genes_comunes) %>% arrange(gene)
+dim(tcga) #[1] 57562   279
 gtex <- gtex %>% filter(gene %in% genes_comunes) %>% arrange(gene)
+dim(gtex) #[1] 57562    20
 
 # Ensure same gene order
 stopifnot(all(tcga$gene == gtex$gene))
@@ -47,42 +56,47 @@ gtex_mat <- gtex %>% column_to_rownames("gene")
 combined_counts <- cbind(tcga_mat, gtex_mat) %>%
   as.data.frame() %>%
   rownames_to_column("gene")
+dim(combined_counts) #[1] 57562   298
 
-# ===================== PART 2: BUILD COMBINED METADATA ===================== #
+# Remove genes with zero expression across all samples
+combined_counts <- combined_counts[rowSums(combined_counts[,-1]) > 0, ]
+dim(combined_counts) #[1] 56033   298
 
-# Step 1: Load TCGA metadata and remove unused columns
-metadata_tcga <- vroom("~/1_Get_Data_TCGA/1_2_Metadata.tsv") %>%
-  select(-race, -frec, -percent)
+# ===================== BUILD COMBINED METADATA ===================== #
 
-# Step 2: Identify GTEx samples from count matrix
+# Load TCGA metadata and remove unused columns
+metadata_tcga <- vroom("~/CESC_Network_local/1_Get_Data/1_2_Metadata.tsv") %>%
+  dplyr::select(-race, -frec, -percent)
+
+#Identify GTEx samples from count matrix
 combined_samples <- colnames(combined_counts)[-1]  # remove gene column
 gtex_samples <- setdiff(combined_samples, metadata_tcga$specimenID)
 
-# Step 3: Append GTEx metadata rows
+#Append GTEx metadata rows
 metadata_tcga <- metadata_tcga %>%
   bind_rows(
     tibble(specimenID = gtex_samples, cases.submitter_id = gtex_samples) %>%
       mutate(across(-c(specimenID, cases.submitter_id), ~ "Solid Tissue Normal"))
   )
 
-# Step 4: Filter HPV and add 'source' column
+# Filter HPV and add 'source' column
 metadata_tcga <- metadata_tcga %>%
   filter(!HPV_clade %in% "otro", !HPV_type %in% "HPV70") %>%
   mutate(
     HPV_clade = recode(HPV_clade, "A7" = "A7_clade", "A9" = "A9_clade"),
     source = if_else(specimenID %in% gtex_samples, "GTEX", "TCGA")
   ) %>%
-  select(specimenID, source, everything())
+  dplyr::select(specimenID, source, everything())
 
-metadata_tcga <- metadata_tcga %>%
+metadata_full <- metadata_tcga %>%
   mutate(across(everything(), ~replace_na(.x, "Solid Tissue Normal")))
 
-# ===================== PART 3: FINALIZE AND SAVE ===================== #
+# ===================== FINALIZE AND SAVE ===================== #
 
 # Filter count matrix by valid metadata samples
 combined_counts <- combined_counts %>%
-  select(gene, all_of(metadata_tcga$specimenID))
+  dplyr::select(gene, all_of(metadata_full$specimenID))
 
 # Save results
-saveRDS(metadata_tcga, file = "~/1_Get_Data_TCGA/2_Harmoni_metadata_TCGA_GTEx.rds")
-saveRDS(combined_counts, file = "~/1_Get_Data_TCGA/2_Harmoni_counts_TCGA_GTEx.rds")
+saveRDS(metadata_full, file = "~/CESC_Network_local/1_Get_Data/2_Harmoni_metadata_TCGA_GTEx.rds")
+saveRDS(combined_counts, file = "~/CESC_Network_local/1_Get_Data/2_Harmoni_counts_TCGA_GTEx.rds")

@@ -1,4 +1,4 @@
-\# ===================== SCRIPT OVERVIEW ===================== #
+# ===================== SCRIPT OVERVIEW ===================== #
 # Title: Get Raw Gene Expression Data from GTEx and TCGA-CESC (Cervix)
 # Description:
 #   This script retrieves raw RNA-Seq counts and metadata for cervix uteri samples
@@ -8,7 +8,7 @@
 # Contact: josejoelruizhernandez@gmail.com
 # Date: 2025-04-05
 # =========================================================== #
-
+setwd("~/CESC_Network_local/1_Get_Data/")
 # ===================== LOAD REQUIRED LIBRARIES ===================== #
 library(recount3)
 library(SummarizedExperiment)
@@ -41,9 +41,6 @@ metadata(rse_cervix)$annotation
 # Extract sample metadata
 gtex_meta <- as.data.frame(colData(rse_cervix))
 colnames(gtex_meta)
-
-# Save raw counts as .rds
-saveRDS(counts_matrix, file = "/1_GTEx_Cervix_raw_counts.rds")
 
 # ===================== PART 2: TCGA-CESC ===================== #
 
@@ -100,7 +97,7 @@ head(unstranded[1:10, 1:3])
 # ===================== BUILD TCGA METADATA ===================== #
 
 # Load HPV distribution data
-HPV_TCGA <- vroom(file = "~/0_HPV_Distribution/1_1_HPV_Clade_Distrib.tsv")
+HPV_TCGA <- vroom(file = "~/CESC_Network_local/0_HPV_Distribution/1_1_HPV_Clade_Distrib.tsv")
 # dim(HPV_TCGA)  # [1] 275   5
 
 # Preview HPV metadata
@@ -124,7 +121,7 @@ Metadata <- Output_query_TCGA %>%
   )
 
 # Check dimensions
-# dim(Metadata)  # [1] 278   10
+#dim(Metadata)  # [1] 278   10
 
 # Check column names
 # colnames(Metadata)
@@ -137,7 +134,7 @@ unstranded_counts <- unstranded %>% dplyr::select(gene, all_of(Cases_metadata))
 
 # Check filtered dimensions
 # dim(unstranded)         # [1] 60660 308
-# dim(unstranded_counts)  # [1] 60660 279
+#dim(unstranded_counts)  # [1] 60660 279
 # Note: 29 samples likely HPV-negative and excluded
 
 # Optional check
@@ -152,14 +149,18 @@ CladeHPV_specimenID <- Metadata %>%
 # 68   202     3        5
 
 # ===================== SAVE FINAL OUTPUTS ===================== #
+#Save GTEX counts
+saveRDS(counts_matrix, file = "~/CESC_Network_local/1_Get_Data/1_3_GTEx_Cervix_raw_counts.rds")
 
 # Save TCGA metadata
 Metadata <- as_tibble(Metadata)
-vroom_write(Metadata, "1_2_Metadata.tsv", delim = "\t")
+vroom_write(Metadata, "~/CESC_Network_local/1_Get_Data/1_2_Metadata.tsv", delim = "\t")
 
 # Save count matrix (filtered)
 unstranded_counts <- as_tibble(unstranded_counts)
-vroom_write(unstranded_counts, "1_1_unstranded_counts.tsv", delim = "\t")
+vroom_write(unstranded_counts, "~/CESC_Network_local/1_Get_Data/1_1_unstranded_counts.tsv", delim = "\t")
 
 # Optionally save session
-# save.image(file = "0_Image_data_RNA.RData")
+#save.image(file = "~/CESC_Network_local/1_Get_Data/0_Image_data_RNA.RData")
+#load(file = "~/CESC_Network_local/1_Get_Data_TCGA/0_Image_data_RNA.RData")
+
