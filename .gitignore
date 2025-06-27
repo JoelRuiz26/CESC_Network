@@ -1,0 +1,58 @@
+# Ignore
+*
+
+# Pero permite estos archivos/directorios:
+!.gitignore
+!README*
+!*/           # permite explorar subcarpetas (no ignorarlas completamente)
+!*.R          # permite todos los scripts R (en cualquier carpeta)
+
+# (Opcional) permite scripts bash y markdown:
+#!*.sh
+#!*.md
+
+# (Opcional) permite carpetas específicas (si lo deseas)
+#!docs/
+#!config/
+
+# EXCLUYE archivos de datos comunes:
+*.RData
+*.rds
+*.tsv
+*.csv
+*.xlsx
+*.xls
+*.txt
+*.zip
+*.gz
+*.tar
+*.h5
+*.hdf5
+*.bam
+*.fastq
+*.fq
+*.sam
+*.vcf
+*.pdf
+*.png
+*.jpg
+*.jpeg
+*.tiff
+*.bed
+*.bw
+*.bigwig
+*.gtf
+*.gff
+*.json
+*.log
+*.out
+*.err
+*.bak
+.DS_Store
+
+# (Opcional) ignora carpetas temporales conocidas
+.Rproj.user/
+__pycache__/
+cache/
+tmp/
+temp/
