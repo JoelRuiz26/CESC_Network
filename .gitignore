@@ -1,21 +1,23 @@
-# Ignore
+# Ignore everything by default
 *
 
-# Pero permite estos archivos/directorios:
+# Allow Git to descend into subdirectories
+!*/
+
+# Track only specific files in any directory
 !.gitignore
 !README*
-!*/           # permite explorar subcarpetas (no ignorarlas completamente)
-!*.R          # permite todos los scripts R (en cualquier carpeta)
+!*.R
 
-# (Opcional) permite scripts bash y markdown:
+# (Optional) Allow bash and markdown scripts
 #!*.sh
 #!*.md
 
-# (Opcional) permite carpetas específicas (si lo deseas)
+# (Optional) Allow specific folders
 #!docs/
 #!config/
 
-# EXCLUYE archivos de datos comunes:
+# Explicitly ignore common data/bioinformatics file types
 *.RData
 *.rds
 *.tsv
@@ -50,9 +52,10 @@
 *.bak
 .DS_Store
 
-# (Opcional) ignora carpetas temporales conocidas
+# Ignore common temporary or metadata folders
 .Rproj.user/
 __pycache__/
 cache/
 tmp/
 temp/
+
