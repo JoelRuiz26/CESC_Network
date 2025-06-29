@@ -12,6 +12,8 @@ library(EDASeq)
 library(vroom)
 library(tidyverse)
 library(ggplot2)
+library(limma)
+
 # ===================== SEED FOR REPRODUCIBILITY ===================== #
 set.seed(123)
 # ===================== LOAD INPUT DATA ===================== #
@@ -243,10 +245,41 @@ table(myc_filteredd@dat$DiagnosticTest[, "Diagnostic Test"])
 #34    255
 
 # ===================== SOLVE BATCH EFFECT ===================== #
-ffTMMARSyn=ARSyNseq(noiseqData_filtered, factor = "source", batch = T,
-                    norm = "n",  logtransf = F)
+#Expression counts were preprocessed by GC and length bias correction (EDASeq) 
+#and TMM normalization (edgeR). No batch correction was applied at this stage, 
+#to retain covariance structure for network inference. 
+#Batch (source) was subsequently modeled as a covariate in the 
+#differential expression analysis using limma-trend, 
+#to adjust for cross-dataset differences without removing biological signal.
 
-myPCA_after = dat(ffTMMARSyn, type = "PCA", norm = T,logtransf = F)
+
+#“For variables highly confounded with biological groups,
+#batch correction should be done at the model stage (as a covariate), 
+#not as data correction beforehand.” (Leek et al., 2010; Law et al., 2014)
+
+#Batch correction with limma::removeBatchEffect was applied to reduce source-related bias 
+#while adjusting for sample_type. Given the confounding between batch and biology, 
+#biological contrasts may be partially attenuated.
+
+# log2-transform TMM-normalized counts
+expr_logCPM <- log2(fullfullTMM + 0.5)
+
+# Correct batch using limma::removeBatchEffect
+# We adjust batch (source) while preserving sample_type biological signal
+expr_batchcorrected <- removeBatchEffect(
+  expr_logCPM,
+  batch = factors$source,
+  design = model.matrix(~ sample_type, data = factors)
+)
+
+#ffTMMARSyn=ARSyNseq(noiseqData_filtered, factor = "HPV_clade", batch = F,
+#                    norm = "n",  logtransf = F)
+
+noiseqData_batch = NOISeq::readData(data = expr_batchcorrected, 
+                                       factors=factors)
+
+myPCA_after = dat(noiseqData_batch  , type = "PCA", norm = T,logtransf = T)
+
 
 pdf("plots_prepro_data/QC_PCA_scores_HPVclade_after.pdf", width = 8, height = 6)
 explo.plot(myPCA_after, plottype = "scores", factor = "source")
@@ -261,7 +294,7 @@ mylength_n <- setNames(myannot_filtered$length, myannot_filtered$feature)
 mygcn_n <- setNames(myannot_filtered$percentage_gene_gc_content, myannot_filtered$feature)
 mybiotype_n <- setNames(myannot_filtered$gene_biotype, myannot_filtered$feature)
 
-noiseqData_norm = NOISeq::readData(data = exprs(ffTMMARSyn), 
+noiseqData_norm = NOISeq::readData(data = expr_batchcorrected, 
                                    factors=factors,
                                    gc = mygcn_n,
                                    biotype = mybiotype_n,
@@ -377,10 +410,13 @@ dev.off()
 mycd_norm<- dat(noiseqData_norm, type = "cd", norm = TRUE)
 # Verify diagnostic
 table(mycd_norm@dat$DiagnosticTest[, "Diagnostic Test"])
-#FAILED PASSED #source b=T  (I've used this)
+#FAILED PASSED #source b=T  
 #25    264 
-#FAILED PASSED #b=F HPV_clade
+#FAILED PASSED #b=F HPV_clade 
 #68    221 
+
+#FAILED PASSED    limma corrected (I've used this)
+# 67    222 
 
 pdf("plots_prepro_data/QC_Mvalues_mycd_after.pdf", width = 10, height = 6)
 par(mar = c(5, 4, 4, 2) - 1)
@@ -399,7 +435,7 @@ explo.plot(myPCA_sample_after, plottype= "scores", factor = "source")
 dev.off()
 
 # ===================== SAVE FINAL  ===================== #
-Final_SNT_vs_PP <- exprs(ffTMMARSyn) %>% as.data.frame()
+Final_SNT_vs_PP <- expr_batchcorrected %>% as.data.frame()
 Final_SNT_vs_PP$Gene <- rownames(Final_SNT_vs_PP)  #Add column for input ARACNE
 Final_SNT_vs_PP <- Final_SNT_vs_PP[, c(ncol(Final_SNT_vs_PP), 1:(ncol(Final_SNT_vs_PP)-1))]  
 dim(Final_SNT_vs_PP) #[1] 11544   291
@@ -440,5 +476,5 @@ vroom::vroom_write(Final_A9_NW,
                    file = "~/CESC_Network/2_Prepro_TCGA_GTEx/2_8_Full_counts_A9_annot.tsv", 
                    delim = "\t")
 
-save.image("~/CESC_Network/2_Prepro_TCGA_GTEx/2_9_Image_Post_Prepro.RData")
+#save.image("~/CESC_Network/2_Prepro_TCGA_GTEx/2_9_Image_Post_Prepro.RData")
 #load("~/CESC_Network/2_Prepro_TCGA_GTEx/2_9_Image_Post_Prepro.RData")
