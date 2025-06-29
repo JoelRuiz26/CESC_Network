@@ -10,7 +10,7 @@
 !*.R
 
 # (Optional) Allow bash and markdown scripts
-#!*.sh
+!*.sh
 #!*.md
 
 # (Optional) Allow specific folders
