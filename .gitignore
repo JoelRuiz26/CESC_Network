@@ -50,6 +50,8 @@
 *.out
 *.err
 *.bak
+*.sif
+*.sort
 .DS_Store
 
 # Ignore common temporary or metadata folders
@@ -59,3 +61,4 @@ cache/
 tmp/
 temp/
 
+ARACNE-multicore/
