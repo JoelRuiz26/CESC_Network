@@ -3,9 +3,8 @@
 # Author: Joel Ruiz Hernandez
 # Contact: josejoelruizhernandez@gmail.com
 # =========================================================== #
-setwd("~/CESC_Network_local/2_Prepro_TCGA_GTEx/")
+setwd("~/CESC_Network/2_Prepro_TCGA_GTEx/")
 # ===================== LOAD REQUIRED LIBRARIES ===================== #
-
 library(biomaRt)
 library(NOISeq)
 library(edgeR)
@@ -13,19 +12,17 @@ library(EDASeq)
 library(vroom)
 library(tidyverse)
 library(ggplot2)
-
 # ===================== SEED FOR REPRODUCIBILITY ===================== #
 set.seed(123)
-
 # ===================== LOAD INPUT DATA ===================== #
-factors <- readRDS(file = "~/CESC_Network_local/1_Get_Data/2_Harmoni_metadata_TCGA_GTEx.rds")
+factors <- readRDS(file = "~/CESC_Network/1_Get_Data/2_Harmoni_metadata_TCGA_GTEx.rds")
 dim(factors) #[1] 290   8
 colnames(factors) 
 #[1] "specimenID"         "source"             "cases.submitter_id"
 #[4] "sample_type"        "figo_stage"         "primary_diagnosis" 
 #[7] "HPV_type"           "HPV_clade"  
 
-unstranded_counts <- readRDS(file = "~/CESC_Network_local/1_Get_Data/2_Harmoni_counts_TCGA_GTEx.rds")
+unstranded_counts <- readRDS(file = "~/CESC_Network/1_Get_Data/2_Harmoni_counts_TCGA_GTEx.rds")
 dim(unstranded_counts) #[1] 56033   291
 
 # ===================== CLEAN AND ANNOTATE DATA ===================== #
@@ -88,10 +85,9 @@ noiseqData_before <- NOISeq::readData(
   factors = factors,
   gc = mygc,
   biotype = mybiotype,
-  length = mylength
-)
+  length = mylength)
 
-#saveRDS(noiseqData_before, file = "~/CESC_Network_local/2_Prepro_TCGA_GTEx/noiseq_before.rds")
+#saveRDS(noiseqData_before, file = "~/CESC_Network/2_Prepro_TCGA_GTEx/2_2_Noiseq_before.rds")
 
 # =====================  IDENTIFY QUALITY CONTROL ===================== #
 ### 3) Quality control of count data--- ---
@@ -222,8 +218,8 @@ stopifnot(all(rownames(factors) == colnames(counts_filtered)))
 mydataEDA <- newSeqExpressionSet(
   counts = as.matrix(counts_filtered),
   featureData = AnnotatedDataFrame(data = myannot_filtered),
-  phenoData = AnnotatedDataFrame(data = factors)
-)
+  phenoData = AnnotatedDataFrame(data = factors))
+
 #order for less bias
 lFull <- withinLaneNormalization(mydataEDA, "length", which = "full")#corrects length bias 
 gcFull <- withinLaneNormalization(lFull, 
@@ -246,9 +242,7 @@ table(myc_filteredd@dat$DiagnosticTest[, "Diagnostic Test"])
 #FAILED PASSED 
 #34    255
 
-
 # ===================== SOLVE BATCH EFFECT ===================== #
-
 ffTMMARSyn=ARSyNseq(noiseqData_filtered, factor = "source", batch = T,
                     norm = "n",  logtransf = F)
 
@@ -276,37 +270,28 @@ noiseqData_norm = NOISeq::readData(data = exprs(ffTMMARSyn),
 #  _2 = second ARSyNseq (factor = source, batch= T, + factor = HPV_clade, batch = F) 
 #ffTMMARSyn_norm=ARSyNseq(noiseqData_norm, factor = "HPV_clade", batch = F,
 #                    norm = "n",  logtransf = F)
-
 #noiseqData_norm_2 = NOISeq::readData(data = exprs(ffTMMARSyn_norm), 
 #                                   factors=factors,
 #                                   gc = mygcn_n,
 #                                   biotype = mybiotype_n,
 #                                   length = mylength_n)
-
-myPCA_after_2 = dat(ffTMMARSyn_norm, type = "PCA", norm = T,logtransf = F)
-
-pdf("plots_prepro_data/QC_PCA_scores_HPVclade_after_2.pdf", width = 8, height = 6)
-explo.plot(myPCA_after_2, plottype = "scores", factor = "source")
-dev.off()
-
-pdf("plots_prepro_data/QC_PCA_scores_source_after_2.pdf", width = 8, height = 6)
-explo.plot(myPCA_after_2, plottype = "scores", factor = "HPV_clade")
-dev.off()
-
-
+#myPCA_after_2 = dat(ffTMMARSyn_norm, type = "PCA", norm = T,logtransf = F)
+#pdf("plots_prepro_data/QC_PCA_scores_HPVclade_after_2.pdf", width = 8, height = 6)
+#explo.plot(myPCA_after_2, plottype = "scores", factor = "source")
+#dev.off()
+#pdf("plots_prepro_data/QC_PCA_scores_source_after_2.pdf", width = 8, height = 6)
+#explo.plot(myPCA_after_2, plottype = "scores", factor = "HPV_clade")
+#dev.off()
 # 3.3.3) RNA composition
-mycd_norm_2 <- dat(noiseqData_norm_2, type = "cd", norm = TRUE)
+#mycd_norm_2 <- dat(noiseqData_norm_2, type = "cd", norm = TRUE)
 # Verify diagnostic
-table(mycd_norm_2@dat$DiagnosticTest[, "Diagnostic Test"])
+#table(mycd_norm_2@dat$DiagnosticTest[, "Diagnostic Test"])
 #FAILED PASSED bind #b=T source and #b=F HPV_clade
 #51    238 
 
-
 # ===================== IDENTIFY QUALITY CONTROL AFTER NORMALIZATION ===================== #
 ### 3) Quality control of count data--- ---
-
 # 3.2) Sequencing depth & Expression Quantification
-
 # 3.2.1) Count distribution per sample
 pdf("plots_prepro_data/QC_boxplot_counts_after.pdf", width = 8, height = 6)
 mycountsbio_HPV = NOISeq::dat(noiseqData_norm, type = "countsbio", factor = "HPV_clade", norm = TRUE)
@@ -343,10 +328,8 @@ hist(log_cpm_means,
 dev.off()
 
 # 3.3) Sequencing bias detection
-
 # 3.3.1) Length bias
 mylengthbias_SampleType = NOISeq::dat(noiseqData_norm, factor = "HPV_clade", type = "lengthbias", norm = TRUE)
-
 pdf("plots_prepro_data/QC_length_bias_global_after.pdf", width = 8, height = 6)
 par(cex.axis=1.5, cex.lab=1.5, cex.main=2)
 explo.plot(mylengthbias_SampleType, samples = NULL, toplot = "global")
@@ -394,7 +377,7 @@ dev.off()
 mycd_norm<- dat(noiseqData_norm, type = "cd", norm = TRUE)
 # Verify diagnostic
 table(mycd_norm@dat$DiagnosticTest[, "Diagnostic Test"])
-#FAILED PASSED #source b=T  (I used this)
+#FAILED PASSED #source b=T  (I've used this)
 #25    264 
 #FAILED PASSED #b=F HPV_clade
 #68    221 
@@ -407,7 +390,6 @@ dev.off()
 
 # 3.4) PCA
 myPCA_sample_after = dat(noiseqData_norm, type = "PCA", norm = TRUE, logtransf = FALSE)
-
 pdf("plots_prepro_data/QC_PCA_scores_HPVclade_after.pdf", width = 8, height = 6)
 explo.plot(myPCA_sample_after, plottype= "scores", factor = "HPV_clade")
 dev.off()
@@ -416,51 +398,47 @@ pdf("plots_prepro_data/QC_PCA_scores_source_after.pdf", width = 8, height = 6)
 explo.plot(myPCA_sample_after, plottype= "scores", factor = "source")
 dev.off()
 
-
 # ===================== SAVE FINAL  ===================== #
-
 Final_SNT_vs_PP <- exprs(ffTMMARSyn) %>% as.data.frame()
-Final_SNT_vs_PP$Gene <- rownames(Final_SNT_vs_PP)  # copiar rownames a columna Gene
+Final_SNT_vs_PP$Gene <- rownames(Final_SNT_vs_PP)  #Add column for input ARACNE
 Final_SNT_vs_PP <- Final_SNT_vs_PP[, c(ncol(Final_SNT_vs_PP), 1:(ncol(Final_SNT_vs_PP)-1))]  
+dim(Final_SNT_vs_PP) #[1] 11544   291
 
-# Guardar matriz completa
-vroom::vroom_write(Final_SNT_vs_PP, file = "~/2_Prepro_Data_TCGA/1_Full_counts_A7_A9_t.tsv", delim = "\t")
-
-# Guardar metadatos sincronizados
-vroom::vroom_write(factors, file = "~/2_Prepro_Data_TCGA/1_Factors.tsv", delim = "\t")
+# Save full matrix
+vroom::vroom_write(Final_SNT_vs_PP, file = "~/CESC_Network/2_Prepro_TCGA_GTEx/2_3_Full_counts_A7_A9_notAnot_11544.tsv", delim = "\t")
+# Save metadata
+vroom::vroom_write(factors, file = "~/CESC_Network/2_Prepro_TCGA_GTEx/2_4_Factors.tsv", delim = "\t")
 #Save annotation
-vroom::vroom_write(myannot_filtered, file = "~/2_Prepro_Data_TCGA/1_Myannot.tsv", delim = "\t")
+vroom::vroom_write(myannot_filtered, file = "~/CESC_Network/2_Prepro_TCGA_GTEx/2_5_Myannot.tsv", delim = "\t")
 
-# Subconjunto A7
+# Matrix annoted
+Final_SNT_vs_PP$HGNC_symbol <- myannot_filtered$hgnc_symbol[match(Final_SNT_vs_PP$Gene, myannot_filtered$feature)]
+Final_SNT_vs_PP_annot <- Final_SNT_vs_PP %>% filter(!is.na(HGNC_symbol) & HGNC_symbol != "")
+Final_SNT_vs_PP_annot <- Final_SNT_vs_PP_annot %>%
+  dplyr::select(HGNC_symbol, everything(), -Gene) %>%
+  dplyr::rename(Gene = HGNC_symbol)
+rownames(Final_SNT_vs_PP_annot) <- Final_SNT_vs_PP_annot$Gene
+
+# Save matrix annoted
+vroom::vroom_write(Final_SNT_vs_PP_annot,
+                   file = "~/CESC_Network/2_Prepro_TCGA_GTEx/2_6_Full_counts_A7_A9_annot.tsv",
+                   delim = "\t")
+
+# Save A7 for network
 Factors_A7 <- factors %>% filter(HPV_clade == "A7_clade")
-Final_A7_NW <- Final_SNT_vs_PP %>%
+Final_A7_NW <- Final_SNT_vs_PP_annot %>%
   dplyr::select(Gene, all_of(Factors_A7$specimenID))
-vroom::vroom_write(Final_A7_NW, file = "~/2_Prepro_Data_TCGA/1_Final_A7_NW_t.tsv", delim = "\t")
+vroom::vroom_write(Final_A7_NW, 
+                   file = "~/CESC_Network/2_Prepro_TCGA_GTEx/2_7_Full_counts_A7_annot.tsv", 
+                   delim = "\t")
 
-# Subconjunto A9
+# Save A9 for network
 Factors_A9 <- factors %>% filter(HPV_clade == "A9_clade")
-Final_A9_NW <- Final_SNT_vs_PP %>%
+Final_A9_NW <- Final_SNT_vs_PP_annot %>%
   dplyr::select(Gene, all_of(Factors_A9$specimenID))
-vroom::vroom_write(Final_A9_NW, file = "~/2_Prepro_Data_TCGA/1_Final_A9_NW_t.tsv", delim = "\t")
+vroom::vroom_write(Final_A9_NW, 
+                   file = "~/CESC_Network/2_Prepro_TCGA_GTEx/2_8_Full_counts_A9_annot.tsv", 
+                   delim = "\t")
 
-#save.image("~/2_Prepro_Data_TCGA/2_Image_Post_Prepro.RData")
-
-
-
-
-
-
-
-
-# Añadir anotación HGNC y colapsar (ejemplo usando suma, puedes cambiar a mean si tienes justificación)
-counts_hgnc <- counts %>%
-  mutate(hgnc_symbol = myannot$hgnc_symbol[match(rownames(counts), myannot$feature)]) %>%
-  filter(hgnc_symbol != "" & !is.na(hgnc_symbol)) %>%
-  group_by(hgnc_symbol) %>%
-  summarise(across(where(is.numeric), sum, na.rm = TRUE), .groups = "drop") 
-
-# Poner los rownames como HGNC
-counts_hgnc <- as.data.frame(counts_hgnc)
-rownames(counts_hgnc) <- counts_hgnc$hgnc_symbol
-counts_hgnc$hgnc_symbol <- NULL
-
+save.image("~/CESC_Network/2_Prepro_TCGA_GTEx/2_9_Image_Post_Prepro.RData")
+#load("~/CESC_Network/2_Prepro_TCGA_GTEx/2_9_Image_Post_Prepro.RData")
