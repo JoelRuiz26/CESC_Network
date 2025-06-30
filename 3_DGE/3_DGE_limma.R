@@ -7,15 +7,18 @@
 # - Normalized (GC, length, TMM)
 # - Log2-transformed
 # - Batch-corrected for source while preserving sample_type
+
 # =========================================================== #
 
 # ===================== LOAD REQUIRED LIBRARIES ===================== #
+
 library(limma)
 library(vroom)
 library(ggplot2)
 library(dplyr)
 
 # ===================== SET WORKING DIRECTORY ===================== #
+
 setwd("~/CESC_Network/3_DGE/")
 
 # ===================== LOAD DATA ===================== #
@@ -50,7 +53,7 @@ fit2 <- contrasts.fit(fit, contrast.matrix)
 fit2 <- eBayes(fit2)
 
 # ===================== THRESHOLDS ===================== #
-fdr_threshold <- 0.05
+fdr_threshold <- 0.01
 logfc_threshold <- 1
 
 # ===================== MAKE OUTPUT FOLDER FOR PLOTS ===================== #
@@ -87,14 +90,14 @@ A7_DEGs$Regulation <- ifelse(A7_DEGs$logFC >= logfc_threshold, "Upregulated", "D
 volcano_colors <- c("Upregulated" = "red", "Downregulated" = "blue")
 
 pdf("plots_DGE/VolcanoPlot_A7_vs_SNT.pdf", width=8, height=6)
-ggplot(top_A7, aes(x=logFC, y=-log10(P.Value))) +
+ggplot(top_A7, aes(x=logFC, y=-log10(adj.P.Val))) +
   geom_point(alpha=0.4, color="gray80") +
   geom_point(data=A7_DEGs, aes(color=Regulation), alpha=0.8, size=2) +
   scale_color_manual(values=volcano_colors) +
   theme_bw(base_size=18) +
   labs(title="Volcano Plot: A7 vs SNT",
        x="log2 Fold Change",
-       y="-log10 P-Value",
+       y="-log10 Adjusted P-Value (FDR)",
        color="Regulation") +
   geom_vline(xintercept=c(-logfc_threshold, logfc_threshold), linetype="dashed") +
   geom_hline(yintercept=-log10(fdr_threshold), linetype="dashed")
@@ -129,15 +132,20 @@ write.table(A9_Down, "3_4_1_DGE_A9_vs_SNT_Downregulated.tsv", sep="\t", quote=FA
 A9_DEGs$Regulation <- ifelse(A9_DEGs$logFC >= logfc_threshold, "Upregulated", "Downregulated")
 
 pdf("plots_DGE/VolcanoPlot_A9_vs_SNT.pdf", width=8, height=6)
-ggplot(top_A9, aes(x=logFC, y=-log10(P.Value))) +
+ggplot(top_A9, aes(x=logFC, y=-log10(adj.P.Val))) +
   geom_point(alpha=0.4, color="gray80") +
   geom_point(data=A9_DEGs, aes(color=Regulation), alpha=0.8, size=2) +
   scale_color_manual(values=volcano_colors) +
   theme_bw(base_size=18) +
   labs(title="Volcano Plot: A9 vs SNT",
        x="log2 Fold Change",
-       y="-log10 P-Value",
+       y="-log10 Adjusted P-Value (FDR)",
        color="Regulation") +
   geom_vline(xintercept=c(-logfc_threshold, logfc_threshold), linetype="dashed") +
   geom_hline(yintercept=-log10(fdr_threshold), linetype="dashed")
 dev.off()
+
+
+#Smyth 2015
+#https://pmc.ncbi.nlm.nih.gov/articles/PMC4402510/#:~:text=overcome%20the%20problem%20of%20small,Recently
+#Es el método recomendado en Bioconductor para datos ya transformados/log2CPM.
