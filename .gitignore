@@ -52,6 +52,11 @@
 *.bak
 *.sif
 *.sort
+*.css
+*.map
+*.js
+*.scss
+*.txt
 .DS_Store
 
 # Ignore common temporary or metadata folders
