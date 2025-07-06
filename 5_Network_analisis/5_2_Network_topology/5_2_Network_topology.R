@@ -8,8 +8,8 @@
 pacman::p_load("igraph", "tidyverse", "ggraph", "tidygraph", "svglite", "ggvenn")
 
 ### Load graphs ###
-Subgraph_A7 <- read_graph('~/5_Global_Analisis/1_Subnetworks/1_Subnetwork_A7.graphml', format = 'graphml') #6469
-Subgraph_A9 <- read_graph('~/5_Global_Analisis/1_Subnetworks/1_Subnetwork_A9.graphml', format = 'graphml') #6428
+Subgraph_A7 <- readRDS('~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_1_2_2_Subnetwork_A7_common.rds')
+Subgraph_A9 <- readRDS('~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_1_2_2_Subnetwork_A9_common.rds')
 
 
 ### Build graphs to be comparable ###
@@ -20,13 +20,13 @@ nodes_A9 <- V(Subgraph_A9)$name
 missing_in_A7 <- setdiff(nodes_A9, nodes_A7) #1499
 missing_in_A9 <- setdiff(nodes_A7, nodes_A9) #1540
 #Add missing nodes
-graph_A7_add <- add_vertices(Subgraph_A7, nv = length(missing_in_A7), name = missing_in_A7) #7968
-graph_A9_add <- add_vertices(Subgraph_A9, nv = length(missing_in_A9), name = missing_in_A9) #7968
+#graph_A7_add <- add_vertices(Subgraph_A7, nv = length(missing_in_A7), name = missing_in_A7) #7968
+#graph_A9_add <- add_vertices(Subgraph_A9, nv = length(missing_in_A9), name = missing_in_A9) #7968
 #Verify
 #print(all(sort(V(graph_A7_add)$name) == sort(V(graph_A9_add)$name))) #[1] TRUE
 #Save graphs (Output 1)
-write_graph(graph_A7_add, '~/5_Global_Analisis/2_Parameters_Global/2_Subnetwork_A7_added.graphml', format = 'graphml')
-write_graph(graph_A9_add, '~/5_Global_Analisis/2_Parameters_Global/2_Subnetwork_A9_added.graphml', format = 'graphml')
+#write_graph(graph_A7_add, '~/5_Global_Analisis/2_Parameters_Global/2_Subnetwork_A7_added.graphml', format = 'graphml')
+#write_graph(graph_A9_add, '~/5_Global_Analisis/2_Parameters_Global/2_Subnetwork_A9_added.graphml', format = 'graphml')
 
 
 ### Prepare data and functions  ###
