@@ -8,8 +8,8 @@
 pacman::p_load("igraph", "tidyverse", "ggraph", "tidygraph", "svglite", "ggvenn")
 
 ### Load graphs ###
-Subgraph_A7 <- readRDS('~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_1_2_2_Subnetwork_A7_common.rds')
-Subgraph_A9 <- readRDS('~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_1_2_2_Subnetwork_A9_common.rds')
+Subgraph_A7 <- readRDS('~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_1_2_2_Subnetwork_A7_600k.rds')
+Subgraph_A9 <- readRDS('~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_1_2_2_Subnetwork_A9_600k.rds')
 
 
 ### Build graphs to be comparable ###
@@ -17,8 +17,8 @@ Subgraph_A9 <- readRDS('~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_1_2_2
 nodes_A7 <- V(Subgraph_A7)$name
 nodes_A9 <- V(Subgraph_A9)$name
 #Missing nodes each one
-missing_in_A7 <- setdiff(nodes_A9, nodes_A7) #1499
-missing_in_A9 <- setdiff(nodes_A7, nodes_A9) #1540
+missing_in_A7 <- setdiff(nodes_A9, nodes_A7) #219
+missing_in_A9 <- setdiff(nodes_A7, nodes_A9) #526
 #Add missing nodes
 #graph_A7_add <- add_vertices(Subgraph_A7, nv = length(missing_in_A7), name = missing_in_A7) #7968
 #graph_A9_add <- add_vertices(Subgraph_A9, nv = length(missing_in_A9), name = missing_in_A9) #7968
@@ -31,7 +31,7 @@ missing_in_A9 <- setdiff(nodes_A7, nodes_A9) #1540
 
 ### Prepare data and functions  ###
 #Make list
-graphLists <- list("HPV-A7" = graph_A7_add, "HPV-A9" = graph_A9_add)
+graphLists <- list("HPV-A7" = Subgraph_A7, "HPV-A9" = Subgraph_A9)
 # Seed
 set.seed(123)
 #Functions
@@ -59,8 +59,8 @@ topological_metrics <- lapply(graphLists, function(graph) { #Topological metrics
 
 ### Results ###
 #Jaccard index
-NodesJaccard <- jaccard_nodes(graph_A7_add, graph_A9_add) #Must be 1
-EdgesJaccard <- jaccard_edges(graph_A7_add, graph_A9_add) # 0.24536
+NodesJaccard <- jaccard_nodes(Subgraph_A7, Subgraph_A9) # 0.93454
+EdgesJaccard <- jaccard_edges(Subgraph_A7, Subgraph_A9) # 0.19949
 #Topological table
 topological_metrics_df <- bind_rows(topological_metrics, .id = "network") %>%
   mutate(
@@ -71,26 +71,28 @@ t_topological_metrics <- topological_metrics_df %>% dplyr::select(1:6,jaccard_no
 colnames(t_topological_metrics) <- c("VPH-A7","VPH-A9")
 t_topological_metrics <- t_topological_metrics %>% dplyr::slice(-1)
           #print(t_topological_metrics)
-          #VPH-A7    VPH-A9
-          #Numero_de_nodos                       7968      7968
-          #Componentes_conectados                1826      1839
-          #Grado_promedio                    6.647841  9.922691
-          #Coeficiente_de_agrupamiento      0.3682372 0.5114216
-          #Asortatividad                    0.5481564 0.6186316
-          #jaccard_nodes                            1         1
-          #jaccard_edges                    0.2453688 0.2453688
-          #Tamano_del_componente_principal       5679      5677
-          #Porcentaje_componente_principal   71.27259  71.24749
-          #Diametro                          6.610542  6.061504
-          #Longitud_promedio_caminos_cortos  1.849803  1.774362
+#                                    VPH-A7    VPH-A9
+#Numero_de_nodos                      11162     10855
+#Componentes_conectados                   8         9
+#Grado_promedio                    107.5076  110.5481
+#Coeficiente_de_agrupamiento      0.3087146 0.4170420
+#Asortatividad                    0.2869697 0.2666389
+#jaccard_nodes                      0.93454   0.93454
+#jaccard_edges                    0.1994986 0.1994986
+#Tamano_del_componente_principal      11148     10839
+#Porcentaje_componente_principal   99.87457  99.85260
+#Diametro                                10         9
+#Longitud_promedio_caminos_cortos  3.038151  3.019805
+
+
 # Save tsv (Output 2)
-vroom::vroom_write(t_topological_metrics, "~/5_Global_Analisis/2_Parameters_Global/2_Toplogical_features_A7A9_added.tsv")
+vroom::vroom_write(t_topological_metrics, "~/CESC_Network/5_Network_analisis/5_2_Network_topology/5_2_1_Toplogical_features_A7A9.tsv")
 
 
 ### Venn Diagram  ###
 #Edges each graph
-edges_A7 <- apply(as_edgelist(graph_A7_add), 1, function(e) paste(sort(e), collapse = "-"))
-edges_A9 <- apply(as_edgelist(graph_A9_add), 1, function(e) paste(sort(e), collapse = "-"))
+edges_A7 <- apply(as_edgelist(Subgraph_A7), 1, function(e) paste(sort(e), collapse = "-"))
+edges_A9 <- apply(as_edgelist(Subgraph_A9), 1, function(e) paste(sort(e), collapse = "-"))
 list_edges <- list("HPV-A7" = edges_A7, "HPV-A9" = edges_A9)
 # Plot
 VennPlot <- ggvenn(list_edges,
@@ -102,8 +104,6 @@ VennPlot <- ggvenn(list_edges,
                   show_percentage = FALSE)
 print(VennPlot)
 # Save graph (Output 3)
-ggsave(filename = "~/5_Global_Analisis/2_Parameters_Global/2_VennDiagram_edges.png",
+ggsave(filename = "~/CESC_Network/5_Network_analisis/5_2_Network_topology/5_2_2_VennDiagram_edges.png",
         plot = VennPlot,
         width = 8, height = 8, dpi = 300)
-#Save Image
-save.image(file = "~/5_Global_Analisis/2_Parameters_Global/2_Image_Network_Topology.RData")

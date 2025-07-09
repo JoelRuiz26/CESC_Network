@@ -64,6 +64,9 @@ rownames(counts) <- counts$gene
 counts <- counts %>% dplyr::select(-gene)
 dim(counts) #[1] 39750   290
 
+#save for enrichment
+#saveRDS(myannot, file = "~/CESC_Network/2_Prepro_TCGA_GTEx/2_10_Universe_annotation_table.rds")
+
 # ========== SYNC DATA ========== #
 factors <- factors %>% filter(specimenID %in% colnames(counts)) %>% as.data.frame()
 counts  <- counts[, factors$specimenID, drop = FALSE] 

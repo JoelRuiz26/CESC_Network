@@ -1,4 +1,3 @@
-# --------------------------------------------------------
 # Find minimum giant component with max mutual information 
 # in Cervical Cancer Co-expression Networks
 # Author: Joel Ruiz Hernandez
@@ -28,7 +27,8 @@ library(ggplot2)
 # --------------------------------------------------------
 # Load precomputed maximum cutoff value from .rds
 # --------------------------------------------------------
-max_cutoff_links <- readRDS("~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_1_1_Max_cutoff_links.rds")
+#max_cutoff_links <- readRDS("~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_1_1_Max_cutoff_links.rds")
+max_cutoff_links <- 50000
 cat("\nLoaded max_cutoff_links from RDS:", max_cutoff_links, "\n")
 
 # --------------------------------------------------------
@@ -37,12 +37,12 @@ cat("\nLoaded max_cutoff_links from RDS:", max_cutoff_links, "\n")
 A7_Full <- vroom(
   file = "~/CESC_Network/4_Network/ARACNE-multicore/launch/2_7_Full_counts_A7_annot.sort",
   col_names = c("GenA", "GenB", "MI")
-) %>% na.omit()
+) %>% na.omit() %>% dplyr::slice(1:5000000)
 
 A9_Full <- vroom(
   file = "~/CESC_Network/4_Network/ARACNE-multicore/launch/2_8_Full_counts_A9_annot.sort",
   col_names = c("GenA", "GenB", "MI")
-) %>% na.omit()
+) %>% na.omit() %>% dplyr::slice(1:5000000)
 
 # --------------------------------------------------------
 # Function to compute network growth metrics
@@ -140,8 +140,8 @@ GC_graph_elbow_common <- ggplot() +
 # print(GC_graph_elbow_common)
 
 # Save the figure
- ggsave(filename = "~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_1_2_1_GC_graph_elbow_common.png",
-        plot = GC_graph_elbow_common, width = 12, height = 8, dpi = 300)
+ggsave(filename = "~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_1_2_1_GC_graph_elbow_common.png",
+       plot = GC_graph_elbow_common, width = 12, height = 8, dpi = 300)
 
 # --------------------------------------------------------
 # Export subnetworks at common cutoff
