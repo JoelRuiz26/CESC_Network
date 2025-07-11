@@ -7,8 +7,8 @@ library(tidyverse)
 ### ========================
 ### Cargar grafos originales
 ### ========================
-graph_A7 <- readRDS("~/CESC_Network/7_Modularity/7_1_1_Louvain_A7_graph.rds")
-graph_A9 <- readRDS("~/CESC_Network/7_Modularity/7_1_1_Louvain_A9_graph.rds")
+graph_A7 <- readRDS("~/CESC_Network/7_Modularity/7_1_Louvain/7_1_1_Louvain_A7_graph.rds")
+graph_A9 <- readRDS("~/CESC_Network/7_Modularity/7_1_Louvain/7_1_1_Louvain_A9_graph.rds")
 
 ### ========================
 ### FUNCION para crear metared
@@ -108,13 +108,13 @@ community_graph_A9 <- build_community_network(graph_A9)
 ### ========================
 ### Guardar en RDS
 ### ========================
-saveRDS(community_graph_A7, "~/CESC_Network/7_Modularity/7_4_1_Community_Graph_A7.rds")
-saveRDS(community_graph_A9, "~/CESC_Network/7_Modularity/7_4_1_Community_Graph_A9.rds")
+saveRDS(community_graph_A7, "~/CESC_Network/7_Modularity/7_3_Module_Graph/7_3_1_Community_Graph_A7.rds")
+saveRDS(community_graph_A9, "~/CESC_Network/7_Modularity/7_3_Module_Graph/7_3_1_Community_Graph_A9.rds")
 
 ### ========================
 ### Exportar en GraphML
 ### ========================
-write_graph(community_graph_A7, "~/CESC_Network/7_Modularity/7_4_2_Community_Graph_A7.graphml", format = "graphml")
-write_graph(community_graph_A9, "~/CESC_Network/7_Modularity/7_4_2_Community_Graph_A9.graphml", format = "graphml")
+write_graph(community_graph_A7, "~/CESC_Network/7_Modularity/7_3_Module_Graph/7_3_2_Community_Graph_A7.graphml", format = "graphml")
+write_graph(community_graph_A9, "~/CESC_Network/7_Modularity/7_3_Module_Graph/7_3_2_Community_Graph_A9.graphml", format = "graphml")
 
 message("✅ All done!")

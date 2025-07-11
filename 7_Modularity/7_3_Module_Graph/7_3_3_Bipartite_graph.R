@@ -8,14 +8,14 @@ library(vroom)
 ### ========================
 ### 1️⃣ Cargar metaredes desde RDS
 ### ========================
-community_graph_A7 <- readRDS("~/CESC_Network/7_Modularity/7_4_1_Community_Graph_A7.rds")
-community_graph_A9 <- readRDS("~/CESC_Network/7_Modularity/7_4_1_Community_Graph_A9.rds")
+community_graph_A7 <- readRDS("~/CESC_Network/7_Modularity/7_3_Module_Graph/7_3_1_Community_Graph_A7.rds")
+community_graph_A9 <- readRDS("~/CESC_Network/7_Modularity/7_3_Module_Graph/7_3_1_Community_Graph_A9.rds")
 
 ### ========================
 ### 2️⃣ Cargar tablas ORA
 ### ========================
-ora_A7 <- vroom("~/CESC_Network/7_Modularity/7_2_1_Ora7_600k.tsv")
-ora_A9 <- vroom("~/CESC_Network/7_Modularity/7_2_1_Ora9_600k.tsv")
+ora_A7 <- vroom("~/CESC_Network/7_Modularity/7_2_ORA/7_2_1_Ora7_600k.tsv")
+ora_A9 <- vroom("~/CESC_Network/7_Modularity/7_2_ORA/7_2_1_Ora9_600k.tsv")
 
 ### ========================
 ### 3️⃣ Función para construir red combinada
@@ -117,6 +117,6 @@ combined_graph_A9 <- build_combined_enrichment_network(ora_A9, community_graph_A
 ### ========================
 ### 5️⃣ Guardar en GraphML
 ### ========================
-write_graph(combined_graph_A7, "~/CESC_Network/7_Modularity/7_5_1_Bipartite_Enrichment_A7.graphml", format = "graphml")
-write_graph(combined_graph_A9, "~/CESC_Network/7_Modularity/7_5_1_Bipartite_Enrichment_A9.graphml", format = "graphml")
+write_graph(combined_graph_A7, "~/CESC_Network/7_Modularity/7_3_Module_Graph/7_3_4_Bipartite_Enrichment_A7.graphml", format = "graphml")
+write_graph(combined_graph_A9, "~/CESC_Network/7_Modularity/7_3_Module_Graph/7_3_4_Bipartite_Enrichment_A9.graphml", format = "graphml")
 message("✅ All done! Combined GraphML files created.")

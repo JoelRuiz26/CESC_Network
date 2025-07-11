@@ -28,7 +28,7 @@ library(ggplot2)
 # Load precomputed maximum cutoff value from .rds
 # --------------------------------------------------------
 #max_cutoff_links <- readRDS("~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_1_1_Max_cutoff_links.rds")
-max_cutoff_links <- 50000
+max_cutoff_links <- 700000
 cat("\nLoaded max_cutoff_links from RDS:", max_cutoff_links, "\n")
 
 # --------------------------------------------------------

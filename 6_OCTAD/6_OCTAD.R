@@ -164,6 +164,65 @@ dim(result_A9_0.2) #[1] 301   6
 
 length(intersect(result_A7_0.2$pert_iname,result_A9_0.2$pert_iname)) #[1] 94
 
+# ---------------------------------------------
+# Add Canonical Names from compoundinfo_beta.txt
+# ---------------------------------------------
+# ---------------------------------------------
+# Add flexible mapping to human-readable names
+# ---------------------------------------------
+
+# ---------------------------------------------
+# Add Human-readable Names from compoundinfo_beta.txt
+# Match on ANY of pert_id, cmap_name, compound_aliases
+# ---------------------------------------------
+
+library(dplyr)
+
+# 1. Cargar compoundinfo_beta
+drug_info <- readr::read_tsv("~/CESC_Network/8_DGIDB/compoundinfo_beta.txt")
+
+# 2. Simplifica columnas
+drug_info_slim <- drug_info %>%
+  select(pert_id, cmap_name, compound_aliases)
+
+# 3. Join por pert_id
+join_pert_id <- result_A7_0.2 %>%
+  left_join(drug_info_slim, by = c("pert_iname" = "pert_id")) %>%
+  mutate(match_source = if_else(!is.na(cmap_name), "pert_id", NA_character_))
+
+# 4. Join por cmap_name
+join_cmap_name <- result_A7_0.2 %>%
+  left_join(drug_info_slim, by = c("pert_iname" = "cmap_name")) %>%
+  mutate(match_source = if_else(!is.na(pert_id), "cmap_name", NA_character_))
+
+# 5. Join por compound_aliases
+join_aliases <- result_A7_0.2 %>%
+  left_join(drug_info_slim, by = c("pert_iname" = "compound_aliases")) %>%
+  mutate(match_source = if_else(!is.na(pert_id), "compound_aliases", NA_character_))
+
+# 6. Combina los tres resultados
+all_matches <- bind_rows(join_pert_id, join_cmap_name, join_aliases) %>%
+  arrange(pert_iname, match_source) %>%
+  group_by(pert_iname) %>%
+  dplyr::slice(1) %>%              # Solo el primer match encontrado
+  ungroup()
+
+# 7. Resultado final con columnas limpias
+result_A7_final <- all_matches %>%
+  dplyr::select(
+    everything(),
+    matched_pert_id = pert_id,
+    matched_cmap_name = cmap_name,
+    matched_compound_aliases = compound_aliases
+  )
+
+# 8. Inspecciona resultado
+glimpse(result_A7_final)
+
+
+#vroom_write(result_A7_0.2, file = "~/CESC_Network/6_OCTAD/6_OCTAD_A7_results_0.2.tsv")
+#vroom_write(result_A9_0.2, file = "~/CESC_Network/6_OCTAD/6_OCTAD_A9_results_0.2.tsv")
+
 # =========================================
 # Enrichment Analysis of Drug Targets (CHEMBL)
 # =========================================
@@ -283,4 +342,10 @@ for (linea in lineas_similares_A9) {
 }
 
 save.image("~/CESC_Network/6_OCTAD/6_3_OCTAD.RData")
+#load("~/CESC_Network/6_OCTAD/6_3_OCTAD.RData")
 
+
+#length(unique(result_A7_0.2$pert_iname))
+#[1] 175
+#sum(grepl("^BRD-", result_A7_0.2$pert_iname))
+#[1] 88
