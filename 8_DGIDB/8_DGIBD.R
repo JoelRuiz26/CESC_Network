@@ -118,6 +118,7 @@ cat("✅ Fármacos OCTAD A7 en DGIdb (exact):", length(common_drugs_A7_exact), "
 #16
 cat("✅ Fármacos OCTAD A9 en DGIdb (exact):", length(common_drugs_A9_exact), "\n")
 #37
+
 # ----------------------------
 # FUZZY MATCHING (Jaro-Winkler)
 # ----------------------------

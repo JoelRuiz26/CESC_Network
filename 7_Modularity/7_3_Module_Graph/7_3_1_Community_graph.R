@@ -32,6 +32,7 @@ build_community_network <- function(graph) {
     rename(community_to = community)
   
   # Filtrar solo enlaces ENTRE comunidades diferentes y contar
+  # Filtrar solo enlaces ENTRE comunidades diferentes y sumar
   community_edges <- edges %>%
     filter(community_from != community_to) %>%
     mutate(
@@ -48,12 +49,7 @@ build_community_network <- function(graph) {
       weight = n(),
       .groups = "drop"
     ) %>%
-    dplyr::select(-community_pair) %>%
-    mutate(
-      normalized_weight = (weight - min(weight)) / (max(weight) - min(weight))
-    )
-  
-  
+    dplyr::select(-community_pair)
   # ======== Atributos de nodos (size y PageRank promedio)
   
   ## Community size
