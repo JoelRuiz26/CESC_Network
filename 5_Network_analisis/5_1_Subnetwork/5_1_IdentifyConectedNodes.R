@@ -12,7 +12,7 @@
 # Output:
 #   - Reports summary statistics to the console.
 #   - Saves the maximum cutoff value between both networks
-#     as a single .rds object for reproducible downstream use.
+#     as a single .rds object.
 # --------------------------------------------------------
 
 # --------------------------------------------------------
