@@ -27,22 +27,14 @@ library(ggplot2)
 # --------------------------------------------------------
 # NOTE: If you don't have an RDS, we will cap by the file length later.
 max_cutoff_links <- 1000000
+#max_cutoff_links <- readRDS("~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_1_1_Max_cutoff_links.rds")
 cat("\n[INFO] Requested max_cutoff_links:", max_cutoff_links, "\n")
 
 # --------------------------------------------------------
 # Load networks (already sorted by MI)
 # --------------------------------------------------------
-A7_Full <- vroom(
-  file = "~/CESC_Network/4_Network/ARACNE-multicore/launch/2_7_Full_counts_A7_annot.sort",
-  col_names = c("GenA", "GenB", "MI")
-) %>% na.omit() %>% dplyr::slice(1:1000001)
-
-
-A9_Full <- vroom(
-  file = "~/CESC_Network/4_Network/ARACNE-multicore/launch/2_8_Full_counts_A9_annot.sort",
-  col_names = c("GenA", "GenB", "MI")
-) %>% na.omit() %>% dplyr::slice(1:1000001)
-
+A7_Full <- readRDS("~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_1_2_A7_edgelist_allnodes.rds")
+A9_Full <- readRDS("~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_1_2_A9_edgelist_allnodes.rds")
 
 # Effective limits to avoid out-of-range indexing
 imax_A7 <- min(max_cutoff_links, nrow(A7_Full))
@@ -239,7 +231,6 @@ GC_graph_elbow_common <- ggplot() +
   annotate("text", x = common_cutoff_links, y = max_y*0.06,
            label = paste0("Common cutoff = ", format(common_cutoff_links, big.mark=",")),
            angle = 90, vjust = -0.5, size = 4.0, color = "black") +
-  
   labs(
     title = "Growth of Largest Connected Component in Cervical Cancer Co-expression Networks",
 #    subtitle = "Elbow method: chord (dot-dash), perpendicular (dotted), elbows (circles), common cut (black line)",

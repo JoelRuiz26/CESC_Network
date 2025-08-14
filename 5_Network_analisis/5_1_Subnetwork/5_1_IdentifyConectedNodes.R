@@ -67,6 +67,7 @@ analyze_network <- function(file_path, max_rows = 10000000) {
   ))
 }
 
+
 # --------------------------------------------------------
 # Analyze both networks
 # --------------------------------------------------------
@@ -126,8 +127,57 @@ cat("═════════════════════════
 #   readRDS(".../max_cutoff_links.rds")
 # --------------------------------------------------------
 
+# --------------------------------------------------------
+# Save both edgelists sliced to the common maximum cutoff
+# --------------------------------------------------------
+A7_common <- vroom(
+  "~/CESC_Network/4_Network/ARACNE-multicore/launch/2_7_Full_counts_A7_annot.sort",
+  col_names = c("GenA", "GenB", "MI"),
+  show_col_types = FALSE
+) %>% na.omit() %>% dplyr::slice(1:max_cutoff_links)
+
+A9_common <- vroom(
+  "~/CESC_Network/4_Network/ARACNE-multicore/launch/2_8_Full_counts_A9_annot.sort",
+  col_names = c("GenA", "GenB", "MI"),
+  show_col_types = FALSE
+) %>% na.omit() %>% dplyr::slice(1:max_cutoff_links)
+
+saveRDS(A7_common, "~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_1_2_A7_edgelist_allnodes.rds")
+saveRDS(A9_common, "~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_1_2_A9_edgelist_allnodes.rds")
+cat("[INFO] Saved both A7 and A9 edgelists with common cutoff:", max_cutoff_links, "\n")
+
 saveRDS(
   max_cutoff_links, 
   file = "~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_1_1_Max_cutoff_links.rds"
 )
+
 cat("Saved object 'max_cutoff_links' as .rds file for future use.\n")
+
+
+#════════════════════════════════════
+#NETWORK ANALYSIS REPORT - 2_7_Full_counts_A7_annot
+#════════════════════════════════════
+#• Total unique nodes: 11544
+#• Rows analyzed: 10000000
+#• Cutoff row found: 2690573
+#• Nodes covered: 11544/11544
+#• Coverage percent: 100%
+#════════════════════════════════════
+
+#════════════════════════════════════
+#NETWORK ANALYSIS REPORT - 2_8_Full_counts_A9_annot
+#════════════════════════════════════
+#• Total unique nodes: 11544
+#• Rows analyzed: 10000000
+#• Cutoff row found: 4967805
+#• Nodes covered: 11544/11544
+#• Coverage percent: 100%
+#════════════════════════════════════
+
+#════════════════════════════════════
+#FINAL COMMON THRESHOLD SELECTED
+#════════════════════════════════════
+#Maximum cutoff row between networks:  4967805 
+#════════════════════════════════════
+
+
