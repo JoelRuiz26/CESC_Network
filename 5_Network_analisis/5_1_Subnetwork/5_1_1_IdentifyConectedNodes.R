@@ -147,9 +147,15 @@ saveRDS(A9_common, "~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_1_2_A9_ed
 cat("[INFO] Saved both A7 and A9 edgelists with common cutoff:", max_cutoff_links, "\n")
 
 saveRDS(
-  max_cutoff_links, 
-  file = "~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_1_1_Max_cutoff_links.rds"
+  cutoff_A7, 
+  file = "~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_1_1_A7_cutoff_links.rds"
 )
+
+saveRDS(
+  cutoff_A9, 
+  file = "~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_1_1_A9_cutoff_links.rds"
+)
+
 
 cat("Saved object 'max_cutoff_links' as .rds file for future use.\n")
 
