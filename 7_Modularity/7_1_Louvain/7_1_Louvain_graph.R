@@ -10,8 +10,8 @@ library(ggplot2)
 set.seed(123)
 
 ### Load networks ###
-graph_A7 <- readRDS('~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_1_2_2_Subnetwork_A7_600k.rds')
-graph_A9 <- readRDS('~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_1_2_2_Subnetwork_A9_600k.rds')
+graph_A7 <- readRDS('~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A7_elbow.rds')
+graph_A9 <- readRDS('~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A9_elbow.rds')
 
 ###### For A7 network ######
 ### Louvain ###
@@ -30,7 +30,7 @@ V(graph_A7)$Community_name <- community_PR_names_A7[as.character(V(graph_A7)$Com
 
 ### Filter nodes for enrichment ###
 V(graph_A7)$Community_size <- table(V(graph_A7)$Community)[as.character(V(graph_A7)$Community)] #community size
-nodes_to_keep_A7 <- V(graph_A7)[V(graph_A7)$Community_size >= 6]
+nodes_to_keep_A7 <- V(graph_A7)[V(graph_A7)$Community_size >= 10]
 filtered_graph_A7 <- induced_subgraph(graph_A7, vids = nodes_to_keep_A7)
 
 
@@ -51,13 +51,13 @@ V(graph_A9)$Community_name <- community_PR_names_A9[as.character(V(graph_A9)$Com
 
 ### Filter nodes for enrichment ###
 V(graph_A9)$Community_size <- table(V(graph_A9)$Community)[as.character(V(graph_A9)$Community)]
-nodes_to_keep_A9 <- V(graph_A9)[V(graph_A9)$Community_size >= 6]
+nodes_to_keep_A9 <- V(graph_A9)[V(graph_A9)$Community_size >= 10]
 filtered_graph_A9 <- induced_subgraph(graph_A9, vids = nodes_to_keep_A9)
 
 
 ### Save filtered graphs ###
-saveRDS(filtered_graph_A9, file = "~/CESC_Network/7_Modularity/7_1_1_Louvain_A9_graph.rds")
-saveRDS(filtered_graph_A7, file = "~/CESC_Network/7_Modularity/7_1_1_Louvain_A7_graph.rds")
+saveRDS(filtered_graph_A9, file = "~/CESC_Network/7_Modularity/7_1_Louvain/7_1_1_Louvain_A9_graph.rds")
+saveRDS(filtered_graph_A7, file = "~/CESC_Network/7_Modularity/7_1_Louvain/7_1_1_Louvain_A7_graph.rds")
 
 
 ### Verify ###

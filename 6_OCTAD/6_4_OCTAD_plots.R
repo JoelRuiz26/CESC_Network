@@ -1,4 +1,4 @@
-load("~/CESC_Network/6_OCTAD/6_3_OCTAD.RData")
+load("~/CESC_Network/6_OCTAD/6_2_4_OCTAD.RData")
 setwd("~/CESC_Network/6_OCTAD/")
 
 library(pheatmap)
@@ -17,8 +17,8 @@ rownames(similitud_A7) <- similitud_A7$cell_id
 rownames(similitud_A9) <- similitud_A9$cell_id
 
 combined_similitud <- full_join(
-  similitud_A7 %>% select(cell_id, medcor) %>% rename(clado_A7 = medcor),
-  similitud_A9 %>% select(cell_id, medcor) %>% rename(clado_A9 = medcor),
+  similitud_A7 %>% dplyr::select(cell_id, medcor) %>% dplyr::rename(clado_A7 = medcor),
+  similitud_A9 %>% dplyr::select(cell_id, medcor) %>% dplyr::rename(clado_A9 = medcor),
   by = "cell_id"
 )
 
@@ -98,11 +98,11 @@ SHARED <- intersect(result_A7_0.2$pert_iname, result_A9_0.2$pert_iname)
 # COMBINAR DATOS Y CATEGORÍAS
 # ==========================================================
 scatter_data <- full_join(
-  result_A7 %>% select(pert_iname, A7 = sRGES),
-  result_A9 %>% select(pert_iname, A9 = sRGES),
+  result_A7 %>% dplyr::select(pert_iname, A7 = sRGES),
+  result_A9 %>% dplyr::select(pert_iname, A9 = sRGES),
   by = "pert_iname"
 ) %>%
-  mutate(
+  dplyr::mutate(
     categoria = case_when(
       pert_iname %in% SHARED ~ "Shared",
       pert_iname %in% UNICOS_A7 ~ "clade_A7",
@@ -199,6 +199,7 @@ p_final <- ggplot(scatter_data, aes(x = A7, y = A9, color = categoria)) +
     axis.text = element_text(size = 18)
   )
 
+plot(p_final)
 # ==========================================================
 # GUARDAR PDF Y PNG
 # ==========================================================
