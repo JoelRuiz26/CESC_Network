@@ -18,7 +18,7 @@ echo "Column Index Name: $cname"
 
 SECONDS=0
 # **Aquí se fija a 4 cores**
-python ${partools}/aracne-par.py $ftsv node.list $cname 4 &> aracne.log 
+python ${partools}/aracne-par.py $ftsv node.list $cname 10 &> aracne.log 
 echo "ARACNe time: $(echo $SECONDS/60 | bc -l) minutes."
 
 SECONDS=0
