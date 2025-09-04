@@ -71,7 +71,7 @@ topological_metrics_df <- bind_rows(topological_metrics, .id = "network") %>%
 t_topological_metrics <- topological_metrics_df %>% dplyr::select(1:6,jaccard_nodes,jaccard_edges,7:10) %>% t() %>% as.data.frame()
 colnames(t_topological_metrics) <- c("VPH-A7","VPH-A9")
 t_topological_metrics <- t_topological_metrics %>% dplyr::slice(-1)
-          #print(t_topological_metrics)
+          print(t_topological_metrics)
 #                                   VPH-A7    VPH-A9
 #Numero_de_nodos                      10730     10344
 #Componentes_conectados                  23        22

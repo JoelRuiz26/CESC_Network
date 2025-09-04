@@ -305,8 +305,8 @@ p <- ggplot() +
   theme_bw() +
   theme(
     plot.title.position = "plot",
-    plot.title  = element_text(size = 26, face = "bold", hjust = 0.5, margin = margin(t = 12, b = 10)),
-    axis.title  = element_text(size = 18, face = "bold"),
+    plot.title  = element_text(size = 20, face = "bold", hjust = 0.5, margin = margin(t = 12, b = 10)),
+    axis.title  = element_text(size = 16, face = "bold"),
     axis.text   = element_text(size = 13),
     legend.position = "top",
     legend.title    = element_text(size = 14, face = "bold"),

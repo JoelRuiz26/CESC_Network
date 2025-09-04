@@ -32,14 +32,14 @@ stopifnot(file.exists(h5_path))  # ensure
 # A7 Clade 
 # =========================================
 ##  usar whole para similitud de líneas (si tienes el HDF5)
-similitud_A7 <- computeCellLine(case_id = case_A7, source = "octad.whole", file = h5_path)
+similitud_A7 <- computeCellLine(case_id = case_A7, source = "octad.small")#, file = h5_path)
 similitud_A7 <- dplyr::mutate(similitud_A7, cell_id = rownames(similitud_A7))
-lineas_similares_A7 <- dplyr::filter(similitud_A7, medcor > 0.35) |> dplyr::pull(cell_id)
+lineas_similares_A7 <- dplyr::filter(similitud_A7, medcor > 0.31) |> dplyr::pull(cell_id)
 
 
-similitud_A9 <- computeCellLine(case_id = case_A9, source = "octad.whole", file = h5_path)
+similitud_A9 <- computeCellLine(case_id = case_A9, source = "octad.small")#, file = h5_path)
 similitud_A9 <- dplyr::mutate(similitud_A9, cell_id = rownames(similitud_A9))
-lineas_similares_A9 <- dplyr::filter(similitud_A9, medcor > 0.35) |> dplyr::pull(cell_id)
+lineas_similares_A9 <- dplyr::filter(similitud_A9, medcor > 0.31) |> dplyr::pull(cell_id)
 
 
 # ========================================= 
@@ -74,10 +74,15 @@ result_A9 <- runsRGES(
 # =========================================
 # Filter Drugs with sRGES < -0.2
 # =========================================
-result_A7_0.2 <- result_A7 %>% dplyr::filter(sRGES <= -0.2) %>% dplyr::arrange(sRGES)
-result_A9_0.2 <- result_A9 %>% dplyr::filter(sRGES <= -0.2) %>% dplyr::arrange(sRGES)
+result_A7_0.2 <- result_A7 %>% dplyr::filter(sRGES <= -0.25) %>% dplyr::arrange(sRGES)
+result_A9_0.2 <- result_A9 %>% dplyr::filter(sRGES <= -0.25) %>% dplyr::arrange(sRGES)
 dim(result_A7_0.2); dim(result_A9_0.2)
-#### medcor 0.35 ####
+###---  small ---###
+#[1] 148   6
+#[1] 161   6
+
+###---  whole ---###
+#### medcor 0.35 #### 
 #[1] 91  6
 #[1] 73  6
 
@@ -212,7 +217,7 @@ for (linea in lineas_similares_A9) {
 }
 
 save.image("~/CESC_Network/6_OCTAD/6_2_4_OCTAD.RData")
-#load("~/CESC_Network/6_OCTAD/6_3_OCTAD.RData")
+#load("~/CESC_Network/6_OCTAD/6_2_4_OCTAD.RData")
 
 
 #length(unique(result_A7_0.2$pert_iname))

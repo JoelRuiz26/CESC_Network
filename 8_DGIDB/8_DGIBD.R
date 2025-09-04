@@ -12,6 +12,7 @@
 # 4. Calcula distancias a DGE
 # 5. Rankea fármacos por proximidad
 # 6. Visualiza resultados
+
 # ====================================================
 
 # ----------------------------
@@ -28,8 +29,8 @@ library(ggplot2)
 # ----------------------------
 # LOAD OCTAD RESULTS
 # ----------------------------
-A7_octad <- vroom("~/CESC_Network/6_OCTAD/6_OCTAD_A7_results_0.2.tsv")
-A9_octad <- vroom("~/CESC_Network/6_OCTAD/6_OCTAD_A9_results_0.2.tsv")
+A7_octad <- readRDS("~/CESC_Network/6_OCTAD/6_2_1_OCTAD_A7_results_0.2.rds")
+A9_octad <- readRDS("~/CESC_Network/6_OCTAD/6_2_1_OCTAD_A9_results_0.2.rds")
 head(A7_octad)
 # A tibble: 6 × 6
 #pert_iname      mean     n median      sd  sRGES
@@ -68,7 +69,7 @@ colnames(dgidb_interactions)
 # ----------------------------
 dgidb_interactions <- dgidb_interactions %>%
   filter(approved == "TRUE")
-head(dgidb_interactions)
+dim(dgidb_interactions) #[1] 37970    13
 
 #Macke score numeric type
 dgidb_interactions <- dgidb_interactions %>%
@@ -104,20 +105,24 @@ dgidb_interactions <- dgidb_interactions %>%
 # GET UNIQUE DRUG NAMES
 # ----------------------------
 octad_drugs_A7 <- unique(A7_octad$norm_iname)
+length(octad_drugs_A7) #[1] 91
+
 octad_drugs_A9 <- unique(A9_octad$norm_iname)
+length(octad_drugs_A9) #[1] 73
+
 dgidb_drug_names <- union(unique(dgidb_interactions$norm_drug_name),unique(dgidb_interactions$norm_drug_name_claim))
-length(dgidb_drug_names)
+length(dgidb_drug_names) #[1] 5434
 
 # ----------------------------
 # INTERSECT EXACT
 # ----------------------------
-common_drugs_A7_exact <- intersect(octad_drugs_A7, dgidb_drug_names)
-common_drugs_A9_exact <- intersect(octad_drugs_A9, dgidb_drug_names)
+common_drugs_A7_exact <- intersect(octad_drugs_A7, dgidb_drug_names) 
+common_drugs_A9_exact <- intersect(octad_drugs_A9, dgidb_drug_names) 
 
 cat("✅ Fármacos OCTAD A7 en DGIdb (exact):", length(common_drugs_A7_exact), "\n")
-#16
+#11
 cat("✅ Fármacos OCTAD A9 en DGIdb (exact):", length(common_drugs_A9_exact), "\n")
-#37
+#18
 
 # ----------------------------
 # FUZZY MATCHING (Jaro-Winkler)
@@ -164,12 +169,12 @@ all_matches_A7 <- union(common_drugs_A7_exact, fuzzy_matches_A7$DGIdb)
 all_matches_A9 <- union(common_drugs_A9_exact, fuzzy_matches_A9$DGIdb)
 
 cat("✅ Total final A7 matches:", length(all_matches_A7), "\n")
-#17
+#14
 cat("✅ Total final A9 matches:", length(all_matches_A9), "\n")
-#39
+#12
 both <- intersect(all_matches_A7,all_matches_A9)
 length(both)
-#[1] 12
+#[1] 9
 
 # ----------------------------
 # SAVE RESULTS
@@ -184,12 +189,12 @@ write_tsv(tibble(A9_matches = all_matches_A9), "~/CESC_Network/8_DGIDB/8_1_Drugs
 
 interactions_A7 <- dgidb_interactions %>%
   filter(norm_drug_name %in% all_matches_A7 | norm_drug_name_claim %in% all_matches_A7) %>%
-  select(drug_name, drug_claim_name, gene_name, interaction_score) %>%
+  dplyr::select(drug_name, drug_claim_name, gene_name, interaction_score) %>%
   distinct()
 
 interactions_A9 <- dgidb_interactions %>%
   filter(norm_drug_name %in% all_matches_A9 | norm_drug_name_claim %in% all_matches_A9) %>%
-  select(drug_name, drug_claim_name, gene_name, interaction_score) %>%
+  dplyr::select(drug_name, drug_claim_name, gene_name, interaction_score) %>%
   distinct()
 
 # ----------------------------
@@ -216,11 +221,11 @@ interactions_A9 <- interactions_A9 %>%
 # ----------------------------
 # LOAD DGE
 # ----------------------------
-DGE_A7 <- vroom("~/CESC_Network/3_DGE/3_2_DGE_A7_vs_SNT_Significant_logFC1.tsv")
-DGE_A9 <- vroom("~/CESC_Network/3_DGE/3_4_DGE_A9_vs_SNT_Significant_logFC1.tsv")
+DGE_A7 <- readRDS("~/CESC_Network/6_OCTAD/6_1_4_DE_A7_signific.rds")
+DGE_A9 <- readRDS("~/CESC_Network/6_OCTAD/6_1_4_DE_A9_signific.rds")
 
-dge_genes_A7 <- unique(DGE_A7$Gene)
-dge_genes_A9 <- unique(DGE_A9$Gene)
+dge_genes_A7 <- unique(DGE_A7$Symbol)
+dge_genes_A9 <- unique(DGE_A9$Symbol)
 
 
 # ----------------------------
@@ -455,4 +460,11 @@ dev.off()
 png("~/CESC_Network/8_DGIDB/8_3_A9_Heatmap_with_Zscore.png", width=1200, height=800, res=150)
 draw(ht_A9)
 dev.off()
+
+
+
+
+
+
+
 

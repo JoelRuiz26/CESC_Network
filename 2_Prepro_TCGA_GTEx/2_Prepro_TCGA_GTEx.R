@@ -184,7 +184,7 @@ mycd <- dat(noiseqData_before, type = "cd", norm = FALSE) # Slow operation
 pdf("plots_prepro_data/QC_Mvalues_mycd_before.pdf", width = 10, height = 6)
 par(mar = c(5, 4, 4, 2) - 1)
 par(cex.axis = 1.5, cex.lab = 1.5, cex.main = 2, xaxs = "i")
-explo.plot(mycd, samples = c(266:276))
+explo.plot(mycd, samples = c(268:279))
 dev.off()
 # Verify diagnostic
 table(mycd@dat$DiagnosticTest[, "Diagnostic Test"])
@@ -240,21 +240,21 @@ noiseqData_filtered = NOISeq::readData(data = fullfullTMM,
 #explo.plot(myPCA_sample, plottype= "scores", factor = "HPV_clade")
 #explo.plot(myPCA_sample, plottype= "scores", factor = "source")
 #dev.off()
-
 mycd_filtered <- dat(noiseqData_filtered, type = "cd", norm = TRUE ) # Slow operation
+
 # Verify diagnostic
-table(myc_filteredd@dat$DiagnosticTest[, "Diagnostic Test"])
+table(mycd_filtered@dat$DiagnosticTest[, "Diagnostic Test"])
 #FAILED PASSED 
-#34    255
+#29    260 
 
 # ===================== SOLVE BATCH EFFECT ===================== #
 #Expression counts were preprocessed by GC and length bias correction (EDASeq) 
-#and TMM normalization (edgeR). No batch correction was applied at this stage, 
+#and TMM normalization (edgeR). No batch correction was applied at this stage,
 #to retain covariance structure for network inference. 
+
 #Batch (source) was subsequently modeled as a covariate in the 
 #differential expression analysis using limma-trend, 
 #to adjust for cross-dataset differences without removing biological signal.
-
 
 #“For variables highly confounded with biological groups,
 #batch correction should be done at the model stage (as a covariate), 
@@ -269,19 +269,21 @@ expr_logCPM <- log2(fullfullTMM + 0.5)
 
 # Correct batch using limma::removeBatchEffect
 # We adjust batch (source) while preserving sample_type biological signal
+
 expr_batchcorrected <- removeBatchEffect(
   expr_logCPM,
   batch = factors$source,
-  design = model.matrix(~ sample_type, data = factors)
-)
+  design = model.matrix(~ sample_type, data = factors))
 
-#ffTMMARSyn=ARSyNseq(noiseqData_filtered, factor = "HPV_clade", batch = F,
-#                    norm = "n",  logtransf = F)
+###
+ffTMMARSyn=ARSyNseq(noiseqData_filtered, factor = "sample_type", batch = F,
+                    norm = "n",  logtransf = F)
+###
 
 noiseqData_batch = NOISeq::readData(data = expr_batchcorrected, 
                                        factors=factors)
 
-myPCA_after = dat(noiseqData_batch  , type = "PCA", norm = T,logtransf = T)
+myPCA_after = dat(ffTMMARSyn  , type = "PCA", norm = T,logtransf = T)
 
 
 pdf("plots_prepro_data/QC_PCA_scores_HPVclade_after.pdf", width = 8, height = 6)
@@ -345,6 +347,7 @@ dev.off()
 
 # Plot global distribution of CPM
 pdf("plots_prepro_data/QC_histogram_CPM_distribution_after.pdf", width = 8, height = 6)
+
 log_cpm_means <- rowMeans(cpm(noiseqData_norm@assayData$exprs, log = TRUE))
 hist_data <- hist(log_cpm_means, plot = FALSE, breaks = 30)
 hist(log_cpm_means,
@@ -438,7 +441,7 @@ explo.plot(myPCA_sample_after, plottype= "scores", factor = "source")
 dev.off()
 
 # ===================== SAVE FINAL  ===================== #
-Final_SNT_vs_PP <- expr_batchcorrected %>% as.data.frame()
+Final_SNT_vs_PP <- exprs(ffTMMARSyn) %>% as.data.frame()
 Final_SNT_vs_PP$Gene <- rownames(Final_SNT_vs_PP)  #Add column for input ARACNE
 Final_SNT_vs_PP <- Final_SNT_vs_PP[, c(ncol(Final_SNT_vs_PP), 1:(ncol(Final_SNT_vs_PP)-1))]  
 dim(Final_SNT_vs_PP) #[1] 11544   291
@@ -481,3 +484,4 @@ vroom::vroom_write(Final_A9_NW,
 
 #save.image("~/CESC_Network/2_Prepro_TCGA_GTEx/2_9_Image_Post_Prepro.RData")
 #load("~/CESC_Network/2_Prepro_TCGA_GTEx/2_9_Image_Post_Prepro.RData")
+

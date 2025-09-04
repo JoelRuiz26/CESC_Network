@@ -96,8 +96,8 @@ print(length(unique(ora_A7$Community_Name)))
 print(length(unique(ora_A9$Community_Name)))
 
 ### Guardar resultados ###
-write.table(ora_A7, file = "~/CESC_Network/7_Modularity/7_2_1_Ora7.tsv", sep = "\t", row.names = FALSE, quote = FALSE)
-write.table(ora_A9, file = "~/CESC_Network/7_Modularity/7_2_1_Ora9.tsv", sep = "\t", row.names = FALSE, quote = FALSE)
+write.table(ora_A7, file = "~/CESC_Network/7_Modularity/7_2_ORA/7_2_1_Ora7.tsv", sep = "\t", row.names = FALSE, quote = FALSE)
+write.table(ora_A9, file = "~/CESC_Network/7_Modularity/7_2_ORA/7_2_1_Ora9.tsv", sep = "\t", row.names = FALSE, quote = FALSE)
 
 end_time <- Sys.time()
 cat("Tiempo total:", round(end_time - start_time, 2), "minutos\n")
