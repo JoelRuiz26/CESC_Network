@@ -1,21 +1,24 @@
 # =========================================
-# Load_library
+# Load libraries
 # =========================================
+suppressPackageStartupMessages({
+  library(ggplot2)
+  library(dplyr)
+  library(readr)
+  library(tidyr)
+  library(patchwork)
+  library(ggVennDiagram)
+})
 
-library(ggplot2)
-library(dplyr)
-library(readr)
-library(tidyr)
-library(patchwork)
-library(ggVennDiagram)
-
-# ---------------- Params ----------------
+# =========================================
+# Parameters
+# =========================================
 lfc_thr  <- 1
 padj_thr <- 0.01
 base_dir <- "~/CESC_Network/6_OCTAD/6_1_DGE_signature/6_1_0_Output_rds/"
 out_dir  <- "~/CESC_Network/6_OCTAD/6_1_DGE_signature/6_1_1_Output_plots/"
 
-# Elegant, high-contrast palette (consistent across volcano & venn)
+# High-contrast palette (consistent across volcano & Venn)
 # EdgeR = deep red, DESeq2 = deep blue, limma = teal-green
 method_cols <- c(
   EdgeR  = "#B40426",
@@ -23,15 +26,42 @@ method_cols <- c(
   limma  = "#1FA187"
 )
 
-# -------------- I/O helpers --------------
+# =========================================
+# Helper to save PNG + PDF (vector)
+# =========================================
+save_png_pdf <- function(path_png, plot, width, height,
+                         units = "in", dpi = 1200, limitsize = FALSE,
+                         use_cairo = TRUE) {
+  # 1) Save PNG (hi-DPI)
+  ggplot2::ggsave(filename = path_png, plot = plot,
+                  width = width, height = height, units = units,
+                  dpi = dpi, limitsize = limitsize)
+  # 2) Save vector PDF (good for journals)
+  path_pdf <- sub("\\.png$", ".pdf", path_png)
+  if (use_cairo) {
+    ggplot2::ggsave(filename = path_pdf, plot = plot,
+                    width = width, height = height, units = units,
+                    device = grDevices::cairo_pdf, limitsize = limitsize)
+  } else {
+    ggplot2::ggsave(filename = path_pdf, plot = plot,
+                    width = width, height = height, units = units,
+                    limitsize = limitsize)
+  }
+  invisible(path_pdf)
+}
+
+# =========================================
+# I/O helpers (unchanged logic)
+# =========================================
+
+# Read the raw DE table saved previously by your pipeline
 read_de_full <- function(clade, method_tag){
-  # Read the raw DE table saved previously by your pipeline
   f <- file.path(base_dir, sprintf("6_1_2_DE_full_%s_%s.rds", clade, method_tag))
   if (!file.exists(f)) stop("File not found: ", f)
   readRDS(f)
 }
 
-# Pick a stable gene identifier for venns
+# Choose a stable gene identifier for Venns
 pick_id_col <- function(df){
   if ("identifier" %in% names(df)) return("identifier")
   if ("ENSEMBL"   %in% names(df)) return("ENSEMBL")
@@ -43,15 +73,7 @@ pick_symbol_col <- function(df){
   NA_character_
 }
 
-# Minimal frame for volcano plotting
-read_de_for_volcano <- function(clade, method_tag){
-  read_de_for_venn(clade, method_tag) %>%     
-    dplyr::distinct(gene_id, .keep_all = TRUE) %>%#
-    dplyr::select(log2FoldChange, padj) %>%
-    dplyr::mutate(method = method_tag)
-}
-
-# Minimal frame for venn sets 
+# Minimal frame for Venn sets
 read_de_for_venn <- function(clade, method_tag){
   x <- read_de_full(clade, method_tag)
   id_col  <- pick_id_col(x)
@@ -70,7 +92,17 @@ read_de_for_venn <- function(clade, method_tag){
     dplyr::mutate(method = method_tag)
 }
 
-# -------------- Volcano prep --------------
+# Minimal frame for volcano plotting
+read_de_for_volcano <- function(clade, method_tag){
+  read_de_for_venn(clade, method_tag) %>%     
+    dplyr::distinct(gene_id, .keep_all = TRUE) %>% # keep one row per gene
+    dplyr::select(log2FoldChange, padj) %>%
+    dplyr::mutate(method = method_tag)
+}
+
+# =========================================
+# Volcano prep (unchanged logic)
+# =========================================
 prep_volcano_df <- function(clade){
   methods <- c("EdgeR","DESeq2","limma")
   df <- dplyr::bind_rows(lapply(methods, \(m) read_de_for_volcano(clade, m))) %>%
@@ -99,7 +131,7 @@ prep_volcano_df <- function(clade){
   df
 }
 
-# Count up/down by method to annotate in-plot
+# Count up/down by method to annotate inside the plot
 annot_counts_df <- function(df){
   counts <- df %>%
     dplyr::filter(sig != "ns") %>%
@@ -119,12 +151,14 @@ annot_counts_df <- function(df){
       x = dplyr::if_else(sig == "up",  xmax*0.985, -xmax*0.985),
       y = base_y - idx[as.character(method)]*vstep,
       hjust = dplyr::if_else(sig == "up", 1, 0),
-      # More formal wording
+      # Formal label
       label = paste0(method, " ", ifelse(sig=="up","up","down"), ": ", n)
     )
 }
 
-# Volcano overlay (one per clade)
+# =========================================
+# Volcano overlay (per clade) — identical look
+# =========================================
 make_overlay_volcano <- function(clade, out_png = NULL){
   df   <- prep_volcano_df(clade)
   ann  <- annot_counts_df(df)
@@ -170,7 +204,7 @@ make_overlay_volcano <- function(clade, out_png = NULL){
       axis.title        = element_text(size = 19),
       axis.text         = element_text(size = 18),
       panel.grid.minor  = element_blank(),
-      panel.grid.major  = element_line(linewidth = 0.25, color = "grey92"),
+      panel.grid.major  = element_line(linewidth = 0.25, color = "white"),
       plot.title        = element_text(face = "bold", size = 18)
     ) +
     guides(color = guide_legend(override.aes = list(size = 3.5, alpha = 1)))
@@ -178,11 +212,14 @@ make_overlay_volcano <- function(clade, out_png = NULL){
   if (is.null(out_png)) {
     out_png <- file.path(out_dir, paste0("6_1_6_Volcano_HPV_", clade, "_clade_overlay.png"))
   }
-  ggsave(out_png, p, width = 7.6, height = 4.9, dpi = 1200)
+  # >>> Save PNG + PDF (instead of PNG only) <<<
+  save_png_pdf(out_png, p, width = 7.6, height = 4.9, dpi = 1200)
   p
 }
 
-# ----------------- Build volcanos -----------------
+# =========================================
+# Build volcanos (unchanged)
+# =========================================
 pA7_ov <- make_overlay_volcano("A7")
 pA9_ov <- make_overlay_volcano("A9")
 
@@ -195,12 +232,13 @@ g_volcano <- (pA7_ov + pA9_ov) +
     legend.text     = element_text(size = 18)
   )
 
-ggsave(file.path(out_dir, "6_1_7_Volcano_HPV_A7_A9_clades_overlay_grid.png"),
-       g_volcano, width = 13.5, height = 5.6, dpi = 1200)
+# >>> Save PNG + PDF for the grid <<<
+save_png_pdf(file.path(out_dir, "6_1_7_Volcano_HPV_A7_A9_clades_overlay_grid.png"),
+             g_volcano, width = 13.5, height = 5.6, dpi = 1200)
 
-#g_volcano
-
-# -------------- Venns (Up/Down by clade) --------------
+# =========================================
+# Venns (Up/Down by clade) — identical logic
+# =========================================
 get_sig_sets <- function(clade){
   methods <- c("EdgeR","DESeq2","limma")
   dfs <- lapply(methods, \(m) read_de_for_venn(clade, m))
@@ -211,12 +249,14 @@ get_sig_sets <- function(clade){
 }
 
 plot_venn <- function(sets_list, title, out_png,
-                      count_size = 6.8, setlabel_size = 4.2,
-                      width = 6.4, height = 5.2, dpi = 1200,
+                      count_size = 4.5, setlabel_size = 4.2,
+                      width = 8, height = 8, dpi = 1200,
                       fill_tone = "#F7FAFF") {
+  # Ensure order matches your palette
   stopifnot(exists("method_cols"))
   sets_list <- sets_list[names(method_cols)]
   
+  # Base Venn
   p <- ggVennDiagram(
     sets_list,
     label = "count",
@@ -224,49 +264,58 @@ plot_venn <- function(sets_list, title, out_png,
     set_edge_color = unname(method_cols[names(sets_list)]),
     set_edge_size  = 1.2
   ) +
-    # Relleno muy claro (o usa "white" si prefieres blanco puro)
+    # Flat very-light fill; no legend
     scale_fill_gradient(low = fill_tone, high = fill_tone, guide = "none") +
     labs(title = title) +
     theme_void(base_size = 16) +
     theme(
-      plot.title      = element_text(face = "bold", hjust = 0.5, size = 16,
-                                     margin = margin(b = 6)),
+      plot.title      = element_text(face = "bold", hjust = 0.5, size = 16, margin = margin(b = 6)),
       text            = element_text(size = 16),
       legend.position = "none",
-      # Márgenes más amplios para que no se corten las etiquetas de conjuntos
-      plot.margin     = margin(t = 6, r = 26, b = 6, l = 26)
+      plot.margin     = margin(t = 6, r = 30, b = 6, l = 30)
     ) +
-    # Evita que se recorten textos fuera del panel
-    coord_cartesian(clip = "off")
+    coord_cartesian(clip = "off") +
+    theme(aspect.ratio = 1)
   
-  # Ajustar tamaños de texto por capa:
-  # - Capas con columna 'count' => números interiores grandes (count_size)
-  # - Otras capas de texto => etiquetas de conjuntos (setlabel_size, bold)
+  # Tweak text layers:
+  # - make counts bigger & bold
+  # - make set labels bigger & bold
+  # - REMOVE label rectangles (no fill, no border)
   layers <- p$layers
   for (i in seq_along(layers)) {
     dat <- layers[[i]]$data
-    cls <- class(layers[[i]]$geom)
-    if (any(cls %in% c("GeomText", "GeomLabel", "GeomSfText", "GeomSfLabel"))) {
+    g   <- layers[[i]]$geom
+    if (inherits(g, "GeomText") || inherits(g, "GeomLabel") ||
+        inherits(g, "GeomSfText") || inherits(g, "GeomSfLabel")) {
       if (is.null(layers[[i]]$aes_params)) layers[[i]]$aes_params <- list()
+      
+      # Interior counts have a "count" column in the layer data
       if (is.data.frame(dat) && ("count" %in% names(dat))) {
-        layers[[i]]$aes_params$size <- count_size
+        layers[[i]]$aes_params$size     <- count_size
         layers[[i]]$aes_params$fontface <- "bold"
       } else {
-        layers[[i]]$aes_params$size <- setlabel_size
+        layers[[i]]$aes_params$size     <- setlabel_size
         layers[[i]]$aes_params$fontface <- "bold"
+      }
+      
+      # Kill the label box if this layer is a label-type geom
+      if (inherits(g, "GeomLabel") || inherits(g, "GeomSfLabel")) {
+        layers[[i]]$aes_params$fill       <- NA  # transparent background
+        layers[[i]]$aes_params$label.size <- 0   # no rectangle border
+        # Optional: tighten padding
+        # layers[[i]]$aes_params$label.padding <- grid::unit(0.05, "lines")
       }
     }
   }
   p$layers <- layers
   
-  # Guardado (PNG hi-dpi + PDF vectorial)
+  # Save PNG + vector PDF
   ggplot2::ggsave(out_png, p, width = width, height = height,
                   dpi = dpi, units = "in", limitsize = FALSE)
   ggplot2::ggsave(sub("\\.png$", ".pdf", out_png), p,
                   width = width, height = height, units = "in",
                   device = grDevices::cairo_pdf)
-  
-  return(p)
+  p
 }
 
 
@@ -304,29 +353,31 @@ pA9_venn_up <- plot_venn(
 
 # Optional grids (per clade) with larger canvas
 gA7_venn <- pA7_venn_down + pA7_venn_up + plot_layout(ncol = 2)
-ggsave(file.path(out_dir, "6_1_8_Venn_HPV_A7_clade_grid.png"),
-       gA7_venn, width = 12.0, height = 5.2, dpi = 1200)
+save_png_pdf(file.path(out_dir, "6_1_8_Venn_HPV_A7_clade_grid.png"),
+             gA7_venn, width = 12.0, height = 5.2, dpi = 1200)
 
 gA9_venn <- pA9_venn_down + pA9_venn_up + plot_layout(ncol = 2)
-ggsave(file.path(out_dir, "6_1_8_Venn_HPV_A9_clade_grid.png"),
-       gA9_venn, width = 12.0, height = 5.2, dpi = 1200)
+save_png_pdf(file.path(out_dir, "6_1_8_Venn_HPV_A9_clade_grid.png"),
+             gA9_venn, width = 12.0, height = 5.2, dpi = 1200)
 
-#gA7_venn
-#gA9_venn
+gA7_venn
+gA9_venn
 
-# ---- Combo: volcanos grid arriba + (Venn A7 | Venn A9) abajo ----
+# =========================================
+# Combo figure: volcanos (top) + (Venn A7 | Venn A9) (bottom)
+# =========================================
 combo_fig <- g_volcano / (gA7_venn | gA9_venn) +
-  plot_layout(heights = c(1.2, 1)) &                # ⬆ aumenta altura de la fila superior
-  theme(plot.title = element_text(margin = margin(b = 10))) # ⬆ separa títulos de venn
+  plot_layout(heights = c(1, 1)) &
+  theme(plot.title = element_text(margin = margin(b = 10)))
 
-ggsave(file.path(out_dir, "6_1_9_Volcano_Venns_combo.png"),
-       combo_fig, width = 14, height = 13, units = "in",
-       dpi = 1200, limitsize = FALSE)
+combo_fig
 
-#combo_fig
+save_png_pdf(file.path(out_dir, "6_1_9_Volcano_Venns_combo.png"),
+             combo_fig, width = 12, height = 10, dpi = 1200, limitsize = FALSE)
 
-###Save intersection genes ###
-# === Consenso 3-métodos (UP/DOWN) por clado y exportación TSV ===
+# =========================================
+# Save intersection genes (unchanged logic)
+# =========================================
 sets_A7 <- get_sig_sets("A7")
 sets_A9 <- get_sig_sets("A9")
 
@@ -343,12 +394,107 @@ consensus_tbl <- dplyr::bind_rows(
 )
 
 saveRDS(consensus_tbl, file.path(out_dir, "6_10_Consensus_genes_3methods.rds"))
-
-
 table(consensus_tbl$clade, consensus_tbl$regulation)
-#   down   up
-#A7 1455  548
-#A9 2037  883
 
+# =========================================
+# A7 vs A9 Venns for consensus sets (UP/DOWN)
+# =========================================
+
+# Helpers
+cons_sets_by <- function(tbl, reg){
+  a7 <- tbl %>% dplyr::filter(clade=="A7", regulation==reg) %>% dplyr::pull(gene) %>% unique()
+  a9 <- tbl %>% dplyr::filter(clade=="A9", regulation==reg) %>% dplyr::pull(gene) %>% unique()
+  list(A7 = a7, A9 = a9)
+}
+
+shared_stats <- function(a, b){
+  inter <- intersect(a, b)
+  uni   <- union(a, b)
+  c(nA   = length(a),
+    nB   = length(b),
+    nI   = length(inter),
+    pctA = 100 * length(inter)/max(1, length(a)),
+    pctB = 100 * length(inter)/max(1, length(b)),
+    jacc = 100 * length(inter)/max(1, length(uni)))
+}
+
+plot_clade_venn <- function(sets, title_prefix, out_png,
+                            count_size = 7, setlabel_size = 5,
+                            width = 6.5, height = 6.5, dpi = 1200,
+                            fill_tone = "#F7FAFF") {
+  stats <- shared_stats(sets$A7, sets$A9)
+  subtitle <- sprintf("Shared = %d | %.1f%% of A7, %.1f%% of A9 | Jaccard = %.1f%%",
+                      stats["nI"], stats["pctA"], stats["pctB"], stats["jacc"])
+  
+  sets_plot <- list(`HPV-A7` = sets$A7, `HPV-A9` = sets$A9)
+  
+  p <- ggVennDiagram(
+    sets_plot, label = "count",
+    set_color      = c("#6A3D9A", "#FF7F00"),
+    set_edge_color = c("#6A3D9A", "#FF7F00"),
+    set_edge_size  = 1.2
+  ) +
+    scale_fill_gradient(low = fill_tone, high = fill_tone, guide = "none") +
+    labs(title = paste0(title_prefix, " (consensus 3 methods)"),
+         subtitle = subtitle) +
+    theme_void(base_size = 16) +
+    theme(
+      plot.title    = element_text(face = "bold", hjust = 0.5, size = 16, margin = margin(b = 2)),
+      plot.subtitle = element_text(hjust = 0.5, size = 13),
+      legend.position = "none",
+      plot.margin   = margin(t = 6, r = 26, b = 6, l = 26)
+    ) +
+    coord_cartesian(clip = "off") +
+    theme(aspect.ratio = 1) 
+  
+  # Enlarge counts and labels
+  layers <- p$layers
+  for (i in seq_along(layers)) {
+    dat <- layers[[i]]$data
+    cls <- class(layers[[i]]$geom)
+    if (any(cls %in% c("GeomText", "GeomLabel", "GeomSfText", "GeomSfLabel"))) {
+      if (is.null(layers[[i]]$aes_params)) layers[[i]]$aes_params <- list()
+      if (is.data.frame(dat) && ("count" %in% names(dat))) {
+        layers[[i]]$aes_params$size <- count_size
+        layers[[i]]$aes_params$fontface <- "bold"
+      } else {
+        layers[[i]]$aes_params$size <- setlabel_size
+        layers[[i]]$aes_params$fontface <- "bold"
+      }
+    }
+  }
+  p$layers <- layers
+  
+  # Save PNG + PDF (vector)
+  ggsave(out_png, p, width = width, height = height, dpi = dpi, units = "in", limitsize = FALSE)
+  ggsave(sub("\\.png$", ".pdf", out_png), p, width = width, height = height, units = "in",
+         device = grDevices::cairo_pdf)
+  p
+}
+
+# Build A7 vs A9 consensus Venns (UP and DOWN)
+sets_cons_up   <- cons_sets_by(consensus_tbl, "up")
+sets_cons_down <- cons_sets_by(consensus_tbl, "down")
+
+p_clades_up <- plot_clade_venn(
+  sets_cons_up,
+  "UP-regulated genes (HPV-A7 vs HPV-A9)",
+  file.path(out_dir, "6_1_10_Venn_A7_vs_A9_UP_consensus.png")
+)
+
+p_clades_down <- plot_clade_venn(
+  sets_cons_down,
+  "DOWN-regulated genes (HPV-A7 vs HPV-A9)",
+  file.path(out_dir, "6_1_10_Venn_A7_vs_A9_DOWN_consensus.png")
+)
+
+# Grid for these two consensus Venns
+g_clade_venns <- p_clades_up + p_clades_down + plot_layout(ncol = 2)
+save_png_pdf(file.path(out_dir, "6_1_10_Venn_A7_vs_A9_consensus_grid.png"),
+             g_clade_venns, width = 13.0, height = 6.8, dpi = 1200)
+
+g_clade_venns
+
+# Optional: save workspace (unchanged)
 save.image("~/CESC_Network/6_OCTAD/6_1_DGE_signature/6_1_1_Output_plots/6_1_9_Image_plots.RData")
-
+#load("~/CESC_Network/6_OCTAD/6_1_DGE_signature/6_1_1_Output_plots/6_1_9_Image_plots.RData")

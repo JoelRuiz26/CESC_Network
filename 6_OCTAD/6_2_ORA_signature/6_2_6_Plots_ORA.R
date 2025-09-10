@@ -1,124 +1,128 @@
 # ================================
-# Plots de ORA (top-10 por panel)
-# - Entrada: ora_tbl (RDS)
-# - Salidas: 
-#    1) 6_2_2_Ora_dotplot_ALL_top10.png  (facet)
-#    2) PNGs por combinación clade_reg_ont (p.ej., A7_up_BP_top10.png)
+# Libraries
 # ================================
-
 suppressPackageStartupMessages({
-  library(dplyr)
-  library(ggplot2)
-  library(stringr)
-  library(forcats)
+  library(dplyr); library(stringr); library(forcats)
+  library(ggplot2); library(scales)
 })
 
-# ---- Cargar resultados ORA ----
-ora_tbl <- readRDS("~/CESC_Network/6_OCTAD/6_2_ORA_signature/6_2_2_Ora_tbl.rds")
-
-# Carpeta de salida
-out_dir <- "~/CESC_Network/6_OCTAD/6_2_ORA_signature/plots"
-dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
-
-# ---- Preparar columnas numéricas útiles ----
-# GeneRatio viene como "k/N": lo convertimos a numérico
-ratio_num <- function(x) {
-  sapply(strsplit(x, "/"), function(z) as.numeric(z[1]) / as.numeric(z[2]))
-}
-
-ora_clean <- ora_tbl %>%
-  mutate(
-    GeneRatio_num = ratio_num(GeneRatio),
-    minusLog10Padj = -log10(p.adjust),
-    # Acortar descripciones para que quepan bien sin perder legibilidad
-    Description_wrap = str_wrap(Description, width = 50),
-    clade = factor(clade, levels = sort(unique(clade))),
-    regulation = factor(regulation, levels = c("up","down")),
-    ontology = factor(ontology, levels = c("BP","CC","MF"))
-  )
-
-# ---- Top-10 por clade × regulation × ontology (ordenado por p.adjust) ----
-top10 <- ora_clean %>%
-  group_by(clade, regulation, ontology) %>%
-  arrange(p.adjust, desc(Count), .by_group = TRUE) %>%
-  slice_head(n = 10) %>%
-  ungroup()
-
-# ---- DOTPLOT FACETEADO (todos los paneles con top-10) ----
-p_all <- ggplot(
-  top10,
-  aes(x = GeneRatio_num,
-      y = fct_reorder(Description_wrap, GeneRatio_num),
-      size = Count,
-      color = minusLog10Padj)
-) +
-  geom_point() +
-  facet_grid(ontology ~ interaction(clade, regulation, sep = " / "),
-             scales = "free_y", space = "free_y") +
-  labs(
-    x = "GeneRatio",
-    y = NULL,
-    color = "-log10(p.adjust)",
-    size = "Genes",
-    title = "GO ORA (Top-10 por panel)"
-  ) +
-  theme_minimal(base_size = 11) +
-  theme(
-    panel.spacing.y = unit(6, "pt"),
-    axis.text.y = element_text(size = 9),
-    plot.title = element_text(face = "bold")
-  )
-
-ggsave(file.path(out_dir, "6_2_2_Ora_dotplot_ALL_top10.png"),
-       p_all, width = 12, height = 10, dpi = 300)
-
-# ---- PNGs individuales por combinación clade × regulation × ontology ----
-#     Mismo estilo de dotplot, 10 términos por combinación
-make_safe <- function(x) gsub("[^A-Za-z0-9_]+", "_", x)
-
-combos <- top10 %>%
-  distinct(clade, regulation, ontology) %>%
-  arrange(clade, regulation, ontology)
-
-for (i in seq_len(nrow(combos))) {
-  cl  <- combos$clade[i]
-  dr  <- combos$regulation[i]
-  ont <- combos$ontology[i]
+# ================================
+# Helper: save PNG + PDF (vector)
+# - Ensures same width/height for both
+# - Uses Cairo PDF to keep text metrics consistent
+# ================================
+save_png_pdf <- function(path_png, plot, width, height,
+                         units = "in", dpi = 1200, limitsize = FALSE,
+                         use_cairo = TRUE) {
   
-  df <- top10 %>%
-    filter(clade == cl, regulation == dr, ontology == ont) %>%
-    # reordenar ejes por GeneRatio_num para este panel
-    mutate(Description_wrap = fct_reorder(Description_wrap, GeneRatio_num))
-  
-  if (nrow(df) == 0) next
-  
-  p <- ggplot(
-    df,
-    aes(x = GeneRatio_num,
-        y = Description_wrap,
-        size = Count,
-        color = minusLog10Padj)
-  ) +
-    geom_point() +
-    labs(
-      x = "GeneRatio",
-      y = NULL,
-      color = "-log10(p.adjust)",
-      size = "Genes",
-      title = paste0("GO ORA Top-10 — ", cl, " / ", dr, " / ", as.character(ont))
-    ) +
-    theme_minimal(base_size = 11) +
+  # Forzar fondo blanco en el objeto
+  plot_white <- plot +
     theme(
-      axis.text.y = element_text(size = 9),
-      plot.title = element_text(face = "bold")
+      plot.background  = element_rect(fill = "white", colour = NA),
+      panel.background = element_rect(fill = "white", colour = NA)
     )
   
-  fname <- sprintf("%s_%s_%s_top10.png",
-                   make_safe(as.character(cl)),
-                   make_safe(as.character(dr)),
-                   make_safe(as.character(ont)))
-  ggsave(file.path(out_dir, fname), p, width = 9, height = 6, dpi = 300)
+  # 1) PNG (con bg blanco explícito)
+  ggplot2::ggsave(
+    filename = path_png, plot = plot_white,
+    width = width, height = height, units = units,
+    dpi = dpi, limitsize = limitsize, bg = "white"
+  )
+  
+  # 2) PDF (vector; Cairo para métricas consistentes)
+  path_pdf <- sub("\\.png$", ".pdf", path_png)
+  if (use_cairo) {
+    ggplot2::ggsave(
+      filename = path_pdf, plot = plot_white,
+      width = width, height = height, units = units,
+      device = grDevices::cairo_pdf, limitsize = limitsize
+    )
+  } else {
+    ggplot2::ggsave(
+      filename = path_pdf, plot = plot_white,
+      width = width, height = height, units = units,
+      limitsize = limitsize
+    )
+  }
+  invisible(path_pdf)
 }
 
-cat("Listo.\n- Facet: ", file.path(out_dir, "6_2_2_Ora_dotplot_ALL_top10.png"),
-    "\n- PNGs individuales por combinación en: ", out_dir, "\n")
+
+# ================================
+# I/O
+# ================================
+ora_tbl <- readRDS("~/CESC_Network/6_OCTAD/6_2_ORA_signature/6_2_3_Ora_tbl_0_25.rds")
+out_dir <- "~/CESC_Network/6_OCTAD/6_2_ORA_signature/6_2_7_Output_plots/"
+
+# ================================
+# Utils
+# ================================
+ratio_num <- function(x) sapply(strsplit(x, "/"), \(z) as.numeric(z[1]) / as.numeric(z[2]))
+
+# ================================
+# Clean & transform
+# ================================
+ora_clean <- ora_tbl %>%
+  mutate(
+    GeneRatio_num    = ratio_num(GeneRatio),
+    minusLog10Padj   = -log10(p.adjust),
+    Description_wrap = stringr::str_wrap(Description, width = 55),
+    clade            = factor(clade, levels = sort(unique(clade))),
+    regulation       = factor(regulation, levels = c("up", "down")),
+    ontology         = factor(ontology, levels = c("BP","CC","MF")),
+    clade_lbl        = dplyr::recode(clade, A7 = "HPV-A7", A9 = "HPV-A9")
+  )
+
+# Top terms per clade/regulation/ontology
+top40 <- ora_clean %>%
+  group_by(clade_lbl, regulation, ontology) %>%
+  arrange(p.adjust, desc(Count), .by_group = TRUE) %>%
+  slice_head(n = 5) %>%
+  ungroup()
+
+# Nice breaks for x-axis
+xb <- pretty(c(0, max(top40$GeneRatio_num, na.rm = TRUE)), n = 4)
+
+# ================================
+# Plot
+# ================================
+p_all <- ggplot(top40,
+                aes(x = GeneRatio_num,
+                    y = forcats::fct_reorder(Description_wrap, GeneRatio_num),
+                    size = Count, color = minusLog10Padj)) +
+  geom_point(alpha = 0.95) +
+  facet_grid(ontology ~ interaction(clade_lbl, regulation, sep = " / "),
+             scales = "free_y", space = "free_y") +
+  labs(x = "GeneRatio", y = NULL, color = "-log10(p.adjust)", size = "Genes") +
+  scale_color_viridis_c(direction = -1) +
+  scale_size_area(max_size = 12) +
+  scale_x_continuous(
+    breaks = xb,
+    labels = scales::label_number(accuracy = 0.02),
+    expand = expansion(mult = c(0.01, 0.03)),
+    guide  = guide_axis(check.overlap = TRUE)
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    strip.text   = element_text(size = 14, face = "bold"),
+    strip.text.y = element_text(angle = 0, face = "bold"),
+    axis.text.y  = element_text(size = 13, face = "bold", lineheight = 1.3),
+    panel.spacing.y    = grid::unit(12, "pt"),
+    panel.spacing.x    = grid::unit(15, "pt"),
+    panel.grid.major.x = element_line(color = "grey90", linewidth = 0.4),
+    panel.grid.major.y = element_line(color = "grey90", linewidth = 0.4),
+    panel.grid.minor   = element_blank(),
+    plot.margin        = margin(10, 20, 10, 40)
+  ) +
+  coord_cartesian(clip = "off")
+
+# ================================
+# Save: PNG + PDF (same geometry)
+# ================================
+save_png_pdf(file.path(out_dir, "6_2_8_Ora_dotplot_clean.png"),
+             p_all, width = 16, height = 9, dpi = 1200, limitsize = FALSE)
+
+p_all
+
+# (optional) Save workspace
+save.image("~/CESC_Network/6_OCTAD/6_2_ORA_signature/6_2_7_Output_plots/6_2_9_Image_plots.RData")

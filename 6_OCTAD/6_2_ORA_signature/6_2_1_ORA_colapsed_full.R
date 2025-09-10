@@ -113,9 +113,10 @@ ora_tbl_grouped <- run_ora(
   min_gene_list_n = min_gene_list_n,
   p_cut = p_cut, q_cut = q_cut,
   key_type = key_type,
-  simplify = TRUE, simplify_cutoff = 0.3 #Change for semantic terms grouping
+  simplify = TRUE, simplify_cutoff = 0.25 #Change for semantic terms grouping
 )
-saveRDS(ora_tbl_grouped, file.path(out_dir, "6_2_3_Ora_tbl_0.95.rds"))
+
+saveRDS(ora_tbl_grouped, file.path(out_dir, "6_2_3_Ora_tbl_0_25.rds"))
 
 save.image("~/CESC_Network/6_OCTAD/6_2_ORA_signature/6_2_4_Image_ORA.RData")
 cat("FULL   unique terms:", length(unique(ora_tbl_full$Description)),    "\n")
@@ -124,6 +125,31 @@ cat("GROUP  unique terms:", length(unique(ora_tbl_grouped$Description)), "\n")
 ### ###
 #load("~/CESC_Network/6_OCTAD/6_2_ORA_signature/6_2_4_Image_ORA.RData")
 
+#### Check different descriptions
 
+a7_only <- setdiff(unique(ora_tbl_grouped$Description[ora_tbl_grouped$clade == "A7"]),
+                   unique(ora_tbl_grouped$Description[ora_tbl_grouped$clade == "A9"]))
+
+a9_only <- setdiff(unique(ora_tbl_grouped$Description[ora_tbl_grouped$clade == "A9"]),
+                   unique(ora_tbl_grouped$Description[ora_tbl_grouped$clade == "A7"]))
+
+# A7 
+a7_only_df <- ora_tbl_grouped %>%
+  filter(clade == "A7", Description %in% a7_only) %>%
+  dplyr::select(Description, regulation)
+
+#Description regulation
+#GO:0008017 microtubule binding         up
+#GO:0140666  annealing activity         up
+
+# A9 
+a9_only_df <- ora_tbl_grouped %>%
+  filter(clade == "A9", Description %in% a9_only) %>%
+  dplyr::select(Description, regulation)
+#Description regulation
+#GO:0140888          interferon-mediated signaling pathway         up
+#GO:0003678                          DNA helicase activity         up
+#GO:0140801               histone H2AXY142 kinase activity       down
+#GO:0141147 intracellularly calcium-gated channel activity       down
 
 
