@@ -1,17 +1,23 @@
 #============================================================================= 
-# sRGES (RES) runner # Input: -list of DGE (define the method used) and 
-# -patient sample IDs (included in TCGA/GTEX) 
-# Output: -List of drugs with RES significant scoring # What it does 
-# 1) Aligns case IDs to OCTAD metadata (EH7274) 
-# 2) Computes cell-line similarity per signature using octad.whole (HDF5) 
-# 3) Runs octad::runsRGES for each (signature × method) 
-# 4) Savesthe filtered RDS per combo: RES_<signature>_<method>_cut*.rds # 
-# Notes # 
-#- Requires the ~3GB HDF5 file for octad.whole. 
-# - You define "signatures" = sets of patient sample IDs (case cohorts). 
-# - For each signature, you specify one or more expression signatures (methods). 
-# =============================================================================
-
+# sRGES (RES) runner
+# Inputs:
+#   - Disease expression signatures (DGE) per method (DESeq2/EdgeR/limma)
+#   - Patient sample IDs (present in TCGA/GTEx)
+# Outputs:
+#   - Filtered drug rankings per (signature × method):  RES_<sig>_<method>_cut*.rds
+#   - FULL drug rankings per (signature × method):      RES_<sig>_<method>_FULL.rds
+#   - NEW: Similar cell lines used per signature:       SimilarCellLines_<sig>_medcor>*.rds
+#
+# Steps:
+#   1) Align case IDs to OCTAD metadata (EH7274)
+#   2) Compute cell-line similarity per signature (octad.whole HDF5)
+#   3) Run octad::runsRGES per (signature × method)
+#   4) Save filtered + FULL rankings; NEW: save similar cell lines (character)
+#
+# Notes:
+#   - Requires ~3GB HDF5 (octad.whole)
+#   - "signatures" are patient cohorts; each may run multiple DGE methods
+#=============================================================================
 
 suppressPackageStartupMessages({
   library(octad)
@@ -21,10 +27,10 @@ suppressPackageStartupMessages({
 })
 
 # ------------------------- Parameters -------------------------
-medcor_thr   <- 0.34
-sRGES_cutoff <- -0.20
-permutations <- 10000
-choose_fda   <- TRUE
+medcor_thr   <- 0.34     # threshold on median correlation (medcor) to keep similar cell lines
+sRGES_cutoff <- -0.20    # filtering cutoff for sRGES (more negative is better)
+permutations <- 10000     # permutations for runsRGES
+choose_fda   <- TRUE       # restrict to FDA drugs if TRUE
 set.seed(123)
 
 # ------------------------------ Paths ------------------------
@@ -64,11 +70,15 @@ sig_cfg <- list(
 )
 
 # ---------------------- Align case IDs with OCTAD --------------
+# EH7274 contains OCTAD phenotype metadata; used to keep only aligned sample IDs
 phenoDF <- octad.db::get_ExperimentHub_data("EH7274")
 
 # =============================== FUNCTIONS ====================
 
 # (1) Compute cell-line similarity for one signature
+#     Returns:
+#       - sim_tbl: data.frame with medcor per cell line (sorted desc)
+#       - cells:   character vector of cell_ids with medcor > medcor_thr
 compute_similarity_for_signature <- function(case_ids, medcor_thr, h5_file) {
   sim_tbl <- octad::computeCellLine(case_id = case_ids, source = "octad.whole", file = h5_file)
   sim_tbl <- sim_tbl %>%
@@ -78,33 +88,38 @@ compute_similarity_for_signature <- function(case_ids, medcor_thr, h5_file) {
   list(sim_tbl = sim_tbl, cells = cells)
 }
 
-# (2) Run runsRGES for one (signature × method), save FILTERED + FULL
+# (2) Run runsRGES for one (signature × method) and save FILTERED + FULL tables
 run_res_for_signature <- function(signature, method, sig_path, sim_tbl, cells,
                                   permutations, choose_fda, sRGES_cutoff, out_dir) {
   if (!file.exists(sig_path)) stop("DE signature RDS not found: ", sig_path)
   
+  # Load disease signature; keep unique gene Symbols only
   dz_sig <- readRDS(sig_path) %>%
     dplyr::filter(!is.na(Symbol)) %>%
     dplyr::distinct(Symbol, .keep_all = TRUE)
   
+  # Ensure supporting data is available (as in OCTAD pipelines)
   suppressMessages({
     invisible(octad.db::get_ExperimentHub_data("EH7270"))
     invisible(octad.db::get_ExperimentHub_data("EH7271"))
     if (isTRUE(choose_fda)) invisible(octad.db::get_ExperimentHub_data("EH7269"))
   })
   
+  # Output paths
   sig_dir   <- file.path(out_dir, signature, method)
   dir.create(sig_dir, recursive = TRUE, showWarnings = FALSE)
   out_kept  <- file.path(sig_dir, sprintf("RES_%s_%s_cut%.2f.rds",  signature, method, sRGES_cutoff))
-  out_full  <- file.path(sig_dir, sprintf("RES_%s_%s_FULL.rds",     signature, method))   # <-- NEW
+  out_full  <- file.path(sig_dir, sprintf("RES_%s_%s_FULL.rds",     signature, method))   # NEW
   
+  # If no similar cell lines pass the threshold, save empty placeholders
   if (length(cells) == 0) {
     message(sprintf(">> [%s - %s] 0 cells over medcor_thr=%.2f. Saving empty.", signature, method, medcor_thr))
     saveRDS(tibble::tibble(), out_kept)
-    saveRDS(tibble::tibble(), out_full)   # <-- NEW: keep empty placeholder
+    saveRDS(tibble::tibble(), out_full)   # NEW
     return(invisible(tibble::tibble()))
   }
   
+  # Run sRGES
   message(sprintf(">> [%s - %s] runsRGES on %d cells...", signature, method, length(cells)))
   res <- octad::runsRGES(
     dz_signature      = dz_sig,
@@ -112,15 +127,15 @@ run_res_for_signature <- function(signature, method, sig_path, sim_tbl, cells,
     weight_cell_line  = sim_tbl,
     permutations      = permutations,
     choose_fda_drugs  = choose_fda,
-    output            = TRUE,            # deja CSVs en sig_dir
+    output            = TRUE,            # also writes CSVs to sig_dir
     outputFolder      = sig_dir
   )
   
-  # ---- NEW: save the FULL ranking (no filter) ----
+  # Save FULL ranking (unfiltered)
   res_tbl <- tibble::as_tibble(res)
   saveRDS(res_tbl, out_full)
-  # -----------------------------------------------
   
+  # Save filtered table (sRGES <= cutoff), augmented with signature/method
   kept <- res_tbl %>%
     dplyr::filter(sRGES <= sRGES_cutoff) %>%
     dplyr::arrange(sRGES) %>%
@@ -135,6 +150,7 @@ run_res_for_signature <- function(signature, method, sig_path, sim_tbl, cells,
 # ============================== MAIN LOOP =====================
 for (signature in names(sig_cfg)) {
   
+  # 1) Load cohort case IDs and keep only those present in OCTAD
   cases_file <- sig_cfg[[signature]]$cases_rds
   if (!file.exists(cases_file)) {
     warning("Missing cases_rds for signature: ", signature, " -> ", cases_file)
@@ -145,9 +161,25 @@ for (signature in names(sig_cfg)) {
   message(sprintf("\n== Signature %s: %d raw cases | %d aligned in OCTAD",
                   signature, length(case_ids_raw), length(case_ids)))
   
+  # 2) Compute cell-line similarity (returns both the table and the filtered vector)
   sim_out <- compute_similarity_for_signature(case_ids, medcor_thr, h5_file)
   message(sprintf("   Selected cell lines: %d (medcor > %.2f)", length(sim_out$cells), medcor_thr))
   
+  # --- NEW: Save the "pull" of similar cell lines (character) per signature ---
+  #     This does NOT affect downstream results; it only adds a small side artifact.
+  sig_base_dir <- file.path(out_dir, signature)
+  dir.create(sig_base_dir, recursive = TRUE, showWarnings = FALSE)
+  similar_cells_chr <- as.character(sim_out$cells)  # already ordered by medcor desc
+  out_cells_rds <- file.path(sig_base_dir, sprintf("SimilarCellLines_%s_medcor_gt%.2f.rds", signature, medcor_thr))
+  saveRDS(similar_cells_chr, out_cells_rds)
+  message(sprintf("   Saved similar cell lines (character): %s [n=%d]",
+                  out_cells_rds, length(similar_cells_chr)))
+  # (Optional) Save the full similarity table:
+  # out_simtbl_rds <- file.path(sig_base_dir, sprintf("CellLineSimilarityTable_%s_FULL.rds", signature))
+  # saveRDS(sim_out$sim_tbl, out_simtbl_rds)
+  # ---------------------------------------------------------------------------
+  
+  # 3) Run sRGES per DGE method using the same similarity outputs
   for (method in names(sig_cfg[[signature]]$expr)) {
     sig_path <- sig_cfg[[signature]]$expr[[method]]
     run_res_for_signature(
