@@ -51,8 +51,8 @@ common_by_signature <- function(df, sig, k = 3) {
 }
 common_A7 <- common_by_signature(all_res, "A7", k = 3)
 common_A9 <- common_by_signature(all_res, "A9", k = 3)
-#saveRDS(common_A7, file.path(base_res, "A7", paste0("RES_A7_common_3methods_", cutfile)))
-#saveRDS(common_A9, file.path(base_res, "A9", paste0("RES_A9_common_3methods_", cutfile)))
+saveRDS(common_A7, file.path(base_res, "A7", paste0("RES_A7_common_3methods_", cutfile)))
+saveRDS(common_A9, file.path(base_res, "A9", paste0("RES_A9_common_3methods_", cutfile)))
 
 # --------- Colapsa por fármaco ----------
 collapse_num  <- function(x) if (all(is.na(x))) NA_real_ else mean(x, na.rm = TRUE)
@@ -64,6 +64,8 @@ collapse_rges <- function(df_sig_common) {
 }
 collapsed_A7 <- collapse_rges(common_A7)
 collapsed_A9 <- collapse_rges(common_A9)
+saveRDS(collapsed_A7, file.path(base_res, "A7", paste0("RES_A7_common3_collapsed_", cutfile)))
+saveRDS(collapsed_A9, file.path(base_res, "A9", paste0("RES_A9_common3_collapsed_", cutfile)))
 
 # --------- Tabla base (A7 vs A9) ----------
 wide <- full_join(
@@ -253,3 +255,4 @@ draw(
   padding               = grid::unit(c(4, 6, 26, 16), "mm")
 )
 dev.off()
+

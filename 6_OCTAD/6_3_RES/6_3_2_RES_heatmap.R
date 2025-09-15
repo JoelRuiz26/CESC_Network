@@ -15,7 +15,7 @@ suppressPackageStartupMessages({
 # Paths & config
 # --------------------------
 base_res   <- "~/CESC_Network/6_OCTAD/6_3_RES"
-cutfile    <- "cut-0.20.rds"
+cutfile    <- "FULL.rds"
 signatures <- c("A7","A9")
 methods    <- c("DESeq2","EdgeR","limma")
 
@@ -97,8 +97,8 @@ collapse_rges <- function(df_sig_common) {
 collapsed_A7 <- collapse_rges(common_A7)
 collapsed_A9 <- collapse_rges(common_A9)
 
-#saveRDS(collapsed_A7, file.path(base_res, "A7", paste0("RES_A7_common3_collapsed_", cutfile)))
-#saveRDS(collapsed_A9, file.path(base_res, "A9", paste0("RES_A9_common3_collapsed_", cutfile)))
+saveRDS(collapsed_A7, file.path(base_res, "A7", paste0("RES_A7_common3_collapsed_", cutfile)))
+saveRDS(collapsed_A9, file.path(base_res, "A9", paste0("RES_A9_common3_collapsed_", cutfile)))
 
 # --------------------------
 # 4) Build heatmap input (A7 vs A9), membership, ranking

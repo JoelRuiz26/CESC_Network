@@ -27,7 +27,7 @@ suppressPackageStartupMessages({
 })
 
 # ------------------------- Parameters -------------------------
-medcor_thr   <- 0.34     # threshold on median correlation (medcor) to keep similar cell lines
+medcor_thr   <- 0.31     # threshold on median correlation (medcor) to keep similar cell lines
 sRGES_cutoff <- -0.20    # filtering cutoff for sRGES (more negative is better)
 permutations <- 10000     # permutations for runsRGES
 choose_fda   <- TRUE       # restrict to FDA drugs if TRUE
@@ -80,7 +80,7 @@ phenoDF <- octad.db::get_ExperimentHub_data("EH7274")
 #       - sim_tbl: data.frame with medcor per cell line (sorted desc)
 #       - cells:   character vector of cell_ids with medcor > medcor_thr
 compute_similarity_for_signature <- function(case_ids, medcor_thr, h5_file) {
-  sim_tbl <- octad::computeCellLine(case_id = case_ids, source = "octad.whole", file = h5_file)
+  sim_tbl <- octad::computeCellLine(case_id = case_ids, source = "octad.small")#source = "octad.whole", file = h5_file)
   sim_tbl <- sim_tbl %>%
     dplyr::mutate(cell_id = rownames(sim_tbl)) %>%
     dplyr::arrange(dplyr::desc(medcor))
