@@ -48,7 +48,7 @@ n_present_per_set <- function(srg, target_type, signature){
 enrich_many <- function(sRGES_list,
                         out_dir,
                         target_types = c("chembl_targets", "mesh", "ChemCluster"),
-                        alpha = 0.05,
+                        alpha = 0.01,
                         folder_prefix = "Enriquecimiento") {
   dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
   
@@ -103,10 +103,12 @@ enrich_many <- function(sRGES_list,
 # --------------------
 # Load your sRGES (A7, A9) and sort ascending (more negative first)
 # --------------------
-sRES_A7 <- readRDS("~/CESC_Network/6_OCTAD/6_3_RES/A7/RES_A7_common3_collapsed_FULL.rds") %>%
+
+sRES_A7 <- readRDS("~/CESC_Network/6_OCTAD/6_3_RES/A7/RES_A7_common3_collapsed_FDA_Launched.rds") %>%
   arrange(sRGES)
-sRES_A9 <- readRDS("~/CESC_Network/6_OCTAD/6_3_RES/A9/RES_A9_common3_collapsed_FULL.rds") %>%
+sRES_A9 <- readRDS("~/CESC_Network/6_OCTAD/6_3_RES/A9/RES_A9_common3_collapsed_FDA_Launched.rds") %>%
   arrange(sRGES)
+head(sRES_A7)
 
 out_base <- "~/CESC_Network/6_OCTAD/6_4_EnrichedDrugs"
 
@@ -115,7 +117,7 @@ res_enrich <- enrich_many(
   sRGES_list   = list(A7 = sRES_A7, A9 = sRES_A9),
   out_dir      = out_base,
   target_types = c("chembl_targets", "mesh", "ChemCluster"),
-  alpha        = 0.05,
+  alpha        = 0.01,
   folder_prefix= "Enriquecimiento"
 )
 
@@ -148,14 +150,9 @@ enrich_sig_n <- res_enrich$sig %>%
 # --------------------
 dim(enrich_all_n); dim(enrich_sig_n)
 
-#[1] 1412    7
-#[1] 398   7
-
-
-# Example: top MeSH sets for A7, including n_present
-A7_mesh_with_n <- enrich_sig_n %>%
-  filter(signature == "A7", target_type == "mesh") %>%
-  arrange(padj, desc(score))
+###   0.3 and -0.20 RGES
+#[1] 2356    7
+#[1] 330   7
 
 # Save if you want
 saveRDS(enrich_all_n, file.path(out_base, "6_4_1_enrichment_all_with_n_present.rds"))

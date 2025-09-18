@@ -46,7 +46,7 @@ shorten <- function(x, width = 60) stringr::str_trunc(x, width = width, side = "
 plot_bubble_horizontal_pretty <- function(df,
                                           signatures      = c("HPV-A7","HPV-A9"),
                                           target_types    = c("mesh"),
-                                          alpha           = 0.05,
+                                          alpha           = 0.01,
                                           min_present     = 3,
                                           pdf_out         = file.path(out_base, "6_4_plot_bubble.pdf"),
                                           png_out         = file.path(out_base, "6_4_plot_bubble.png"),
@@ -106,7 +106,7 @@ plot_bubble_horizontal_pretty <- function(df,
     labs(
       title    = NULL,
       subtitle = NULL,
-      caption  = "All points are significant (FDR \u2264 0.05)",
+      caption  = "All points are significant (FDR \u2264 0.01)",
       x        = "Enrichment score",
       y        = NULL
     ) +
@@ -162,5 +162,20 @@ plot_bubble_horizontal_pretty(
   min_present  = 3,
   pdf_out      = file.path(out_base, "6_4_plot_bubble_chembl.pdf"),
   png_out      = file.path(out_base, "6_4_plot_bubble_chembl.png"),
+  show         = TRUE
+)
+
+
+
+
+# === CHEMBL targets  ===
+plot_bubble_horizontal_pretty(
+  df           = enrich_sig_n,
+  signatures   = c("HPV-A7","HPV-A9"),
+  target_types = c("ChemCluster"),   # <-- aquí cambiamos a CHEMBL
+  alpha        = 0.01,                  # mismo umbral que usaste arriba
+  min_present  = 3,
+  pdf_out      = file.path(out_base, "6_4_plot_bubble_Clusterchembl.pdf"),
+  png_out      = file.path(out_base, "6_4_plot_bubble_Clusterchembl.png"),
   show         = TRUE
 )

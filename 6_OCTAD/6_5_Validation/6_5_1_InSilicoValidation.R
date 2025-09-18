@@ -29,11 +29,12 @@ result_A9 <- RGEs_A9[, c("pert_iname", "sRGES")]
 
 # Similar cell lines (coerce directly to unique character vector)
 lineas_similares_A7 <- unique(as.character(unlist(
-  readRDS("~/CESC_Network/6_OCTAD/6_3_RES/A7/SimilarCellLines_A7_medcor_gt0.34.rds"),
+  readRDS("~/CESC_Network/6_OCTAD/6_3_RES/A7/SimilarCellLines_A7_medcor_gt0.30.rds"),
   use.names = FALSE
 )))
+
 lineas_similares_A9 <- unique(as.character(unlist(
-  readRDS("~/CESC_Network/6_OCTAD/6_3_RES/A9/SimilarCellLines_A9_medcor_gt0.34.rds"),
+  readRDS("~/CESC_Network/6_OCTAD/6_3_RES/A9/SimilarCellLines_A9_medcor_gt0.30.rds"),
   use.names = FALSE
 )))
 
@@ -95,5 +96,7 @@ log_a7  <- run_validation("A7", result_A7, lineas_similares_A7, output_A7)
 log_a9  <- run_validation("A9", result_A9, lineas_similares_A9, output_A9)
 log_all <- rbind(log_a7, log_a9)
 
-save.image(file.path(base_dir, "6_5_1_Image_Validation.RData"))
+save.image(file.path(base_dir, "6_5_2_Image_Validation.RData"))
+
+load(file.path(base_dir, "6_5_2_Image_Validation.RData"))
 
