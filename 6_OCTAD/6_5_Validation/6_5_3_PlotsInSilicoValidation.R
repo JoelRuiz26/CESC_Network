@@ -6,8 +6,10 @@ suppressPackageStartupMessages({
   library(readr); library(dplyr); library(purrr); library(stringr)
   library(tidyr); library(ggplot2); library(ggrepel)
   library(jsonlite); library(xml2)
-  library(patchwork)   # <-- NUEVO para armar el grid
+  library(patchwork)
+  library(grid)          
 })
+
 
 
 # ---- Base folders ----
@@ -228,11 +230,12 @@ unique_labels_auc <- function(tbl){
 
 # ---- Plotters ----
 # Facets (sin cambios): points + labels por punto + línea extraída del HTML
+# -------- Facets IC50 --------
+# -------- Facets IC50 --------
 plot_facets_ic50 <- function(tbl, title_prefix, metrics_tbl, smooth_df, fda_set){
   if (!nrow(tbl)) return(NULL)
   ann <- metrics_tbl %>% filter(metric=="IC50") %>% dplyr::select(cell_line, label) %>% distinct()
   
-  # Etiquetas SOLO FDA y SOLO StronglyPredicted = "Yes" (sRGES <= -0.2)
   labs_df <- tbl %>%
     mutate(iname_l = tolower(trimws(pert_iname))) %>%
     filter(iname_l %in% fda_set,
@@ -243,14 +246,16 @@ plot_facets_ic50 <- function(tbl, title_prefix, metrics_tbl, smooth_df, fda_set)
               y     = median(log10(medIC50), na.rm = TRUE),
               .groups = "drop")
   
-  ggplot(tbl, aes(x=sRGES, y=log10(medIC50), color=StronglyPredicted)) +
+  p <- ggplot(tbl, aes(x=sRGES, y=log10(medIC50), color=StronglyPredicted)) +
     geom_point() +
-    ggrepel::geom_text_repel(
-      data = labs_df,
-      inherit.aes = FALSE,
-      aes(x = sRGES, y = y, label = pert_iname),
-      size=2.3, max.overlaps=5, segment.color='grey70'
-    ) +
+    { if (nrow(labs_df) > 0)
+      ggrepel::geom_text_repel(
+        data = labs_df, inherit.aes = FALSE,
+        aes(x = sRGES, y = y, label = pert_iname),
+        size = 2.3, segment.color = "grey70", max.overlaps = 5,
+        box.padding = 0.5, point.padding = 0.3, direction = "y"
+      )
+    } +
     { if (nrow(smooth_df)) geom_path(data=smooth_df, aes(x=x,y=y,group=cell_line),
                                      inherit.aes=FALSE, color="black", linewidth=0.6) } +
     facet_wrap(~cell_line, scales="free") +
@@ -258,16 +263,16 @@ plot_facets_ic50 <- function(tbl, title_prefix, metrics_tbl, smooth_df, fda_set)
               hjust=-0.05, vjust=1.1, size=3.1) +
     labs(title=sprintf("%s: sRGES vs log10(IC50) by Cell Line", title_prefix),
          y="log10(medIC50)", x="sRGES") +
-    coord_cartesian(ylim = c(NA, 15)) +   # <-- recorta arriba en 15
+    coord_cartesian(ylim = c(NA, 15)) +
     theme_bw()
+  p
 }
 
-
+# -------- Facets AUC --------
 plot_facets_auc <- function(tbl, title_prefix, metrics_tbl, smooth_df, fda_set){
   if (!nrow(tbl)) return(NULL)
   ann <- metrics_tbl %>% filter(metric=="AUC") %>% dplyr::select(cell_line, label) %>% distinct()
   
-  # Etiquetas SOLO FDA
   labs_df <- tbl %>%
     mutate(iname_l = tolower(trimws(pert_iname))) %>%
     filter(iname_l %in% fda_set,
@@ -277,29 +282,31 @@ plot_facets_auc <- function(tbl, title_prefix, metrics_tbl, smooth_df, fda_set){
               y     = median(medauc, na.rm = TRUE),
               .groups = "drop")
   
-  ggplot(tbl, aes(x=sRGES, y=medauc, color=StronglyPredicted)) +
+  p <- ggplot(tbl, aes(x=sRGES, y=medauc, color=StronglyPredicted)) +
     geom_point() +
-    # SOLO etiquetar FDA:
-    ggrepel::geom_text_repel(
-      data = labs_df,
-      inherit.aes = FALSE,
-      aes(x = sRGES, y = y, label = pert_iname),
-      size=2.3, max.overlaps=5, segment.color='grey70'
-    ) +
+    { if (nrow(labs_df) > 0)
+      ggrepel::geom_text_repel(
+        data = labs_df, inherit.aes = FALSE,
+        aes(x = sRGES, y = y, label = pert_iname),
+        size = 2.3, segment.color = "grey70", max.overlaps = 5,
+        box.padding = 0.5, point.padding = 0.3, direction = "y"
+      )
+    } +
     { if (nrow(smooth_df)) geom_path(data=smooth_df, aes(x=x,y=y,group=cell_line),
                                      inherit.aes=FALSE, color="black", linewidth=0.6) } +
     facet_wrap(~cell_line, scales="free") +
     geom_text(data=ann, inherit.aes=FALSE, aes(x=-Inf, y=Inf, label=label),
               hjust=-0.05, vjust=1.1, size=3.1) +
     labs(title=sprintf("%s: sRGES vs AUC by Cell Line", title_prefix),
-         y="AUC", x="sRGES") + theme_bw()
+         y="AUC", x="sRGES") +
+    theme_bw()
+  p
 }
 
-# Global (modificado): points + **one label per drug** + single lm line
+# -------- Global IC50 --------
 plot_global_ic50 <- function(tbl, title_prefix){
   if (is.null(tbl) || !nrow(tbl)) return(NULL)
   
-  # Etiquetas SOLO FDA y SOLO StronglyPredicted = "Yes"
   labs_df <- tbl %>%
     filter(fda_flag == "FDA",
            StronglyPredicted == "Yes",
@@ -312,22 +319,25 @@ plot_global_ic50 <- function(tbl, title_prefix){
   ggplot(tbl, aes(x = sRGES, y = log10(medIC50))) +
     geom_point(aes(color = StronglyPredicted, shape = fda_flag),
                alpha = ifelse(tbl$fda_flag == "FDA", 0.9, 0.35), size = 1.9) +
-    # Recta con TODOS los puntos (no solo FDA)
     geom_smooth(aes(group = 1), method = "lm", se = TRUE,
                 color = "black", fill = "grey80") +
-    ggrepel::geom_text_repel(
-      data = labs_df, inherit.aes = FALSE,
-      aes(x = sRGES, y = y, label = pert_iname, color = NULL),
-      size = 2.6, segment.color = 'grey80', max.overlaps = Inf
-    ) +
+    { if (nrow(labs_df) > 0)
+      ggrepel::geom_text_repel(
+        data = labs_df, inherit.aes = FALSE,
+        aes(x = sRGES, y = y, label = pert_iname),
+        size = 2.6, segment.color = "grey80", max.overlaps = Inf,
+        box.padding = 0.6, point.padding = 0.35,
+        nudge_y = 0.2, direction = "y"
+      )
+    } +
     scale_shape_manual(values = c(FDA = 17, Other = 16), name = "FDA status") +
     labs(title = sprintf("%s: Global sRGES vs log10(IC50)", title_prefix),
          y = "log10(medIC50)", x = "sRGES") +
-    coord_cartesian(ylim = c(NA, 15)) +   # <-- recorta arriba en 15
+    coord_cartesian(ylim = c(NA, 15), clip = "off") +
     theme_minimal(base_size = 14)
 }
 
-
+# -------- Global AUC --------
 plot_global_auc <- function(tbl, title_prefix){
   if (is.null(tbl) || !nrow(tbl)) return(NULL)
   
@@ -341,19 +351,30 @@ plot_global_auc <- function(tbl, title_prefix){
   ggplot(tbl, aes(x = sRGES, y = medauc)) +
     geom_point(aes(color = StronglyPredicted, shape = fda_flag),
                alpha = ifelse(tbl$fda_flag == "FDA", 0.9, 0.35), size = 1.9) +
-    ## <- CAMBIO: línea con TODOS los puntos
     geom_smooth(aes(group = 1), method = "lm", se = TRUE,
                 color = "black", fill = "grey80") +
-    ggrepel::geom_text_repel(
-      data = labs_df, inherit.aes = FALSE,
-      aes(x = sRGES, y = y, label = pert_iname, color = NULL),
-      size = 2.6, segment.color = 'grey80', max.overlaps = Inf
-    ) +
+    { if (nrow(labs_df) > 0)
+      ggrepel::geom_text_repel(
+        data = labs_df, inherit.aes = FALSE,
+        aes(x = sRGES, y = y, label = pert_iname),
+        size = 2.6, segment.color = "grey80", max.overlaps = Inf,
+        box.padding = 0.6, point.padding = 0.35,
+        nudge_y = 0.02, direction = "y"
+      )
+    } +
     scale_shape_manual(values = c(FDA = 17, Other = 16), name = "FDA status") +
     labs(title = sprintf("%s: Global sRGES vs AUC", title_prefix),
          y = "AUC", x = "sRGES") +
+    coord_cartesian(clip = "off") +
     theme_minimal(base_size = 14)
 }
+
+
+
+
+
+
+
 
 # ---- Build plots ----
 p_ic50_A7 <- plot_facets_ic50(data_A7$ic50, "A7", metrics_A7, smooth_A7_ic50, fda_set_A7)
@@ -392,15 +413,3 @@ save_plot_all(p_auc_A9_glob,  "A9_global_auc")
 # (Optional interactive display)
 for (p in list(p_ic50_A7,p_auc_A7,p_ic50_A9,p_auc_A9,p_ic50_A7_glob,p_auc_A7_glob,p_ic50_A9_glob,p_auc_A9_glob))
   if (!is.null(p)) print(p)
-
-
-
-
-
-
-
-length(unique(tolower(data_A7_ic50_fda$pert_iname)))
-length(unique(tolower(data_A7_auc_fda$pert_iname)))
-
-
-

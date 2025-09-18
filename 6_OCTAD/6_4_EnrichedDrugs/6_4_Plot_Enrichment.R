@@ -61,18 +61,22 @@ plot_bubble_horizontal_pretty <- function(df,
                                           legend_title    = "n") {
   
   # ---- Filter, order and prettify labels
+  # ---- Filter, order and prettify labels
   d <- df %>%
     dplyr::filter(signature %in% signatures,
                   target_type %in% target_types,
                   padj <= alpha,
-                  n_present > min_present) %>%
+                  n_present > min_present,
+                  score >= 0.3) %>%   # <--- NUEVO FILTRO AQUÍ
     dplyr::group_by(signature, target_type) %>%
     dplyr::arrange(padj, dplyr::desc(score), .by_group = TRUE) %>%
     dplyr::ungroup() %>%
     dplyr::mutate(target_short = shorten(target, 60)) %>%
     dplyr::group_by(signature) %>%
-    dplyr::mutate(target_short = factor(target_short,
-                                        levels = rev(unique(target_short[order(-score)])))) %>%
+    dplyr::mutate(target_short = factor(
+      target_short,
+      levels = rev(unique(target_short[order(-score)]))
+    )) %>%
     dplyr::ungroup()
   
   if (nrow(d) == 0L) {
@@ -179,3 +183,4 @@ plot_bubble_horizontal_pretty(
   png_out      = file.path(out_base, "6_4_plot_bubble_Clusterchembl.png"),
   show         = TRUE
 )
+
