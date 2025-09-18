@@ -98,5 +98,3 @@ log_all <- rbind(log_a7, log_a9)
 
 save.image(file.path(base_dir, "6_5_2_Image_Validation.RData"))
 
-load(file.path(base_dir, "6_5_2_Image_Validation.RData"))
-
