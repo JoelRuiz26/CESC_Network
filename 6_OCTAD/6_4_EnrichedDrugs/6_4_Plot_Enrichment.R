@@ -147,40 +147,60 @@ plot_bubble_horizontal_pretty <- function(df,
 }
 
 # ---- Call
+# MeSH (pocas categorías → súbele el mínimo)
 plot_bubble_horizontal_pretty(
   df           = enrich_sig_n,
   signatures   = c("HPV-A7","HPV-A9"),
-  target_types = c("mesh"),
+  target_types = "mesh",
   alpha        = 0.01,
-  min_present  = 3
+  min_present  = 3,
+  base_size    = 18,      # tipografía un poco mayor
+  width_in     = 8.5,     # un poco más ancho si quieres
+  height_min   = 12,      # <-- súbelo (antes 8.5)
+  height_per_cat = 0.40,  # un pelín más de alto por categoría
+  pdf_out      = file.path(out_base, "6_4_plot_bubble_mesh_big.pdf"),
+  png_out      = file.path(out_base, "6_4_plot_bubble_mesh_big.png")
 )
 
-
-
-# === CHEMBL targets  ===
+# ChEMBL targets (muchas categorías → ya crece solo; puedes dejarlo como estaba)
 plot_bubble_horizontal_pretty(
   df           = enrich_sig_n,
   signatures   = c("HPV-A7","HPV-A9"),
-  target_types = c("chembl_targets"),   # <-- aquí cambiamos a CHEMBL
-  alpha        = 0.01,                  # mismo umbral que usaste arriba
+  target_types = "chembl_targets",
+  alpha        = 0.01,
   min_present  = 3,
+  base_size    = 16,
+  width_in     = 8.0,
+  height_min   = 8.5,
+  height_per_cat = 0.34,
   pdf_out      = file.path(out_base, "6_4_plot_bubble_chembl.pdf"),
-  png_out      = file.path(out_base, "6_4_plot_bubble_chembl.png"),
-  show         = TRUE
+  png_out      = file.path(out_base, "6_4_plot_bubble_chembl.png")
 )
 
-
-
-
-# === CHEMBL targets  ===
+# ChemCluster (ajústalo igual que MeSH si te queda pequeño)
 plot_bubble_horizontal_pretty(
   df           = enrich_sig_n,
   signatures   = c("HPV-A7","HPV-A9"),
-  target_types = c("ChemCluster"),   # <-- aquí cambiamos a CHEMBL
-  alpha        = 0.01,                  # mismo umbral que usaste arriba
+  target_types = "ChemCluster",
+  alpha        = 0.01,
   min_present  = 3,
-  pdf_out      = file.path(out_base, "6_4_plot_bubble_Clusterchembl.pdf"),
-  png_out      = file.path(out_base, "6_4_plot_bubble_Clusterchembl.png"),
-  show         = TRUE
+  base_size    = 18,
+  width_in     = 8.5,
+  height_min   = 12,      # <-- sube el mínimo también aquí
+  height_per_cat = 0.40,
+  pdf_out      = file.path(out_base, "6_4_plot_bubble_chemcluster_big.pdf"),
+  png_out      = file.path(out_base, "6_4_plot_bubble_chemcluster_big.png")
 )
+
+
+
+A7 <- readRDS("~/CESC_Network/6_OCTAD/6_3_RES/A7/RES_A7_common3_collapsed_FDA_Launched_0.20.rds")
+A9 <- readRDS("~/CESC_Network/6_OCTAD/6_3_RES/A9/RES_A9_common3_collapsed_FDA_Launched_0.20.rds")
+
+
+print(A9, n=52)
+
+
+
+
 
