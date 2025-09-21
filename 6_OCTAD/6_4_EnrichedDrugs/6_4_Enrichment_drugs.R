@@ -32,13 +32,14 @@ load_cmpd_sets <- function(target_type = c("chembl_targets","mesh","ChemCluster"
 #------------------------------
 n_present_per_set <- function(srg, target_type, signature){
   stopifnot(all(c("pert_iname","sRGES") %in% names(srg)))
-  srg <- srg %>% distinct(pert_iname)  # unique drug names
+  srg <- srg %>% mutate(pert_iname = toupper(trimws(pert_iname))) %>% distinct(pert_iname)
   sets <- load_cmpd_sets(target_type)
+  sets <- lapply(sets, function(v) toupper(trimws(v)))
   tibble(
-    target     = names(sets),
-    n_present  = vapply(sets, function(v) sum(srg$pert_iname %in% v), integer(1)),
-    target_type= target_type,
-    signature  = signature
+    target      = names(sets),
+    n_present   = vapply(sets, function(v) sum(srg$pert_iname %in% v), integer(1)),
+    target_type = target_type,
+    signature   = signature
   )
 }
 
@@ -90,7 +91,7 @@ enrich_many <- function(sRGES_list,
         mutate(signature = nm, target_type = tt)
       
       all_results[[paste(nm, tt, sep = "_")]] <- df
-      sig_results[[paste(nm, tt, sep = "_")]] <- df %>% filter(padj < alpha)
+      sig_results[[paste(nm, tt, sep = "_")]] <- df %>% filter(padj <= alpha)
     }
   }
   
@@ -141,6 +142,10 @@ present_idx <- bind_rows(
 # 2) Join n_present to your enrichment tables
 enrich_all_n <- res_enrich$all %>%
   left_join(present_idx, by = c("target","target_type","signature"))
+# A tibble: 1 × 8
+#n   min   q25   med   q75   max n_gt_0_5 n_gt_0_6
+#<int> <dbl> <dbl> <dbl> <dbl> <dbl>    <int>    <int>
+#  1   195 0.110 0.214 0.265 0.346 0.498        0        0
 
 enrich_sig_n <- res_enrich$sig %>%
   left_join(present_idx, by = c("target","target_type","signature"))

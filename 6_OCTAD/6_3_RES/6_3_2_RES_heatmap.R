@@ -40,7 +40,7 @@ vals     <- as.numeric(mat_h)
 data_min <- min(vals, na.rm = TRUE)
 neg_col  <- "#2166AC"
 zero_col <- "#FFF3B0"
-col_fun  <- colorRamp2(c(0, data_min), c(zero_col, neg_col))
+col_fun  <- colorRamp2(c(-0.1, data_min), c(zero_col, neg_col))
 
 # ---------- Top membership bar ----------
 membership_cols <- c("Common"="#16A085","HPV-A7-only"="#F39C12","HPV-A9-only"="#8E44AD")
@@ -75,7 +75,7 @@ ht <- Heatmap(
   height = unit(3.5, "in"),
   
   heatmap_legend_param = list(direction = "horizontal",
-                              at = seq(0, data_min, by = -0.1))
+                              at = seq(-0.1, data_min, by = -0.1))
 )
 
 # ---------- Save ----------

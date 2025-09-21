@@ -1,206 +1,165 @@
+# ============================================================
+# Bubble plots: MeSH & ChEMBL + 1×2 grid with equal panel width
+# - Keep inner grid lines, remove panel frames
+# - Bigger "Signature" legend keys and extra spacing from title
+# - Same X range and same export size for both panels
+# - One centered caption for both plots, one unified legend
+# - High-res export (PDF + PNG @ 1200 dpi)
+# ============================================================
+
 suppressPackageStartupMessages({
   library(dplyr)
   library(ggplot2)
-  library(stringr)
-  library(ggthemes)
-  library(viridis)
-  library(grid)  # for unit()
+  library(viridis)   # color palette
+  library(cowplot)   # equal panel width + composing caption/legend
 })
 
-
-# --- Paths ---
+# -------------------- Paths & data --------------------
 out_base <- "~/CESC_Network/6_OCTAD/6_4_EnrichedDrugs"
 rds_in   <- file.path(out_base, "6_4_1_enrichment_sig_with_n_present.rds")
+enrich   <- readRDS(rds_in)
 
-# --- Load table (must have: target, score, padj, n_present, signature, target_type) ---
-enrich_sig_n <- readRDS(rds_in)
-enrich_sig_n_score05 <- enrich_sig_n %>% filter(score >= 0.5) %>% filter(n_present > 3)
+# Consistent labels
+enrich <- enrich %>%
+  mutate(signature = dplyr::recode(signature, "A7" = "HPV-A7", "A9" = "HPV-A9"))
 
-# A tibble: 6 × 7
-#target score     p  padj signature target_type    n_present
-#<chr>  <dbl> <dbl> <dbl> <chr>     <chr>              <int>
-#1 ABCB11 0.641     0     0 HPV-A7    chembl_targets         2
-#2 ABCC1  0.673     0     0 HPV-A7    chembl_targets         2
-#3 ABCC4  0.589     0     0 HPV-A7    chembl_targets         1
-#4 ABCC8  0.791     0     0 HPV-A7    chembl_targets         1
+# Global filters (adjust if needed)
+alpha_cut   <- 0.01
+min_present <- 3
+score_min   <- 0.30
 
+# ---------- Common X range for both panels ----------
+xmax_global <- enrich %>%
+  filter(target_type %in% c("mesh", "chembl_targets"),
+         signature %in% c("HPV-A7","HPV-A9"),
+         padj <= alpha_cut, n_present >= min_present, score >= score_min) %>%
+  summarise(xmax = ceiling(max(score, na.rm = TRUE) * 20) / 20) %>% pull(xmax)
+x_limits <- c(0.30, xmax_global)
+x_breaks <- seq(x_limits[1], x_limits[2], by = 0.05)
 
-# --- Replace signature values with nicer labels ---
-enrich_sig_n <- enrich_sig_n %>%
-  dplyr::mutate(
-    signature = dplyr::case_when(
-      signature == "A7" ~ "HPV-A7",
-      signature == "A9" ~ "HPV-A9",
-      TRUE ~ signature  # keep other values unchanged
-    )
+# ---------- Common theme ----------
+theme_bubbles <- theme_minimal(base_size = 16) +
+  theme(
+    # keep inner grid (slightly thin)
+    panel.grid.major.x = element_line(color = "grey85", linewidth = 0.3),
+    panel.grid.major.y = element_line(color = "grey88", linewidth = 0.3),
+    panel.grid.minor   = element_blank(),
+    
+    # remove facet strips and any panel frame/box
+    strip.text.y       = element_blank(),
+    strip.background   = element_blank(),
+    panel.border       = element_blank(),
+    
+    # white backgrounds (avoid any dark backdrop)
+    panel.background   = element_rect(fill = "white", color = NA),
+    plot.background    = element_rect(fill = "white", color = NA),
+    
+    # legend tweaks: bigger keys and extra spacing after title
+    legend.position    = "right",
+    legend.key.size    = grid::unit(7, "mm"),
+    legend.text        = element_text(size = 13),
+    legend.title       = element_text(size = 13, face = "bold", margin = margin(b = 6)),
+    legend.spacing.x   = grid::unit(8, "pt"),
+    
+    plot.margin        = margin(12, 20, 22, 28)
   )
 
+# ---------- Build MeSH plot (no caption here; we'll add one globally) ----------
+mesh_df <- enrich %>%
+  filter(target_type == "mesh",
+         signature %in% c("HPV-A7","HPV-A9"),
+         padj <= alpha_cut, n_present >= min_present, score >= score_min) %>%
+  arrange(signature, padj, dplyr::desc(score)) %>%
+  group_by(signature) %>%
+  mutate(target = factor(target, levels = rev(unique(target[order(-score)])))) %>%
+  ungroup()
 
-# Helper: shorten long labels for Y axis
+p_mesh <- ggplot(mesh_df, aes(score, target)) +
+  geom_point(aes(size = n_present, fill = signature),
+             shape = 21, color = "grey20", stroke = 0.25, alpha = 0.95) +
+  scale_size_continuous(name = "n   ", range = c(3.2, 10), breaks = c(4, 7, 10),    
+                        labels = c("4","7","10")) +
+  scale_fill_viridis_d(name = "Signature    ", option = "D", end = 0.85) +
+  scale_x_continuous(limits = x_limits, breaks = x_breaks,
+                     labels = scales::label_number(accuracy = 0.01),
+                     expand = expansion(mult = c(0.12, 0.10))) +
+  scale_y_discrete(expand = expansion(add = 0.8)) +
+  labs(title = "MeSH", x = "Enrichment score", y = NULL, caption = NULL) +
+  facet_grid(signature ~ ., scales = "free_y", space = "free_y") +
+  theme_bubbles +
+  guides(
+    fill = guide_legend(override.aes = list(size = 6, alpha = 1, shape = 21, color = "grey20")),
+    size = guide_legend(order = 2)
+  )
 
+# ---------- Build ChEMBL plot (no caption here) ----------
+chembl_df <- enrich %>%
+  filter(target_type == "chembl_targets",
+         signature %in% c("HPV-A7","HPV-A9"),
+         padj <= alpha_cut, n_present >= min_present, score >= score_min) %>%
+  arrange(signature, padj, dplyr::desc(score)) %>%
+  group_by(signature) %>%
+  mutate(target = factor(target, levels = rev(unique(target[order(-score)])))) %>%
+  ungroup()
 
+p_chembl <- ggplot(chembl_df, aes(score, target)) +
+  geom_point(aes(size = n_present, fill = signature),
+             shape = 21, color = "grey20", stroke = 0.25, alpha = 0.95) +
+  scale_size_continuous(name = "n", range = c(3.2, 10)) +
+  scale_fill_viridis_d(name = "Signature    ", option = "D", end = 0.85) +
+  scale_x_continuous(limits = x_limits, breaks = x_breaks,
+                     labels = scales::label_number(accuracy = 0.01),
+                     expand = expansion(mult = c(0.12, 0.10))) +
+  scale_y_discrete(expand = expansion(add = 0.8)) +
+  labs(title = "ChEMBL targets", x = "Enrichment score", y = NULL, caption = NULL) +
+  facet_grid(signature ~ ., scales = "free_y", space = "free_y") +
+  theme_bubbles +
+  guides(
+    fill = guide_legend(override.aes = list(size = 6, alpha = 1, shape = 21, color = "grey20")),
+    size = guide_legend(order = 2)
+  )
 
-# Helper: shorten long labels for Y axis
-shorten <- function(x, width = 60) stringr::str_trunc(x, width = width, side = "right", ellipsis = "…")
+# ---------- Save individual figures (same size for both) ----------
+w_in <- 15; h_in <- 9
+ggsave(file.path(out_base, "6_4_plot_bubble_mesh_fixed.pdf"),
+       p_mesh + labs(caption = sprintf("All points are significant (FDR \u2264 %.2f)", alpha_cut)),
+       width = w_in, height = h_in, units = "in", dpi = 1200, useDingbats = FALSE)
+ggsave(file.path(out_base, "6_4_plot_bubble_mesh_fixed.png"),
+       p_mesh + labs(caption = sprintf("All points are significant (FDR \u2264 %.2f)", alpha_cut)),
+       width = w_in, height = h_in, units = "in", dpi = 1200)
 
-plot_bubble_horizontal_pretty <- function(df,
-                                          signatures      = c("HPV-A7","HPV-A9"),
-                                          target_types    = c("mesh"),
-                                          alpha           = 0.01,
-                                          min_present     = 3,
-                                          pdf_out         = file.path(out_base, "6_4_plot_bubble.pdf"),
-                                          png_out         = file.path(out_base, "6_4_plot_bubble.png"),
-                                          show            = TRUE,
-                                          base_size       = 16,
-                                          # slimmer & taller figure
-                                          width_in        = 8.0,
-                                          height_min      = 8.5,
-                                          height_per_cat  = 0.34,
-                                          dpi_png         = 900,
-                                          legend_breaks_n = 3,
-                                          legend_title    = "n") {
-  
-  # ---- Filter, order and prettify labels
-  # ---- Filter, order and prettify labels
-  d <- df %>%
-    dplyr::filter(signature %in% signatures,
-                  target_type %in% target_types,
-                  padj <= alpha,
-                  n_present > min_present,
-                  score >= 0.3) %>%   # <--- NUEVO FILTRO AQUÍ
-    dplyr::group_by(signature, target_type) %>%
-    dplyr::arrange(padj, dplyr::desc(score), .by_group = TRUE) %>%
-    dplyr::ungroup() %>%
-    dplyr::mutate(target_short = shorten(target, 60)) %>%
-    dplyr::group_by(signature) %>%
-    dplyr::mutate(target_short = factor(
-      target_short,
-      levels = rev(unique(target_short[order(-score)]))
-    )) %>%
-    dplyr::ungroup()
-  
-  if (nrow(d) == 0L) {
-    warning("No rows to plot with current filters (padj <= alpha, n_present > min_present).")
-    return(invisible(NULL))
-  }
-  
-  # ---- Dynamic figure height by number of categories per facet
-  n_cat_per_sig <- d %>%
-    dplyr::group_by(signature) %>%
-    dplyr::summarise(n = dplyr::n_distinct(target_short), .groups = "drop") %>%
-    dplyr::pull(n)
-  height_in <- max(height_min, max(n_cat_per_sig, na.rm = TRUE) * height_per_cat)
-  
-  # ---- Size legend: 3 breaks between min & max n_present
-  np_min <- min(d$n_present, na.rm = TRUE)
-  np_max <- max(d$n_present, na.rm = TRUE)
-  brks <- unique(round(seq(np_min, np_max, length.out = legend_breaks_n)))
-  brks <- brks[brks >= np_min & brks <= np_max]
-  
-  # ---- Compact X with extra left/right breathing room
-  xr  <- range(d$score, na.rm = TRUE)
-  pad <- diff(xr) * 0.02
-  xlim_use <- c(xr[1] - pad, xr[2] + pad)
-  
-  p <- ggplot(d, aes(x = score, y = target_short)) +
-    geom_point(aes(size = n_present, fill = signature),
-               shape = 21, color = "grey20", stroke = 0.25, alpha = 0.95) +
-    scale_size_continuous(name = legend_title, breaks = brks, range = c(3.2, 10)) +
-    scale_fill_viridis_d(option = "D", end = 0.85, name = "Signature") +
-    labs(
-      title    = NULL,
-      subtitle = NULL,
-      caption  = "All points are significant (FDR \u2264 0.01)",
-      x        = "Enrichment score",
-      y        = NULL
-    ) +
-    facet_grid(signature ~ ., scales = "free_y", space = "free_y") +
-    ggthemes::theme_clean(base_size = base_size) +
-    theme(
-      axis.text.x       = element_text(size = base_size - 1),
-      # slightly smaller y labels + right margin so they don't touch the panel
-      axis.text.y       = element_text(size = base_size - 3, lineheight = 0.95,
-                                       margin = margin(r = 6)),
-      plot.caption      = element_text(size = base_size - 2, hjust = 0),
-      legend.position   = "right",
-      panel.grid.minor  = element_blank(),
-      panel.grid.major.y= element_blank(),
-      # more separation between HPV-A7 and HPV-A9 panels
-      panel.spacing.y   = unit(1.2, "lines"),
-      # larger left/bottom margin so labels/caption never overlap
-      plot.margin       = margin(t = 14, r = 20, b = 26, l = 30)
-    ) +
-    # compact X + extra space; generous Y padding so bubbles never clip
-    scale_x_continuous(limits = xlim_use, expand = expansion(mult = c(0.06, 0.03))) +
-    scale_y_discrete(expand = expansion(add = 1.0)) +
-    coord_cartesian(clip = "off")
-  
-  if (isTRUE(show)) print(p)
-  
-  # Save (PDF vector + high-DPI PNG)
-  ggsave(pdf_out, p, width = width_in, height = height_in, dpi = 300, useDingbats = FALSE)
-  ggsave(png_out, p, width = width_in, height = height_in, dpi = dpi_png)
-  
-  message("Saved: ", pdf_out)
-  message("Saved: ", png_out)
-  invisible(p)
-}
+ggsave(file.path(out_base, "6_4_plot_bubble_chembl.pdf"),
+       p_chembl + labs(caption = sprintf("All points are significant (FDR \u2264 %.2f)", alpha_cut)),
+       width = w_in, height = h_in, units = "in", dpi = 1200, useDingbats = FALSE)
+ggsave(file.path(out_base, "6_4_plot_bubble_chembl.png"),
+       p_chembl + labs(caption = sprintf("All points are significant (FDR \u2264 %.2f)", alpha_cut)),
+       width = w_in, height = h_in, units = "in", dpi = 1200)
 
-# ---- Call
-# MeSH (pocas categorías → súbele el mínimo)
-plot_bubble_horizontal_pretty(
-  df           = enrich_sig_n,
-  signatures   = c("HPV-A7","HPV-A9"),
-  target_types = "mesh",
-  alpha        = 0.01,
-  min_present  = 3,
-  base_size    = 18,      # tipografía un poco mayor
-  width_in     = 8.5,     # un poco más ancho si quieres
-  height_min   = 12,      # <-- súbelo (antes 8.5)
-  height_per_cat = 0.40,  # un pelín más de alto por categoría
-  pdf_out      = file.path(out_base, "6_4_plot_bubble_mesh_big.pdf"),
-  png_out      = file.path(out_base, "6_4_plot_bubble_mesh_big.png")
-)
+# ---------- Grid with equal panel width + one centered caption ----------
+# 1) Build a single legend
+legend_combined <- cowplot::get_legend(p_mesh + theme(legend.position = "bottom"))
 
-# ChEMBL targets (muchas categorías → ya crece solo; puedes dejarlo como estaba)
-plot_bubble_horizontal_pretty(
-  df           = enrich_sig_n,
-  signatures   = c("HPV-A7","HPV-A9"),
-  target_types = "chembl_targets",
-  alpha        = 0.01,
-  min_present  = 3,
-  base_size    = 16,
-  width_in     = 8.0,
-  height_min   = 8.5,
-  height_per_cat = 0.34,
-  pdf_out      = file.path(out_base, "6_4_plot_bubble_chembl.pdf"),
-  png_out      = file.path(out_base, "6_4_plot_bubble_chembl.png")
-)
+# 2) Remove legends from each panel
+p_mesh_nl   <- p_mesh   + theme(legend.position = "none")
+p_chembl_nl <- p_chembl + theme(legend.position = "none")
 
-# ChemCluster (ajústalo igual que MeSH si te queda pequeño)
-plot_bubble_horizontal_pretty(
-  df           = enrich_sig_n,
-  signatures   = c("HPV-A7","HPV-A9"),
-  target_types = "ChemCluster",
-  alpha        = 0.01,
-  min_present  = 3,
-  base_size    = 18,
-  width_in     = 8.5,
-  height_min   = 12,      # <-- sube el mínimo también aquí
-  height_per_cat = 0.40,
-  pdf_out      = file.path(out_base, "6_4_plot_bubble_chemcluster_big.pdf"),
-  png_out      = file.path(out_base, "6_4_plot_bubble_chemcluster_big.png")
-)
+# 3) Align panels so their *inner panel area* has the same width
+aligned <- cowplot::align_plots(p_mesh_nl, p_chembl_nl, align = "h", axis = "tb")
+grid_panels <- cowplot::plot_grid(aligned[[1]], aligned[[2]],
+                                  ncol = 2, rel_widths = c(1, 1))
 
+# 4) Create a centered caption as its own grob
+cap_text <- sprintf("All points are significant (FDR \u2264 %.2f)", alpha_cut)
+cap_grob <- cowplot::ggdraw() + cowplot::draw_label(cap_text, x = 0.5, y = 0.5,
+                                                    hjust = 0.5, vjust = 0.5, size = 12)
 
+# 5) Stack: panels (top) + caption (middle) + legend (bottom)
+p_grid <- cowplot::plot_grid(grid_panels, cap_grob, legend_combined,
+                             ncol = 1, rel_heights = c(1, 0.07, 0.12))
+#plot(p_grid)
 
-A7 <- readRDS("~/CESC_Network/6_OCTAD/6_3_RES/A7/RES_A7_common3_collapsed_FDA_Launched_0.20.rds")
-A9 <- readRDS("~/CESC_Network/6_OCTAD/6_3_RES/A9/RES_A9_common3_collapsed_FDA_Launched_0.20.rds")
-
-
-print(A9, n=52)
-
-
-
-
-
+# 6) Save grid
+ggsave(file.path(out_base, "6_4_plot_bubble_grid_mesh_chembl_equalwidth.pdf"),
+       p_grid, width = 18, height = 9.5, units = "in", dpi = 1200, useDingbats = FALSE)
+ggsave(file.path(out_base, "6_4_plot_bubble_grid_mesh_chembl_equalwidth.png"),
+       p_grid, width = 18, height = 9.5, units = "in", dpi = 1200)
