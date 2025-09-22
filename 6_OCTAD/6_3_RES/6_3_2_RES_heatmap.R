@@ -80,9 +80,9 @@ ht <- Heatmap(
 
 # ---------- Save ----------
 # -------- AUTOSIZE + SAVE (no corta labels) --------
-pdf_out <- file.path(base_res, "heatmap_A7_A9_horizontal.pdf")
-svg_out <- file.path(base_res, "heatmap_A7_A9_horizontal.svg")
-png_out <- file.path(base_res, "heatmap_A7_A9_horizontal.png")
+pdf_out <- file.path(base_res, "6_3_3_heatmap_A7_A9_horizontal.pdf")
+svg_out <- file.path(base_res, "6_3_3_heatmap_A7_A9_horizontal.svg")
+png_out <- file.path(base_res, "6_3_3_heatmap_A7_A9_horizontal.png")
 
 # 1) Reservas por texto (medidas reales del texto)
 lab_gp   <- gpar(fontsize = 14, fontface = "bold")

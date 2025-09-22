@@ -104,7 +104,7 @@ p_all <- ggplot(top40,
   ) +
   theme_minimal(base_size = 14) +
   theme(
-    strip.text   = element_text(size = 14, face = "bold"),
+    strip.text   = element_text(size = 18, face = "bold"),
     strip.text.y = element_text(angle = 0, face = "bold"),
     axis.text.y  = element_text(size = 13, face = "bold", lineheight = 1.3),
     panel.spacing.y    = grid::unit(12, "pt"),
@@ -112,15 +112,16 @@ p_all <- ggplot(top40,
     panel.grid.major.x = element_line(color = "grey90", linewidth = 0.4),
     panel.grid.major.y = element_line(color = "grey90", linewidth = 0.4),
     panel.grid.minor   = element_blank(),
-    plot.margin        = margin(10, 20, 10, 40)
-  ) +
+    plot.margin        = margin(10, 20, 10, 40),
+    legend.position = "bottom",       # Mueve las leyendas abajo
+    legend.box      = "horizontal") +
   coord_cartesian(clip = "off")
 
 # ================================
 # Save: PNG + PDF (same geometry)
 # ================================
 save_png_pdf(file.path(out_dir, "6_2_8_Ora_dotplot_clean.png"),
-             p_all, width = 16, height = 9, dpi = 1200, limitsize = FALSE)
+             p_all, width = 17, height = 10, dpi = 1200, limitsize = FALSE)
 
 p_all
 
