@@ -1,3 +1,10 @@
+#Script for deepmap exploration
+#https://pmc.ncbi.nlm.nih.gov/articles/PMC5709193/
+#Meyers RM, Bryan JG, McFarland JM, Weir BA, Sizemore AE, Xu H, Dharia NV, Montgomery PG, Cowley GS, Pantel S, Goodale A, Lee Y, Ali LD, Jiang G, 
+#Lubonja R, Harrington WF, Strickland M, Wu T, Hawes DC, Zhivich VA, Wyatt MR, Kalani Z, Chang JJ, Okamoto M, Stegmaier K, Golub TR, Boehm JS, Vazquez F, Root DE, Hahn WC, Tsherniak A. 
+#Computational correction of copy number effect improves specificity of CRISPR-Cas9 essentiality screens in cancer cells. 
+#Nat Genet. 2017 Dec;49(12):1779-1784. doi: 10.1038/ng.3984. Epub 2017 Oct 30. PMID: 29083409; PMCID: PMC5709193.
+
 
 library(depmap)
 library(dplyr)
@@ -80,6 +87,7 @@ rna_data <- depmap::depmap_TPM() %>%
 length(unique(rna_data$cell_line))  #[1] 1405
 length(unique(rna_data$gene))
 #[1] 19221 genes by cell line
+
 
 ############################################################################################
 #In a CRISPR-Cas9 dropout screen:
