@@ -26,7 +26,7 @@ enrich <- enrich %>%
 # Global filters (adjust if needed)
 alpha_cut   <- 0.01
 min_present <- 3
-score_min   <- 0.30
+score_min   <- 0.33
 
 # ---------- Common X range for both panels ----------
 xmax_global <- enrich %>%
@@ -82,15 +82,13 @@ p_mesh <- ggplot(mesh_df, aes(score, target)) +
   scale_fill_viridis_d(name = "Signature    ", option = "D", end = 0.85) +
   scale_x_continuous(limits = x_limits, breaks = x_breaks,
                      labels = scales::label_number(accuracy = 0.01),
-                     expand = expansion(mult = c(0.12, 0.10))) +
+                     expand = expansion(mult = c(0, 0))) +
   scale_y_discrete(expand = expansion(add = 0.8)) +
   labs(title = "MeSH", x = "Enrichment score", y = NULL, caption = NULL) +
   facet_grid(signature ~ ., scales = "free_y", space = "free_y") +
   theme_bubbles +
-  guides(
-    fill = guide_legend(override.aes = list(size = 6, alpha = 1, shape = 21, color = "grey20")),
-    size = guide_legend(order = 2)
-  )
+  guides(fill = guide_legend(override.aes = list(size = 6, alpha = 1, shape = 21, color = "grey20")),
+         size = guide_legend(order = 2))
 
 # ---------- Build ChEMBL plot (no caption here) ----------
 chembl_df <- enrich %>%
@@ -109,7 +107,7 @@ p_chembl <- ggplot(chembl_df, aes(score, target)) +
   scale_fill_viridis_d(name = "Signature    ", option = "D", end = 0.85) +
   scale_x_continuous(limits = x_limits, breaks = x_breaks,
                      labels = scales::label_number(accuracy = 0.01),
-                     expand = expansion(mult = c(0.12, 0.10))) +
+                     expand = expansion(mult = c(0, 0))) +
   scale_y_discrete(expand = expansion(add = 0.8)) +
   labs(title = "ChEMBL targets", x = "Enrichment score", y = NULL, caption = NULL) +
   facet_grid(signature ~ ., scales = "free_y", space = "free_y") +
@@ -156,7 +154,7 @@ cap_grob <- cowplot::ggdraw() + cowplot::draw_label(cap_text, x = 0.5, y = 0.5,
 # 5) Stack: panels (top) + caption (middle) + legend (bottom)
 p_grid <- cowplot::plot_grid(grid_panels, cap_grob, legend_combined,
                              ncol = 1, rel_heights = c(1, 0.07, 0.12))
-#plot(p_grid)
+plot(p_grid)
 
 # 6) Save grid
 ggsave(file.path(out_base, "6_4_plot_bubble_grid_mesh_chembl_equalwidth.pdf"),

@@ -298,15 +298,15 @@ plot_facets_auc <- function(tbl, title_prefix, metrics_tbl, smooth_df, fda_set){
     geom_text(data = ann, inherit.aes = FALSE, aes(x = -Inf, y = Inf, label = label),
               hjust = -0.05, vjust = 1.1, size = 3.1) +
     labs(title = sprintf("%s sRGES by cell line", title_prefix),
-         y = "AUC (recomputed)",  # <— updated
+         y = "Area Under Drug \ 
+         Response Curve (AUC)",  # <— updated
          x = "sRGES") +
     theme_bw() +
     theme(
       plot.title  = element_text(size = 20, face = "bold"),
       axis.title.x = element_text(size = 16),
       axis.title.y = element_text(size = 16)
-    )
-}
+    )}
 
 
 # ---- Plotters (globals with collapsed data + Pearson of collapsed points + LM line) ----
@@ -353,15 +353,14 @@ plot_global_auc <- function(tbl, title_prefix){
                        name   = "FDA status",
                        labels = c(FDA = "Launched", Other = "Other")) +
     labs(title = sprintf("%s", title_prefix),
-         y = "AUC (recomputed)",  # <— updated
+         y = "Area Under Drug \ 
+         Response Curve (AUC)",  # <— updated
          x = "sRGES") +
     coord_cartesian(ylim = range(dd$y, na.rm = TRUE),
                     xlim = range(dd$sRGES, na.rm = TRUE),
                     clip = "off") +
     theme_minimal(base_size = 16)
 }
-
-
 
 # ---- Build plots ----
 p_ic50_A7 <- plot_facets_ic50(data_A7$ic50, "HPV-A7", metrics_A7, smooth_A7_ic50, fda_set_A7)
@@ -415,3 +414,4 @@ grid_globals <- (row_A7 / row_A9) + plot_layout(guides = "collect") & theme(lege
 grid_globals
 
 save_plot(grid_globals, "GLOBAL_grid_HPVA7A9", w = 12, h = 10, dpi = 1200)
+

@@ -28,15 +28,22 @@ RGEs_A9 <- readRDS("~/CESC_Network/6_OCTAD/6_3_RES/A9/RES_A9_common3_collapsed_F
 result_A9 <- RGEs_A9[, c("pert_iname", "sRGES")]
 
 # Similar cell lines (coerce directly to unique character vector)
-lineas_similares_A7 <- unique(as.character(unlist(
+lineas_similares_A7_p <- unique(as.character(unlist(
   readRDS("~/CESC_Network/6_OCTAD/6_3_RES/A7/SimilarCellLines_A7_medcor_gt0.30.rds"),
   use.names = FALSE
 )))
 
-lineas_similares_A9 <- unique(as.character(unlist(
+lineas_similares_A9_p <- unique(as.character(unlist(
   readRDS("~/CESC_Network/6_OCTAD/6_3_RES/A9/SimilarCellLines_A9_medcor_gt0.30.rds"),
   use.names = FALSE
 )))
+
+clado_a7 <- c("HELA","SW756","MS751","ME-180","ME180","C4-I","C4-1","C4-II","C4-2")
+clado_a9 <- c("SIHA", "CASKI", "SISO","HELA") #"HELA" is HPV18, but i added here too
+
+lineas_similares_A7 <- unique(c(lineas_similares_A7_p, clado_a7))
+lineas_similares_A9 <- unique(c(lineas_similares_A9_p, clado_a9))
+
 
 # ---------- 4) Minimal runner (no aliases, no filtering) ----------
 # For each line, call topLineEval and catch errors so the batch continues.

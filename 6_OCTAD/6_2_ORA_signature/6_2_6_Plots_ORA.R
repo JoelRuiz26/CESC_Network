@@ -77,7 +77,7 @@ ora_clean <- ora_tbl %>%
 top40 <- ora_clean %>%
   group_by(clade_lbl, regulation, ontology) %>%
   arrange(p.adjust, desc(Count), .by_group = TRUE) %>%
-  slice_head(n = 5) %>%
+  slice_head(n = 6) %>%
   ungroup()
 
 # Nice breaks for x-axis
@@ -102,13 +102,13 @@ p_all <- ggplot(top40,
     expand = expansion(mult = c(0.01, 0.03)),
     guide  = guide_axis(check.overlap = TRUE)
   ) +
-  theme_minimal(base_size = 14) +
+  theme_minimal(base_size = 18) +
   theme(
-    strip.text   = element_text(size = 18, face = "bold"),
+    strip.text   = element_text(size = 22, face = "bold"),
     strip.text.y = element_text(angle = 0, face = "bold"),
-    axis.text.y  = element_text(size = 13, face = "bold", lineheight = 1.3),
-    panel.spacing.y    = grid::unit(12, "pt"),
-    panel.spacing.x    = grid::unit(15, "pt"),
+    axis.text.y  = element_text(size = 15, face = "bold", lineheight = 1.3),
+    panel.spacing.y    = grid::unit(15, "pt"),
+    panel.spacing.x    = grid::unit(17, "pt"),
     panel.grid.major.x = element_line(color = "grey90", linewidth = 0.4),
     panel.grid.major.y = element_line(color = "grey90", linewidth = 0.4),
     panel.grid.minor   = element_blank(),
@@ -121,7 +121,7 @@ p_all <- ggplot(top40,
 # Save: PNG + PDF (same geometry)
 # ================================
 save_png_pdf(file.path(out_dir, "6_2_8_Ora_dotplot_clean.png"),
-             p_all, width = 17, height = 10, dpi = 1200, limitsize = FALSE)
+             p_all, width = 16, height = 14, dpi = 1200, limitsize = FALSE)
 
 p_all
 
