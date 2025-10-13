@@ -11,6 +11,7 @@ suppressPackageStartupMessages({
 # ---------- Inputs ----------
 base_res <- "~/CESC_Network/6_OCTAD/6_3_RES"
 collapsed_A7 <- readRDS(file.path(base_res, "A7/RES_A7_common3_collapsed_FDA_Launched.rds")) %>% filter(sRGES <= -0.2)
+collapsed_A7 <- collapsed_A7 %>% filter(!pert_iname == "pyrvinium-pamoate")
 collapsed_A9 <- readRDS(file.path(base_res, "A9/RES_A9_common3_collapsed_FDA_Launched.rds")) %>% filter(sRGES <= -0.2)
 
 # ---------- A7 vs A9 ----------
