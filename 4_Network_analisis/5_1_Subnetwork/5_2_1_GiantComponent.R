@@ -319,7 +319,9 @@ p <- ggplot() +
   guides(color = guide_legend(nrow = 1, override.aes = list(linewidth = 2))) +
   coord_cartesian(clip = "off")
 
-#print(p)
+
+
+print(p)
 ggsave("GC_elbows_labels_stacked.png", p, width = 14, height = 6.5, dpi = 600)
 
 # --------------------------------------------------------
@@ -341,5 +343,5 @@ saveRDS(graph_A9_elbow, "~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_2_4_
 
 cat("Graphs exported successfully!\n")
 
-#load("~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_2_2_GiantComponent.RData")
+#load("~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_2_2_GiantComponent.RData")
 

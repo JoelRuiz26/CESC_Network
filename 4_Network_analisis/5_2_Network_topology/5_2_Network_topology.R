@@ -8,8 +8,8 @@
 pacman::p_load("igraph", "tidyverse", "ggraph", "tidygraph", "svglite", "ggvenn")
 
 ### Load graphs ###
-Subgraph_A7 <- readRDS('~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A7_elbow.rds')
-Subgraph_A9 <- readRDS('~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A9_elbow.rds')
+Subgraph_A7 <- readRDS('~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A7_elbow.rds')
+Subgraph_A9 <- readRDS('~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A9_elbow.rds')
 
 
 ### Build graphs to be comparable ###
@@ -69,26 +69,24 @@ topological_metrics_df <- bind_rows(topological_metrics, .id = "network") %>%
     jaccard_edges = ifelse(network == "HPV-A7", EdgesJaccard, EdgesJaccard)
   )
 t_topological_metrics <- topological_metrics_df %>% dplyr::select(1:6,jaccard_nodes,jaccard_edges,7:10) %>% t() %>% as.data.frame()
-colnames(t_topological_metrics) <- c("VPH-A7","VPH-A9")
+colnames(t_topological_metrics) <- c("HPV-A7","HPV-A9")
 t_topological_metrics <- t_topological_metrics %>% dplyr::slice(-1)
           print(t_topological_metrics)
-#                                   VPH-A7    VPH-A9
-#Numero_de_nodos                      10730     10344
-#Componentes_conectados                  23        22
-#Grado_promedio                    72.60708  75.31651
-#Coeficiente_de_agrupamiento      0.3156973 0.4288940
-#Asortatividad                    0.2873399 0.2732628
-#jaccard_nodes                    0.8851418 0.8851418
-#jaccard_edges                    0.1958378 0.1958378
-#Tamano_del_componente_principal      10686     10300
-#Porcentaje_componente_principal   99.58993  99.57463
-#Diametro                                11         9
-#Longitud_promedio_caminos_cortos  3.312521  3.315378
-
+#          HPV-A7    HPV-A9
+#          Componentes_conectados                  76       191
+#          Grado_promedio                    23.69526  26.60030
+#          Coeficiente_de_agrupamiento      0.2594443 0.5693897
+#          Asortatividad                    0.3595462 0.5479928
+#          jaccard_nodes                    0.7905064 0.7905064
+#          jaccard_edges                    0.1271801 0.1271801
+#          Tamano_del_componente_principal      10896      9407
+#          Porcentaje_componente_principal   98.58849  95.55104
+#          Diametro                                12        17
+#          Longitud_promedio_caminos_cortos  4.294790  5.508257
+          
 
 # Save tsv (Output 2)
-vroom::vroom_write(t_topological_metrics, "~/CESC_Network/5_Network_analisis/5_2_Network_topology/5_2_1_Toplogical_features_A7A9.tsv")
-
+saveRDS(t_topological_metrics, "~/CESC_Network/4_Network_analisis/5_2_Network_topology/5_2_1_Toplogical_features_A7A9.rds")
 
 ### Venn Diagram  ###
 #Edges each graph
@@ -120,8 +118,7 @@ VennPlot <- ggvenn(
 print(VennPlot)
 
 
-
 # Save graph (Output 3)
-ggsave(filename = "~/CESC_Network/5_Network_analisis/5_2_Network_topology/5_2_2_VennDiagram_edges.png",
+ggsave(filename = "~/CESC_Network/4_Network_analisis/5_2_Network_topology/5_2_2_VennDiagram_edges.png",
         plot = VennPlot,
         width = 8, height = 8, dpi = 300)

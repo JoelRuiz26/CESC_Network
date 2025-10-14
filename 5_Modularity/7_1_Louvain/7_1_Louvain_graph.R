@@ -10,12 +10,12 @@ library(ggplot2)
 set.seed(123)
 
 ### Load networks ###
-graph_A7 <- readRDS('~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A7_elbow.rds')
-graph_A9 <- readRDS('~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A9_elbow.rds')
+graph_A7 <- readRDS('~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A7_elbow.rds')
+graph_A9 <- readRDS('~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A9_elbow.rds')
 
 ###### For A7 network ######
 ### Louvain ###
-Louvain_A7 <- cluster_louvain(graph_A7)        #25 communities
+Louvain_A7 <- cluster_louvain(graph_A7)        #125 communities
 V(graph_A7)$Community <- Louvain_A7$membership 
 
 ### PageRank ###
@@ -36,7 +36,7 @@ filtered_graph_A7 <- induced_subgraph(graph_A7, vids = nodes_to_keep_A7)
 
 ###### For A9 network ######
 ### Louvain ###
-Louvain_A9 <- cluster_louvain(graph_A9) #32
+Louvain_A9 <- cluster_louvain(graph_A9) #235
 V(graph_A9)$Community <- Louvain_A9$membership
 
 ### PageRank ###
@@ -56,8 +56,8 @@ filtered_graph_A9 <- induced_subgraph(graph_A9, vids = nodes_to_keep_A9)
 
 
 ### Save filtered graphs ###
-saveRDS(filtered_graph_A9, file = "~/CESC_Network/7_Modularity/7_1_Louvain/7_1_1_Louvain_A9_graph.rds")
-saveRDS(filtered_graph_A7, file = "~/CESC_Network/7_Modularity/7_1_Louvain/7_1_1_Louvain_A7_graph.rds")
+saveRDS(filtered_graph_A9, file = "~/CESC_Network/5_Modularity/7_1_Louvain/7_1_1_Louvain_A9_graph.rds")
+saveRDS(filtered_graph_A7, file = "~/CESC_Network/5_Modularity/7_1_Louvain/7_1_1_Louvain_A7_graph.rds")
 
 
 ### Verify ###
