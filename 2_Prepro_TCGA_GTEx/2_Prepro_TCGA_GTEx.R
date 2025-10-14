@@ -17,24 +17,24 @@ library(limma)
 # ===================== SEED FOR REPRODUCIBILITY ===================== #
 set.seed(123)
 # ===================== LOAD INPUT DATA ===================== #
-factors <- readRDS(file = "~/CESC_Network/1_Get_Data/2_Harmoni_metadata_TCGA_GTEx.rds")
-dim(factors) #[1] 290   8
+factors <- readRDS(file = "~/CESC_Network/1_Get_Data/1_2_1_Metadata_full_TCGA_GTEX.rds")
+dim(factors) #[1] 281   9
 colnames(factors) 
-#[1] "specimenID"         "source"             "cases.submitter_id"
-#[4] "sample_type"        "figo_stage"         "primary_diagnosis" 
-#[7] "HPV_type"           "HPV_clade"  
+#[1] "specimenID"        "source"            "case_id_12"       
+#[4] "sample_type"       "HPV_type"          "HPV_clade"        
+#[7] "figo_stage"        "primary_diagnosis" "race" 
 
-unstranded_counts <- readRDS(file = "~/CESC_Network/1_Get_Data/2_Harmoni_counts_TCGA_GTEx.rds")
-dim(unstranded_counts) #[1] 56033   291
+unstranded_counts <- readRDS(file = "~/CESC_Network/1_Get_Data/1_2_2_Cervix_Toil_raw_counts.rds")
+dim(unstranded_counts) #[1] 60498   281
 
 # ===================== CLEAN AND ANNOTATE DATA ===================== #
 # Clean counts matrix
-counts <- as.data.frame(unstranded_counts) %>%
-  mutate(gene = str_remove(gene, "\\..*$"))  # remove Ensembl version if present
+counts <- unstranded_counts %>%
+  dplyr::mutate(gene = str_remove(gene, "\\..*$"))  # remove Ensembl version if present
 
 # Remove genes with all zero counts
 counts <- counts[rowSums(counts[,-1]) > 0, ]
-dim(counts) #[1] 56012   291
+dim(counts) #[1] 48780   281
 
 # Get annotation from Ensembl (GENCODE v43 ~ Ensembl v110 default)
 mart <- useEnsembl("ensembl", dataset="hsapiens_gene_ensembl")
@@ -44,40 +44,42 @@ myannot <- getBM(attributes = c("ensembl_gene_id",
                  filters = "ensembl_gene_id", 
                  values = counts$gene,
                  mart = mart) %>%
-  rename(feature = ensembl_gene_id) %>%
+  dplyr::rename(feature = ensembl_gene_id) %>%
   mutate(length = abs(end_position - start_position)) %>%
   filter(hgnc_id != "" & hgnc_symbol != "") %>%
   distinct(feature, .keep_all = TRUE)
 
 # Filter counts to those with valid annotations
 counts <- counts %>% filter(gene %in% myannot$feature)
-dim(counts) #[1] 39750   291
+dim(counts) #[1] 34577   281
 
 # Reorder myannot to match counts order
 myannot <- myannot %>%
   filter(feature %in% counts$gene) %>%
   arrange(match(feature, counts$gene))
-dim(myannot) #[1] 39750     8
+dim(myannot) #[1] 34577     8
 
 #Set rownames as ENSG for analysis
 rownames(counts) <- counts$gene
 counts <- counts %>% dplyr::select(-gene)
-dim(counts) #[1] 39750   290
+dim(counts) #[1] 34577   280
 
 #save for enrichment
-#saveRDS(myannot, file = "~/CESC_Network/2_Prepro_TCGA_GTEx/2_10_Universe_annotation_table.rds")
+#saveRDS(myannot, file = "~/CESC_Network/2_Prepro_TCGA_GTEx/2_1_Universe_annotation_table.rds")
+
 
 # ========== SYNC DATA ========== #
+factors$specimenID <- sub("^(TCGA-[A-Z0-9]{2}-[A-Z0-9]{4}-[0-9]{2}).*$", "\\1", factors$specimenID)
 factors <- factors %>% filter(specimenID %in% colnames(counts)) %>% as.data.frame()
 counts  <- counts[, factors$specimenID, drop = FALSE] 
 rownames(factors) <- factors$specimenID
 #Verify
 stopifnot(all(colnames(counts) == rownames(factors)))
-dim(counts) #[1] 39750   290
-dim(factors) #[1] 290   8
+dim(counts) #[1] 34577   280
+dim(factors) #[1] 280   9
 table(factors$HPV_clade)
 #A7_clade            A9_clade Solid Tissue Normal 
-#66                 202                  22 
+#65                 202                  13
 
 # =====================  CREATE NOISeq OBJECT ===================== #
 # Create named vectors for annotations USING ENSG (unique IDs)
@@ -91,6 +93,9 @@ noiseqData_before <- NOISeq::readData(
   gc = mygc,
   biotype = mybiotype,
   length = mylength)
+
+
+
 
 #saveRDS(noiseqData_before, file = "~/CESC_Network/2_Prepro_TCGA_GTEx/2_2_Noiseq_before.rds")
 
@@ -206,8 +211,8 @@ dev.off()
 #Filter low counts
 counts_filtered <- filtered.data(
   counts, factor = "HPV_clade", norm = FALSE, depth = NULL, method = 1, cpm = 0, p.adj = "fdr")
-#11544 features are to be kept for differential expression analysis with filtering method 1
-length(unique(rownames(counts_filtered))) #[1] 11544
+#12301 features are to be kept for differential expression analysis with filtering method 1
+length(unique(rownames(counts_filtered))) #[1] 12301
 #sync
 myannot_filtered <- myannot[myannot$feature %in% rownames(counts_filtered), ]
 stopifnot(all(rownames(counts_filtered) %in% myannot_filtered$feature))
@@ -218,6 +223,7 @@ factors <- factors[colnames(counts_filtered), , drop = FALSE]
 rownames(factors) <- factors$specimenID
 # Ensure full synchrony
 stopifnot(all(rownames(factors) == colnames(counts_filtered)))
+counts_filtered <- counts_filtered[rowSums(is.na(counts_filtered))==0 & rowSums(counts_filtered)>0, colSums(is.na(counts_filtered))==0 & colSums(counts_filtered)>0, drop=FALSE]
 
 # Create EDASeq object
 mydataEDA <- newSeqExpressionSet(
@@ -226,10 +232,11 @@ mydataEDA <- newSeqExpressionSet(
   phenoData = AnnotatedDataFrame(data = factors))
 
 #order for less bias
-lFull <- withinLaneNormalization(mydataEDA, "length", which = "full")#corrects length bias 
-gcFull <- withinLaneNormalization(lFull, 
-                                  "percentage_gene_gc_content", which = "full")#corrects GC bias 
-fullfullTMM <-NOISeq::tmm(normCounts(gcFull), long = 1000, lc = 0, k = 0)
+#lFull <- withinLaneNormalization(mydataEDA, "length", which = "full")#corrects length bias 
+#gcFull <- withinLaneNormalization(lFull, 
+#                                  "percentage_gene_gc_content", which = "full")#corrects GC bias 
+normCounts(mydataEDA) <- counts(mydataEDA)
+fullfullTMM <-NOISeq::tmm(normCounts(mydataEDA), long = 1000, lc = 0, k = 0)
 #norm.counts <- betweenLaneNormalization(normCounts(lFull),
 # which = "median", offset = FALSE)
 
@@ -265,25 +272,25 @@ table(mycd_filtered@dat$DiagnosticTest[, "Diagnostic Test"])
 #biological contrasts may be partially attenuated.
 
 # log2-transform TMM-normalized counts
-expr_logCPM <- log2(fullfullTMM + 0.5)
+#expr_logCPM <- log2(fullfullTMM + 1)
 
 # Correct batch using limma::removeBatchEffect
 # We adjust batch (source) while preserving sample_type biological signal
 
-expr_batchcorrected <- removeBatchEffect(
-  expr_logCPM,
-  batch = factors$source,
-  design = model.matrix(~ sample_type, data = factors))
+#expr_batchcorrected <- removeBatchEffect(
+#  expr_logCPM,
+#  batch = factors$source,
+#  design = model.matrix(~ sample_type, data = factors))
 
 ###
-ffTMMARSyn=ARSyNseq(noiseqData_filtered, factor = "sample_type", batch = F,
+ffTMMARSyn=ARSyNseq(noiseqData_filtered, factor = "HPV_type", batch = F,
                     norm = "n",  logtransf = F)
 ###
 
-noiseqData_batch = NOISeq::readData(data = expr_batchcorrected, 
-                                       factors=factors)
+#noiseqData_batch = NOISeq::readData(data = expr_batchcorrected, 
+#                                       factors=factors)
 
-myPCA_after = dat(ffTMMARSyn  , type = "PCA", norm = T,logtransf = T)
+myPCA_after = dat(ffTMMARSyn  , type = "PCA", norm = T,logtransf = F)
 
 
 pdf("plots_prepro_data/QC_PCA_scores_HPVclade_after.pdf", width = 8, height = 6)
@@ -299,7 +306,7 @@ mylength_n <- setNames(myannot_filtered$length, myannot_filtered$feature)
 mygcn_n <- setNames(myannot_filtered$percentage_gene_gc_content, myannot_filtered$feature)
 mybiotype_n <- setNames(myannot_filtered$gene_biotype, myannot_filtered$feature)
 
-noiseqData_norm = NOISeq::readData(data = expr_batchcorrected, 
+noiseqData_norm = NOISeq::readData(data = ffTMMARSyn, 
                                    factors=factors,
                                    gc = mygcn_n,
                                    biotype = mybiotype_n,
@@ -444,10 +451,10 @@ dev.off()
 Final_SNT_vs_PP <- exprs(ffTMMARSyn) %>% as.data.frame()
 Final_SNT_vs_PP$Gene <- rownames(Final_SNT_vs_PP)  #Add column for input ARACNE
 Final_SNT_vs_PP <- Final_SNT_vs_PP[, c(ncol(Final_SNT_vs_PP), 1:(ncol(Final_SNT_vs_PP)-1))]  
-dim(Final_SNT_vs_PP) #[1] 11544   291
+dim(Final_SNT_vs_PP) #[1] 12301    281
 
 # Save full matrix
-vroom::vroom_write(Final_SNT_vs_PP, file = "~/CESC_Network/2_Prepro_TCGA_GTEx/2_3_Full_counts_A7_A9_notAnot_11544.tsv", delim = "\t")
+vroom::vroom_write(Final_SNT_vs_PP, file = "~/CESC_Network/2_Prepro_TCGA_GTEx/2_3_Full_counts_A7_A9_notAnot_12301.tsv", delim = "\t")
 # Save metadata
 vroom::vroom_write(factors, file = "~/CESC_Network/2_Prepro_TCGA_GTEx/2_4_Factors.tsv", delim = "\t")
 #Save annotation
@@ -459,7 +466,7 @@ Final_SNT_vs_PP_annot <- Final_SNT_vs_PP %>% filter(!is.na(HGNC_symbol) & HGNC_s
 Final_SNT_vs_PP_annot <- Final_SNT_vs_PP_annot %>%
   dplyr::select(HGNC_symbol, everything(), -Gene) %>%
   dplyr::rename(Gene = HGNC_symbol)
-rownames(Final_SNT_vs_PP_annot) <- Final_SNT_vs_PP_annot$Gene
+Final_SNT_vs_PP_annot <- Final_SNT_vs_PP_annot %>% dplyr::group_by(Gene) %>% dplyr::summarise(dplyr::across(where(is.numeric), ~mean(., na.rm=TRUE)), .groups="drop"); rownames(Final_SNT_vs_PP_annot) <- Final_SNT_vs_PP_annot$Gene
 
 # Save matrix annoted
 vroom::vroom_write(Final_SNT_vs_PP_annot,

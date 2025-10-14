@@ -319,8 +319,8 @@ p <- ggplot() +
   guides(color = guide_legend(nrow = 1, override.aes = list(linewidth = 2))) +
   coord_cartesian(clip = "off")
 
-print(p)
-# ggsave("GC_elbows_labels_stacked.png", p, width = 14, height = 6.5, dpi = 600)
+#print(p)
+ggsave("GC_elbows_labels_stacked.png", p, width = 14, height = 6.5, dpi = 600)
 
 # --------------------------------------------------------
 # 5) (Opcional) Exportar subredes al elbow independiente

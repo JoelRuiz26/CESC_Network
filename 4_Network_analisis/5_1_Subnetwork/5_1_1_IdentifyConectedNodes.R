@@ -107,44 +107,10 @@ generate_report(results_A7)
 generate_report(results_A9)
 
 # --------------------------------------------------------
-# Determine the maximum cutoff value across both networks
-# This ensures consistent edge density in comparative analysis
+# Save INDIVIDUAL cutoff values (A7 y A9)
 # --------------------------------------------------------
 cutoff_A7 <- results_A7$cutoff_row
 cutoff_A9 <- results_A9$cutoff_row
-
-max_cutoff_links <- max(c(cutoff_A7, cutoff_A9), na.rm = TRUE)
-
-cat("\n════════════════════════════════════\n")
-cat(" FINAL COMMON THRESHOLD SELECTED\n")
-cat("════════════════════════════════════\n")
-cat("Maximum cutoff row between networks: ", max_cutoff_links, "\n")
-cat("════════════════════════════════════\n")
-
-# --------------------------------------------------------
-# Save the single cutoff value as .rds
-# This can be easily loaded in downstream analyses:
-#   readRDS(".../max_cutoff_links.rds")
-# --------------------------------------------------------
-
-# --------------------------------------------------------
-# Save both edgelists sliced to the common maximum cutoff
-# --------------------------------------------------------
-A7_common <- vroom(
-  "~/CESC_Network/4_Network/ARACNE-multicore/launch/2_7_Full_counts_A7_annot.sort",
-  col_names = c("GenA", "GenB", "MI"),
-  show_col_types = FALSE
-) %>% na.omit() %>% dplyr::slice(1:max_cutoff_links)
-
-A9_common <- vroom(
-  "~/CESC_Network/4_Network/ARACNE-multicore/launch/2_8_Full_counts_A9_annot.sort",
-  col_names = c("GenA", "GenB", "MI"),
-  show_col_types = FALSE
-) %>% na.omit() %>% dplyr::slice(1:max_cutoff_links)
-
-saveRDS(A7_common, "~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_1_2_A7_edgelist_allnodes.rds")
-saveRDS(A9_common, "~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_1_2_A9_edgelist_allnodes.rds")
-cat("[INFO] Saved both A7 and A9 edgelists with common cutoff:", max_cutoff_links, "\n")
 
 saveRDS(
   cutoff_A7, 
@@ -156,34 +122,72 @@ saveRDS(
   file = "~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_1_1_A9_cutoff_links.rds"
 )
 
+cat("\n════════════════════════════════════\n")
+cat(" INDIVIDUAL THRESHOLDS SAVED\n")
+cat("════════════════════════════════════\n")
+cat("A7 cutoff row: ", cutoff_A7, "\n")
+cat("A9 cutoff row: ", cutoff_A9, "\n")
+cat("════════════════════════════════════\n")
 
-cat("Saved object 'max_cutoff_links' as .rds file for future use.\n")
+# --------------------------------------------------------
+# Save BOTH edgelists sliced at THEIR OWN cutoff
+# --------------------------------------------------------
+A7_individual <- vroom(
+  "~/CESC_Network/4_Network/ARACNE-multicore/launch/2_7_Full_counts_A7_annot.sort",
+  col_names = c("GenA", "GenB", "MI"),
+  show_col_types = FALSE
+) %>% na.omit() %>% dplyr::slice(1:cutoff_A7)
+
+A9_individual <- vroom(
+  "~/CESC_Network/4_Network/ARACNE-multicore/launch/2_8_Full_counts_A9_annot.sort",
+  col_names = c("GenA", "GenB", "MI"),
+  show_col_types = FALSE
+) %>% na.omit() %>% dplyr::slice(1:cutoff_A9)
+
+saveRDS(A7_individual, 
+        "~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_1_2_A7_edgelist_allnodes.rds")
+saveRDS(A9_individual, 
+        "~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_1_2_A9_edgelist_allnodes.rds")
+
+cat("[INFO] Saved A7 edgelist at its cutoff: ", cutoff_A7, " edges\n")
+cat("[INFO] Saved A9 edgelist at its cutoff: ", cutoff_A9, " edges\n")
+
+
 
 
 #════════════════════════════════════
 #NETWORK ANALYSIS REPORT - 2_7_Full_counts_A7_annot
 #════════════════════════════════════
-#• Total unique nodes: 11544
-#• Rows analyzed: 10000000
-#• Cutoff row found: 2690573
-#• Nodes covered: 11544/11544
+#• Total unique nodes: 12300
+#• Rows analyzed: 8000000
+#• Cutoff row found: 515088
+#• Nodes covered: 12300/12300
 #• Coverage percent: 100%
-#════════════════════════════════════
+#════════════════════════════════════#
 
 #════════════════════════════════════
 #NETWORK ANALYSIS REPORT - 2_8_Full_counts_A9_annot
 #════════════════════════════════════
-#• Total unique nodes: 11544
-#• Rows analyzed: 10000000
-#• Cutoff row found: 4967805
-#• Nodes covered: 11544/11544
+#• Total unique nodes: 12300
+#• Rows analyzed: 8000000
+#════════════════════════════════════#
+
+#════════════════════════════════════
+#NETWORK ANALYSIS REPORT - 2_8_Full_counts_A9_annot
+#════════════════════════════════════
+#• Total unique nodes: 12300
+#• Rows analyzed: 8000000
+#• Cutoff row found: 689404
+#• Nodes covered: 12300/12300
 #• Coverage percent: 100%
 #════════════════════════════════════
 
 #════════════════════════════════════
-#FINAL COMMON THRESHOLD SELECTED
+#INDIVIDUAL THRESHOLDS SAVED
 #════════════════════════════════════
-#Maximum cutoff row between networks:  4967805 
+#A7 cutoff row:  515088 
+#A9 cutoff row:  689404 
 #════════════════════════════════════
-
+#[INFO] Saved A7 edgelist at its cutoff:  515088  edges
+#[INFO] Saved A9 edgelist at its cutoff:  689404  edges
 
