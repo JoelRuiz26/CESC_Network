@@ -15,16 +15,20 @@ suppressPackageStartupMessages({
 # --------------------------------------------------------
 # Cutoffs of each network which contains the maximum links (MI-sorted)  that contains all conected nodes
 # --------------------------------------------------------
-xmax_A7 <- readRDS("~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_1_1_A7_cutoff_links.rds")
-xmax_A9 <- readRDS("~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_1_1_A9_cutoff_links.rds")
+#xmax_A7 <- readRDS("~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_1_1_A7_cutoff_links.rds")
+#xmax_A9 <- readRDS("~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_1_1_A9_cutoff_links.rds")
 
-cat("\n[INFO] xmax per network -> A7:", xmax_A7, "| A9:", xmax_A9, "\n")
+#cat("\n[INFO] xmax per network -> A7:", xmax_A7, "| A9:", xmax_A9, "\n")
+#[INFO] xmax per network -> A7: 515088 | A9: 689404 
+
+xmax_A7 <- 515088
+xmax_A9 <- 689404
 
 # --------------------------------------------------------
 # Cargar edgelists (ordenados por MI)
 # --------------------------------------------------------
-A7_Full <- readRDS("~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_1_2_A7_edgelist_allnodes.rds")
-A9_Full <- readRDS("~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_1_2_A9_edgelist_allnodes.rds")
+A7_Full <- readRDS("~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_1_2_A7_edgelist_allnodes.rds")
+A9_Full <- readRDS("~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_1_2_A9_edgelist_allnodes_AT_A9_cutoff.rds")
 
 imax_A7 <- min(xmax_A7, nrow(A7_Full))
 imax_A9 <- min(xmax_A9, nrow(A9_Full))
@@ -142,6 +146,7 @@ ref_range_A9 <- c(max(1L, elbow_links_A9_c - refine_window),
 
 cat("[INFO] Refining A7 in [", ref_range_A7[1], ", ", ref_range_A7[2], "] ...\n", sep = "")
 metrics_A7_refine <- refine_window_igraph(A7_Full, start = ref_range_A7[1], end = ref_range_A7[2])
+
 
 cat("[INFO] Refining A9 in [", ref_range_A9[1], ", ", ref_range_A9[2], "] ...\n", sep = "")
 metrics_A9_refine <- refine_window_igraph(A9_Full, start = ref_range_A9[1], end = ref_range_A9[2])
@@ -338,8 +343,8 @@ Subnetwork_A9_elbow <- A9_Full %>% slice(1:elbow_links_A7)
 graph_A7_elbow <- graph_from_data_frame(d = Subnetwork_A7_elbow, directed = FALSE)
 graph_A9_elbow <- graph_from_data_frame(d = Subnetwork_A9_elbow, directed = FALSE)
 
-saveRDS(graph_A7_elbow, "~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A7_elbow.rds") 
-saveRDS(graph_A9_elbow, "~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A9_elbow.rds")
+saveRDS(graph_A7_elbow, "~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A7_elbow.rds") 
+saveRDS(graph_A9_elbow, "~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A9_elbow.rds")
 
 cat("Graphs exported successfully!\n")
 

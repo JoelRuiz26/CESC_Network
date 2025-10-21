@@ -17,8 +17,8 @@ library(scales)
 # Load Graphs
 ################################################################################
 
-A7_HPV <- readRDS('~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A7_elbow.rds')
-A9_HPV <- readRDS('~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A9_elbow.rds')
+A7_HPV <- readRDS('~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A7_elbow.rds')
+A9_HPV <- readRDS('~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A9_elbow.rds')
 
 ################################################################################
 # Degree Distribution (PDF)
@@ -29,12 +29,21 @@ A9_HPV <- readRDS('~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_2_4_Subnet
 #   but a few "hub" genes are highly connected.
 
 get_degree_dist_df <- function(graph, group_name) {
-  deg <- degree(graph, mode = "all")
+  stopifnot(inherits(graph, "igraph"))
+  deg <- igraph::degree(graph, mode = "all")     # << clave
+  deg <- as.numeric(deg)
   deg_dist <- table(deg) / length(deg)
-  data.frame(Degree = as.numeric(names(deg_dist)), 
-             Probability = as.numeric(deg_dist), 
-             Network = group_name)
+  data.frame(
+    Degree = as.numeric(names(deg_dist)),
+    Probability = as.numeric(deg_dist),
+    Network = group_name,
+    row.names = NULL, check.names = FALSE
+  )
 }
+
+df_A7 <- get_degree_dist_df(A7_HPV, "HPV_A7")
+df_A9 <- get_degree_dist_df(A9_HPV, "HPV_A9")
+
 
 df_A7 <- get_degree_dist_df(A7_HPV, "HPV_A7")
 df_A9 <- get_degree_dist_df(A9_HPV, "HPV_A9")
@@ -79,7 +88,7 @@ p_pdf <- ggplot(df_combined, aes(x = Degree, y = Probability,
     legend.text        = element_text(size = 10)
   )
 
-ggsave("~/CESC_Network/5_Network_analisis/5_2_Network_topology/5_2_2_Degree_distribution.png",
+ggsave("~/CESC_Network/4_Network_analisis/5_2_Network_topology/5_2_2_Degree_distribution.png",
        p_pdf, width = 7, height = 6, dpi = 300)
 print(p_pdf)
 
@@ -105,20 +114,32 @@ log10_1p_trans <- function() {
     inverse   = function(x) 10^x - 1
   )
 }
+library(igraph)
+library(dplyr)
 
-# CCDF exacta en malla 0..kmax (incluye el punto (0,1))
 build_ccdf_df <- function(graph, label) {
-  deg  <- degree(graph)
+  stopifnot(inherits(graph, "igraph"))
+  # Usa explícitamente igraph::degree y garantiza vector numérico
+  deg <- as.integer(igraph::degree(graph, mode = "all"))
+  deg <- deg[!is.na(deg)]
+  if (length(deg) == 0L) {
+    return(tibble::tibble(Degree = integer(0), CCDF = numeric(0), Network = label))
+  }
   kmax <- max(deg)
-  h    <- tabulate(deg + 1L, nbins = kmax + 1L)    # frecuencias 0..kmax
-  ccdf <- rev(cumsum(rev(h))) / length(deg)        # P(K >= k)
-  tibble(Degree = 0:kmax, CCDF = ccdf, Network = label)
+  h    <- tabulate(deg + 1L, nbins = kmax + 1L)  # frecuencias 0..kmax
+  ccdf <- rev(cumsum(rev(h))) / length(deg)      # P(K >= k)
+  tibble::tibble(Degree = 0:kmax, CCDF = ccdf, Network = label)
 }
 
-df_ccdf <- bind_rows(
+# (opcional pero recomendable) Evita conflictos definitivamente:
+# if (exists("degree", inherits = FALSE)) rm(degree)
+# library(conflicted); conflict_prefer("degree", "igraph")
+
+df_ccdf <- dplyr::bind_rows(
   build_ccdf_df(A7_HPV, "HPV_A7"),
   build_ccdf_df(A9_HPV, "HPV_A9")
 )
+
 
 x_max <- max(df_ccdf$Degree)
 y_min <- min(df_ccdf$CCDF[df_ccdf$CCDF > 0])
@@ -164,5 +185,5 @@ p_ccdf <- ggplot(df_ccdf, aes(Degree, CCDF, color = Network)) +
 print(p_ccdf)
 
 
-ggsave("~/CESC_Network/5_Network_analisis/5_2_Network_topology/5_1_2_Degree_CCDF_distribution.png",
+ggsave("~/CESC_Network/4_Network_analisis/5_2_Network_topology/5_1_2_Degree_CCDF_distribution.png",
        p_ccdf, width = 7, height = 6, dpi = 300)

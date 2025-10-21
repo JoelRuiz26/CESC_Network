@@ -47,7 +47,7 @@ topological_metrics <- lapply(graphLists, function(graph) { #Topological metrics
   list(
     Numero_de_nodos = vcount(graph),
     Componentes_conectados = components(graph)$no, # Número de componentes conectados
-    Grado_promedio = mean(degree(graph)),
+    Grado_promedio = mean(igraph::degree(graph)),
     Coeficiente_de_agrupamiento = transitivity(graph, type = "average"),
     Asortatividad = assortativity_degree(graph),
     Tamano_del_componente_principal = max(components(graph)$csize),
@@ -72,17 +72,19 @@ t_topological_metrics <- topological_metrics_df %>% dplyr::select(1:6,jaccard_no
 colnames(t_topological_metrics) <- c("HPV-A7","HPV-A9")
 t_topological_metrics <- t_topological_metrics %>% dplyr::slice(-1)
           print(t_topological_metrics)
-#          HPV-A7    HPV-A9
-#          Componentes_conectados                  76       191
-#          Grado_promedio                    23.69526  26.60030
-#          Coeficiente_de_agrupamiento      0.2594443 0.5693897
-#          Asortatividad                    0.3595462 0.5479928
-#          jaccard_nodes                    0.7905064 0.7905064
-#          jaccard_edges                    0.1271801 0.1271801
-#          Tamano_del_componente_principal      10896      9407
-#          Porcentaje_componente_principal   98.58849  95.55104
-#          Diametro                                12        17
-#          Longitud_promedio_caminos_cortos  4.294790  5.508257
+          
+#                                               HPV-A7     HPV-A9
+#          Numero_de_nodos                       12300      12300
+#          Componentes_conectados                    1          1
+#          Grado_promedio                     83.75415  112.09821
+#          Coeficiente_de_agrupamiento       0.1839019  0.2527740
+#          Asortatividad                     0.3467502  0.2467278
+#          jaccard_nodes                             1          1
+#          jaccard_edges                    0.08582442 0.08582442
+#          Tamano_del_componente_principal       12300      12300
+#          Porcentaje_componente_principal         100        100
+#          Diametro                                  7          5
+#          Longitud_promedio_caminos_cortos   2.908232   2.630654
           
 
 # Save tsv (Output 2)
@@ -121,4 +123,4 @@ print(VennPlot)
 # Save graph (Output 3)
 ggsave(filename = "~/CESC_Network/4_Network_analisis/5_2_Network_topology/5_2_2_VennDiagram_edges.png",
         plot = VennPlot,
-        width = 8, height = 8, dpi = 300)
+        width = 8, height = 8, dpi = 600)

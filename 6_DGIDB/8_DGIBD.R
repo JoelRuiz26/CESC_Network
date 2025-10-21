@@ -18,7 +18,7 @@
 # ----------------------------
 # SETUP
 # ----------------------------
-setwd("~/CESC_Network/8_DGIDB/")
+setwd("~/CESC_Network/6_DGIDB/")
 library(tidyverse)
 library(vroom)
 library(igraph)
@@ -29,7 +29,7 @@ library(ggplot2)
 # ----------------------------
 # LOAD OCTAD RESULTS
 # ----------------------------
-A7_octad <- readRDS("~/CESC_Network/6_OCTAD/6_2_1_OCTAD_A7_results_0.2.rds")
+A7_octad <- readRDS("~/OCTAD_Cervical_Cancer/1_DGE_signature/1_1_Output_plots/")
 A9_octad <- readRDS("~/CESC_Network/6_OCTAD/6_2_1_OCTAD_A9_results_0.2.rds")
 head(A7_octad)
 # A tibble: 6 × 6

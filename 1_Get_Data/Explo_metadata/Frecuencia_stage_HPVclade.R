@@ -1,7 +1,8 @@
 library(ggplot2)
 library(dplyr)
+library(vroom)
 
-factors <- readRDS("~/2_Prepro_Data_TCGA/SNT_Full_A7A9/factors.rds")
+factors <- vroom("~/CESC_Network/2_Prepro_TCGA_GTEx/2_4_Factors.tsv")
 
 # Filtrar y limpiar los datos
 filtered_data <- factors %>%
