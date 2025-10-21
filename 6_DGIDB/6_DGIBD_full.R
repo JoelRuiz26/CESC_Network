@@ -1,12 +1,12 @@
 # ====================================================
-# Network-based Drug Repurposing using DGIdb + OCTAD
+# Network-based Drug Repurposing using DGIdb
 # ====================================================
 # Author: Joel 
 # Fecha: 2025
 # Referencia: Guney et al. 2016 - Nature Communications
 # ----------------------------------------------------
 # Este script:
-# 1. Filtra fármacos candidatos (OCTAD ∩ DGIdb)
+# 1. Usa TODOS los fármacos aprobados de DGIdb
 # 2. Asocia targets via DGIdb
 # 3. Filtra targets en red
 # 4. Calcula distancias a DGE
@@ -25,21 +25,6 @@ library(igraph)
 library(ComplexHeatmap)
 library(circlize)
 library(ggplot2)
-
-# ----------------------------
-# LOAD OCTAD RESULTS
-# ----------------------------
-A7_octad <- readRDS("~/OCTAD_Cervical_Cancer/3_RES/A7/RES_A7_common3_collapsed_FDA_Launched_0.20.rds")
-A9_octad <- readRDS("~/OCTAD_Cervical_Cancer/3_RES/A9/RES_A9_common3_collapsed_FDA_Launched_0.20.rds")
-head(A7_octad)
-# A tibble: 6 × 6
-#pert_iname      mean     n median      sd  sRGES
-#<chr>          <dbl> <dbl>  <dbl>   <dbl>  <dbl>
-#1 BRD-K89000102 -0.304     1 -0.304 NA      -0.304
-#2 palbociclib   -0.300    32 -0.294  0.0810 -0.300
-#3 meclocycline  -0.299     1 -0.299 NA      -0.299
-#4 BRD-K08317416 -0.297     1 -0.297 NA      -0.297
-#5 BRD-K70337365 -0.289     1 -0.289 NA      -0.289
 
 # ----------------------------
 # LOAD DGIdb DATA
@@ -71,117 +56,62 @@ dgidb_interactions <- dgidb_interactions %>%
   filter(approved == "TRUE")
 dim(dgidb_interactions) #[1] 37970    13
 
-#Macke score numeric type
+# Make score numeric type
+# Filtro mínimo de confianza por interacción (ajusta el umbral)
 dgidb_interactions <- dgidb_interactions %>%
   mutate(
-    interaction_score = ifelse(interaction_score == "NULL", "0", interaction_score), # Reemplazar "NULL" por "0" primero
-    interaction_score = as.numeric(interaction_score) # Luego convertir a numérico
+    interaction_score = ifelse(interaction_score == "NULL", "0", interaction_score),
+    interaction_score = as.numeric(interaction_score)
   )
+
+dgidb_interactions <- dgidb_interactions %>% filter(interaction_score >= 20)
+dim(dgidb_interactions) #[1] 136    13 with 20 filter
+
 summary(dgidb_interactions$interaction_score)
 #Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
 #0.00000   0.02012   0.09299   0.71798   0.38467 157.52301 
+
 # ----------------------------
 # DEFINE STANDARDIZATION FUNCTION
 # ----------------------------
 normalize_drug_name <- function(name) {
   name %>%
-    tolower() %>%                     
-    str_replace_all("[[:punct:]]", " ") %>%  
-    str_squish()                      
+    tolower() %>%
+    str_replace_all("[[:punct:]]", " ") %>%
+    str_squish()
 }
 
 # ----------------------------
-# APPLY STANDARDIZATION
+# APPLY STANDARDIZATION (DGIdb)
 # ----------------------------
-A7_octad <- A7_octad %>%
-  mutate(norm_iname = normalize_drug_name(pert_iname))
-A9_octad <- A9_octad %>%
-  mutate(norm_iname = normalize_drug_name(pert_iname))
 dgidb_interactions <- dgidb_interactions %>%
-  mutate(norm_drug_name = normalize_drug_name(drug_name)) %>% 
-  mutate(norm_drug_name_claim =  normalize_drug_name(drug_claim_name))
+  mutate(norm_drug_name = normalize_drug_name(drug_name)) %>%
+  mutate(norm_drug_name_claim = normalize_drug_name(drug_claim_name))
 
 # ----------------------------
-# GET UNIQUE DRUG NAMES
+# GET UNIQUE DGIdb DRUG NAMES
 # ----------------------------
-octad_drugs_A7 <- unique(A7_octad$norm_iname)
-length(octad_drugs_A7) #[1] 91
-
-octad_drugs_A9 <- unique(A9_octad$norm_iname)
-length(octad_drugs_A9) #[1] 73
-
-dgidb_drug_names <- union(unique(dgidb_interactions$norm_drug_name),unique(dgidb_interactions$norm_drug_name_claim))
-length(dgidb_drug_names) #[1] 5434
+dgidb_drug_names <- union(
+  unique(dgidb_interactions$norm_drug_name),
+  unique(dgidb_interactions$norm_drug_name_claim)
+)
+length(dgidb_drug_names) #[1] ~5k
 
 # ----------------------------
-# INTERSECT EXACT
+# (REPLACING OCTAD) USE ALL DGIdb DRUGS
 # ----------------------------
-common_drugs_A7_exact <- intersect(octad_drugs_A7, dgidb_drug_names) 
-common_drugs_A9_exact <- intersect(octad_drugs_A9, dgidb_drug_names) 
+all_matches_A7 <- dgidb_drug_names
+all_matches_A9 <- dgidb_drug_names
 
-cat("✅ Fármacos OCTAD A7 en DGIdb (exact):", length(common_drugs_A7_exact), "\n")
-#11
-cat("✅ Fármacos OCTAD A9 en DGIdb (exact):", length(common_drugs_A9_exact), "\n")
-#18
+cat("✅ Total final A7 matches (DGIdb-only):", length(all_matches_A7), "\n")
+cat("✅ Total final A9 matches (DGIdb-only):", length(all_matches_A9), "\n")
 
 # ----------------------------
-# FUZZY MATCHING (Jaro-Winkler)
+# SAVE RESULTS (mismos nombres de salida)
 # ----------------------------
-find_best_match <- function(target, candidates, max_dist = 0.05) {
-  dists <- stringdist::stringdist(target, candidates, method = "jw")
-  best <- which.min(dists)
-  if (length(best) == 0 || dists[best] > max_dist) return(NA)
-  return(candidates[best])
-}
 
-unmatched_A7 <- setdiff(octad_drugs_A7, dgidb_drug_names)
-unmatched_A9 <- setdiff(octad_drugs_A9, dgidb_drug_names)
-
-fuzzy_matches_A7 <- tibble(
-  OCTAD = unmatched_A7,
-  DGIdb = sapply(unmatched_A7, find_best_match, candidates = dgidb_drug_names)
-) %>% filter(!is.na(DGIdb))
-
-fuzzy_matches_A9 <- tibble(
-  OCTAD = unmatched_A9,
-  DGIdb = sapply(unmatched_A9, find_best_match, candidates = dgidb_drug_names)
-) %>% filter(!is.na(DGIdb))
-
-cat("✅ Fuzzy matches A7:", nrow(fuzzy_matches_A7), "\n")
-#1
-# A tibble: 2 × 2
-#OCTAD      DGIdb      
-#<chr>      <chr>      
-#2 tioguanine thioguanine
-
-cat("✅ Fuzzy matches A9:", nrow(fuzzy_matches_A9), "\n")
-#2
-# A tibble: 3 × 2
-#OCTAD          DGIdb          
-#<chr>          <chr>          
-#1 etacrynic acid ethacrynic acid
-#2 tioguanine     thioguanine    
-
-# ----------------------------
-# COMBINE EXACT AND FUZZY MATCHES
-# ----------------------------
-all_matches_A7 <- union(common_drugs_A7_exact, fuzzy_matches_A7$DGIdb)
-all_matches_A9 <- union(common_drugs_A9_exact, fuzzy_matches_A9$DGIdb)
-
-cat("✅ Total final A7 matches:", length(all_matches_A7), "\n")
-#14
-cat("✅ Total final A9 matches:", length(all_matches_A9), "\n")
-#12
-both <- intersect(all_matches_A7,all_matches_A9)
-length(both)
-#[1] 9
-
-# ----------------------------
-# SAVE RESULTS
-# ----------------------------
-write_tsv(tibble(A7_matches = all_matches_A7), "~/CESC_Network/6_DGIDB/6_1_Drugs_A7_matches_OCTAD_DGIDB.tsv")
-write_tsv(tibble(A9_matches = all_matches_A9), "~/CESC_Network/6_DGIDB/6_1_Drugs_A9_matches_OCTAD_DGIDB.tsv")
-
+write_tsv(tibble(A7_matches = all_matches_A7), "~/CESC_Network/6_DGIDB/8_1_Drugs_A7_matches_OCTAD_DGIDB.tsv")
+write_tsv(tibble(A9_matches = all_matches_A9), "~/CESC_Network/6_DGIDB/8_1_Drugs_A9_matches_OCTAD_DGIDB.tsv")
 
 # ----------------------------
 # GET DRUG-TARGET INTERACTIONS
@@ -219,7 +149,7 @@ interactions_A9 <- interactions_A9 %>%
   filter(gene_name %in% network_genes_A9)
 
 # ----------------------------
-# LOAD DGE
+# LOAD DGE (key genes)
 # ----------------------------
 DGE_A7 <- readRDS("~/OCTAD_Cervical_Cancer/1_DGE_signature/1_0_Output_rds/1_5_CoreGenes_min/core_genes_A7.rds")
 DGE_A9 <- readRDS("~/OCTAD_Cervical_Cancer/1_DGE_signature/1_0_Output_rds/1_5_CoreGenes_min/core_genes_A9.rds")
@@ -227,24 +157,11 @@ DGE_A9 <- readRDS("~/OCTAD_Cervical_Cancer/1_DGE_signature/1_0_Output_rds/1_5_Co
 dge_genes_A7 <- unique(DGE_A7)
 dge_genes_A9 <- unique(DGE_A9)
 
-
 # ----------------------------
 # NETWORK PROXIMITY CALCULATION
 # ----------------------------
-#Proximity(T,D)=∣T∣1​t∈T∑​d∈Dmin​dist(t,d)
-#    Definir selectivity score:
-#S=mean_dist_to_nonDGEmean_dist_to_DGE
-#S=mean_dist_to_DGEmean_dist_to_nonDGE​
-#
-#Reference
-#https://www.nature.com/articles/ncomms10331#further-reading
-#https://www.nature.com/articles/s41467-019-10744-6
-#https://www.nature.com/articles/s41421-020-0153-3
-
-# ----------------------------
-# NORMALIZE DGIdb interaction scores
-# ----------------------------
-
+#Proximity(T,D)= mean over t∈T of min distance(t, D)
+#Selectivity score S = mean_dist_to_nonDGE / mean_dist_to_DGE
 
 # Load libraries
 library(tidyverse); library(igraph); library(ComplexHeatmap); library(circlize); library(ggplot2); library(viridis)
@@ -255,11 +172,6 @@ library(tidyverse); library(igraph); library(ComplexHeatmap); library(circlize);
 interactions_A7 <- interactions_A7 %>% mutate(interaction_score_scaled = (interaction_score - min(interaction_score, na.rm=TRUE)) / (max(interaction_score, na.rm=TRUE) - min(interaction_score, na.rm=TRUE)))
 interactions_A9 <- interactions_A9 %>% mutate(interaction_score_scaled = (interaction_score - min(interaction_score, na.rm=TRUE)) / (max(interaction_score, na.rm=TRUE) - min(interaction_score, na.rm=TRUE)))
 
-# Compute mean shortest-path distance between two sets of nodes in 'graph'
-# from_nodes: vector of drug targets
-# to_nodes: vector of DGE genes (or non-DGE)
-# Returns the average of minimum distances per target
-
 mean_min_distance <- function(graph, from_nodes, to_nodes) {
   from_nodes <- intersect(from_nodes, V(graph)$name)
   to_nodes <- intersect(to_nodes, V(graph)$name)
@@ -268,23 +180,12 @@ mean_min_distance <- function(graph, from_nodes, to_nodes) {
   mean(apply(d, 1, min), na.rm=TRUE)
 }
 
-# Compute selectivity: ratio of mean distance to nonDGE vs DGE
-# Also returns individual mean distances for both sets
 get_selectivity_scores <- function(graph, drug_targets, DGE, nonDGE) {
   prox_DGE <- mean_min_distance(graph, drug_targets, DGE)
   prox_nonDGE <- mean_min_distance(graph, drug_targets, nonDGE)
   if (is.na(prox_DGE) || prox_DGE == 0) return(tibble(prox_to_DGE=prox_DGE, prox_to_nonDGE=prox_nonDGE, selectivity_score=NA))
   tibble(prox_to_DGE=prox_DGE, prox_to_nonDGE=prox_nonDGE, selectivity_score=prox_nonDGE/prox_DGE)
 }
-
-# Compute z-score based on permutation of targets and DGE while preserving degree
-# targets: drug_targets present in graph
-# DGE: disease genes present in graph
-# nperm: number of permutations (default 500)
-#Goal: Assess whether a drug’s targets are unusually close to disease genes 
-#more than expected by chance given network structure.
-#Method: Compare the observed mean minimum distance between drug targets and DGE
-#to what one would expect under random pairing in the same network topology, controlling for node degree
 
 compute_zscore <- function(graph, targets, DGE, nperm=500) {
   obs <- mean_min_distance(graph, targets, DGE)
@@ -324,11 +225,11 @@ compute_drug_scores <- function(graph, interactions, dge_genes) {
 
 # Run for A7 and A9
 results_A7 <- compute_drug_scores(graph_A7, interactions_A7, dge_genes_A7) #slow
+
 results_A9 <- compute_drug_scores(graph_A9, interactions_A9, dge_genes_A9) #slow
 
-save.image("~/CESC_Network/6_DGIDB/6_4_Image_DGIDB.RData")
-
-#load("~/CESC_Network/8_DGIDB/8_4_Image_DGIDB.RData")
+save.image("~/CESC_Network/6_DGIDB/8_4_Image_DGIDB.RData")
+# load("~/CESC_Network/8_DGIDB/8_4_Image_DGIDB.RData")
 
 #----------------------------------------------------
 
@@ -371,7 +272,6 @@ mat_A7 <- mat_A7[rowSums(is.na(mat_A7)) < ncol(mat_A7), , drop=FALSE]
 mat_A9 <- mat_A9[rowSums(is.na(mat_A9)) < ncol(mat_A9), , drop=FALSE]
 
 # =============================================================
-# =============================================================
 # 5️⃣ Annotate Heatmap Function (Clean and Professional)
 # =============================================================
 annotate_heatmap <- function(mat, results, cohort_label) {
@@ -401,23 +301,16 @@ annotate_heatmap <- function(mat, results, cohort_label) {
     cluster_columns = TRUE,
     show_row_names = TRUE,
     show_column_names = TRUE,
-    
-    # AQUI CAMBIA el tamaño y el estilo de los nombres de FILAS y COLUMNAS
     row_names_gp = gpar(fontsize = 14, fontface = "bold"), 
     column_names_gp = gpar(fontsize = 12, fontface = "bold"),
-    
     heatmap_legend_param = list(
       title = "Mean Proximity Distance",
       legend_height = unit(4, "cm")
     ),
-    
-    # Titulo de la heatmap (arriba)
     column_title = paste0(
       "HPV Clade ", cohort_label, 
       ": Drug–Gene Community Proximity\n"
     ),
-    
-    # ESTILO del titulo
     column_title_gp = gpar(fontsize = 16, fontface = "bold")
   )
 }
@@ -425,7 +318,6 @@ annotate_heatmap <- function(mat, results, cohort_label) {
 # =============================================================
 # 6️⃣ DRAW HEATMAPS
 # =============================================================
-
 ht_A7 <- annotate_heatmap(
   mat_A7,
   results_A7 %>% filter(drug %in% colnames(mat_A7)),
@@ -440,31 +332,20 @@ ht_A9 <- annotate_heatmap(
 )
 draw(ht_A9)
 
-
-
-
 # 7️⃣ SAVE AS PDF and PNG
 # =============================================================
-pdf("~/CESC_Network/6_DGIDB/6_3_A7_Heatmap_with_Zscore.pdf", width=12, height=8)
+pdf("~/CESC_Network/6_DGIDB/8_3_A7_Heatmap_with_Zscore.pdf", width=12, height=8)
 draw(ht_A7)
 dev.off()
 
-pdf("~/CESC_Network/6_DGIDB/6_3_A9_Heatmap_with_Zscore.pdf", width=12, height=8)
+pdf("~/CESC_Network/6_DGIDB/8_3_A9_Heatmap_with_Zscore.pdf", width=12, height=8)
 draw(ht_A9)
 dev.off()
 
-png("~/CESC_Network/6_DGIDB/6_3_A7_Heatmap_with_Zscore.png", width=1200, height=800, res=150)
+png("~/CESC_Network/6_DGIDB/8_3_A7_Heatmap_with_Zscore.png", width=1200, height=800, res=150)
 draw(ht_A7)
 dev.off()
 
-png("~/CESC_Network/6_DGIDB/6_3_A9_Heatmap_with_Zscore.png", width=1200, height=800, res=150)
+png("~/CESC_Network/6_DGIDB/8_3_A9_Heatmap_with_Zscore.png", width=1200, height=800, res=150)
 draw(ht_A9)
 dev.off()
-
-
-
-
-
-
-
-
