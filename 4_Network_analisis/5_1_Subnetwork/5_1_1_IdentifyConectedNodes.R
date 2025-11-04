@@ -72,11 +72,11 @@ analyze_network <- function(file_path, max_rows = 10000000) {
 # Analyze both networks
 # --------------------------------------------------------
 results_A7 <- analyze_network(
-  "~/CESC_Network/4_Network/ARACNE-multicore/launch/2_7_Full_counts_A7_annot.sort"
+  "/STORAGE/csbig/jruiz/cesc_network/2_7_Full_counts_A7_annot.sort"
 )
 
 results_A9 <- analyze_network(
-  "~/CESC_Network/4_Network/ARACNE-multicore/launch/2_8_Full_counts_A9_annot.sort"
+  "/STORAGE/csbig/jruiz/cesc_network/2_8_Full_counts_A9_annot.sort"
 )
 
 # --------------------------------------------------------
@@ -114,12 +114,12 @@ cutoff_A9 <- results_A9$cutoff_row
 
 saveRDS(
   cutoff_A7, 
-  file = "~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_1_1_A7_cutoff_links.rds"
+  file = "~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_1_1_A7_cutoff_links.rds"
 )
 
 saveRDS(
   cutoff_A9, 
-  file = "~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_1_1_A9_cutoff_links.rds"
+  file = "~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_1_1_A9_cutoff_links.rds"
 )
 
 cat("\n════════════════════════════════════\n")
@@ -133,21 +133,21 @@ cat("═════════════════════════
 # Save BOTH edgelists sliced at THEIR OWN cutoff
 # --------------------------------------------------------
 A7_individual <- vroom(
-  "~/CESC_Network/4_Network/ARACNE-multicore/launch/2_7_Full_counts_A7_annot.sort",
+  "/STORAGE/csbig/jruiz/cesc_network/2_7_Full_counts_A7_annot.sort",
   col_names = c("GenA", "GenB", "MI"),
   show_col_types = FALSE
 ) %>% na.omit() %>% dplyr::slice(1:cutoff_A7)
 
 A9_individual <- vroom(
-  "~/CESC_Network/4_Network/ARACNE-multicore/launch/2_8_Full_counts_A9_annot.sort",
+  "/STORAGE/csbig/jruiz/cesc_network/2_8_Full_counts_A9_annot.sort",
   col_names = c("GenA", "GenB", "MI"),
   show_col_types = FALSE
 ) %>% na.omit() %>% dplyr::slice(1:cutoff_A9)
 
 saveRDS(A7_individual, 
-        "~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_1_2_A7_edgelist_allnodes.rds")
+        "~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_1_2_A7_edgelist_allnodes.rds")
 saveRDS(A9_individual, 
-        "~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_1_2_A9_edgelist_allnodes.rds")
+        "~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_1_2_A9_edgelist_allnodes.rds")
 
 cat("[INFO] Saved A7 edgelist at its cutoff: ", cutoff_A7, " edges\n")
 cat("[INFO] Saved A9 edgelist at its cutoff: ", cutoff_A9, " edges\n")
@@ -155,39 +155,31 @@ cat("[INFO] Saved A9 edgelist at its cutoff: ", cutoff_A9, " edges\n")
 
 
 
+
 #════════════════════════════════════
 #NETWORK ANALYSIS REPORT - 2_7_Full_counts_A7_annot
 #════════════════════════════════════
-#• Total unique nodes: 12300
-#• Rows analyzed: 8000000
-#• Cutoff row found: 515088
-#• Nodes covered: 12300/12300
+
+#• Total unique nodes: 11457
+#• Rows analyzed: 10000000
+#• Cutoff row found: 577445
+#• Nodes covered: 11457/11457
 #• Coverage percent: 100%
 #════════════════════════════════════#
 
 #════════════════════════════════════
 #NETWORK ANALYSIS REPORT - 2_8_Full_counts_A9_annot
 #════════════════════════════════════
-#• Total unique nodes: 12300
-#• Rows analyzed: 8000000
-#════════════════════════════════════#
-
-#════════════════════════════════════
-#NETWORK ANALYSIS REPORT - 2_8_Full_counts_A9_annot
-#════════════════════════════════════
-#• Total unique nodes: 12300
-#• Rows analyzed: 8000000
-#• Cutoff row found: 689404
-#• Nodes covered: 12300/12300
+#• Total unique nodes: 11457
+#• Rows analyzed: 10000000
+#• Cutoff row found: 729501
+#• Nodes covered: 11457/11457
 #• Coverage percent: 100%
 #════════════════════════════════════
 
 #════════════════════════════════════
 #INDIVIDUAL THRESHOLDS SAVED
 #════════════════════════════════════
-#A7 cutoff row:  515088 
-#A9 cutoff row:  689404 
+#A7 cutoff row:  577445 
+#A9 cutoff row:  729501 
 #════════════════════════════════════
-#[INFO] Saved A7 edgelist at its cutoff:  515088  edges
-#[INFO] Saved A9 edgelist at its cutoff:  689404  edges
-

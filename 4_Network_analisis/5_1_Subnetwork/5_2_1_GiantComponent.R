@@ -15,20 +15,20 @@ suppressPackageStartupMessages({
 # --------------------------------------------------------
 # Cutoffs of each network which contains the maximum links (MI-sorted)  that contains all conected nodes
 # --------------------------------------------------------
-#xmax_A7 <- readRDS("~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_1_1_A7_cutoff_links.rds")
-#xmax_A9 <- readRDS("~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_1_1_A9_cutoff_links.rds")
+xmax_A7 <- readRDS("~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_1_1_A7_cutoff_links.rds")
+xmax_A9 <- readRDS("~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_1_1_A9_cutoff_links.rds")
 
-#cat("\n[INFO] xmax per network -> A7:", xmax_A7, "| A9:", xmax_A9, "\n")
+cat("\n[INFO] xmax per network -> A7:", xmax_A7, "| A9:", xmax_A9, "\n")
 #[INFO] xmax per network -> A7: 515088 | A9: 689404 
 
-xmax_A7 <- 515088
-xmax_A9 <- 689404
+#xmax_A7 <- 515088
+#xmax_A9 <- 689404
 
 # --------------------------------------------------------
 # Cargar edgelists (ordenados por MI)
 # --------------------------------------------------------
 A7_Full <- readRDS("~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_1_2_A7_edgelist_allnodes.rds")
-A9_Full <- readRDS("~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_1_2_A9_edgelist_allnodes_AT_A9_cutoff.rds")
+A9_Full <- readRDS("~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_1_2_A9_edgelist_allnodes.rds")
 
 imax_A7 <- min(xmax_A7, nrow(A7_Full))
 imax_A9 <- min(xmax_A9, nrow(A9_Full))
@@ -332,7 +332,7 @@ ggsave("GC_elbows_labels_stacked.png", p, width = 14, height = 6.5, dpi = 600)
 # --------------------------------------------------------
 # 5) (Opcional) Exportar subredes al elbow independiente
 # --------------------------------------------------------
-save.image("~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_2_2_GiantComponent.RData")
+save.image("/STORAGE/csbig/jruiz/cesc_network/5_2_2_GiantComponent.RData")
 
 ggsave("~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_2_3_GC_graph_elbow.png",
         plot = p, width = 12, height = 8, dpi = 600)
@@ -348,5 +348,5 @@ saveRDS(graph_A9_elbow, "~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_2_4_
 
 cat("Graphs exported successfully!\n")
 
-#load("~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_2_2_GiantComponent.RData")
+#load("/STORAGE/csbig/jruiz/cesc_network/5_2_2_GiantComponent.RData")
 
