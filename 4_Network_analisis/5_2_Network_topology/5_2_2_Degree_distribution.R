@@ -17,8 +17,8 @@ library(scales)
 # Load Graphs
 ################################################################################
 
-A7_HPV <- readRDS('~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A7_FULL.rds')
-A9_HPV <- readRDS('~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A9_full.rds')
+A7_HPV <- readRDS('~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A7_max.rds')
+A9_HPV <- readRDS('~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A9_max.rds')
 
 ################################################################################
 # Degree Distribution (PDF)
@@ -186,3 +186,4 @@ print(p_ccdf)
 
 ggsave("~/CESC_Network/4_Network_analisis/5_2_Network_topology/5_1_2_Degree_CCDF_distribution.png",
        p_ccdf, width = 7, height = 6, dpi = 300)
+

@@ -8,8 +8,8 @@
 pacman::p_load("igraph", "tidyverse", "ggraph", "tidygraph", "svglite", "ggvenn")
 
 ### Load graphs ###
-Subgraph_A7 <- readRDS('~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A7_elbow.rds')
-Subgraph_A9 <- readRDS('~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A9_elbow.rds')
+Subgraph_A7 <- readRDS('~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A7_max.rds')
+Subgraph_A9 <- readRDS('~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A9_max.rds')
 
 
 ### Build graphs to be comparable ###
@@ -73,18 +73,18 @@ colnames(t_topological_metrics) <- c("HPV-A7","HPV-A9")
 t_topological_metrics <- t_topological_metrics %>% dplyr::slice(-1)
           print(t_topological_metrics)
           
-#                                               HPV-A7     HPV-A9
-#          Numero_de_nodos                       12300      12300
+#          HPV-A7     HPV-A9
+#          Numero_de_nodos                       11457      11457
 #          Componentes_conectados                    1          1
-#          Grado_promedio                     83.75415  112.09821
-#          Coeficiente_de_agrupamiento       0.1839019  0.2527740
-#          Asortatividad                     0.3467502  0.2467278
+#          Grado_promedio                     127.3459   127.3459
+#          Coeficiente_de_agrupamiento       0.1681555  0.2377677
+#          Asortatividad                     0.3592412  0.2377206
 #          jaccard_nodes                             1          1
-#          jaccard_edges                    0.08582442 0.08582442
-#          Tamano_del_componente_principal       12300      12300
+#          jaccard_edges                    0.08677989 0.08677989
+#          Tamano_del_componente_principal       11457      11457
 #          Porcentaje_componente_principal         100        100
-#          Diametro                                  7          5
-#          Longitud_promedio_caminos_cortos   2.908232   2.630654
+#          Diametro                                  4          5
+#          Longitud_promedio_caminos_cortos   2.602994   2.515115
           
 
 # Save tsv (Output 2)
@@ -117,7 +117,7 @@ VennPlot <- ggvenn(
     plot.caption  = element_text(hjust = 0.5, size = 9)
   )
 
-print(VennPlot)
+#print(VennPlot)
 
 
 # Save graph (Output 3)

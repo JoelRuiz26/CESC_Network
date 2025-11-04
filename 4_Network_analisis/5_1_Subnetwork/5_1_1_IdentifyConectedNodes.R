@@ -145,15 +145,37 @@ A9_individual <- vroom(
 ) %>% na.omit() %>% dplyr::slice(1:cutoff_A9)
 
 saveRDS(A7_individual, 
-        "~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_1_2_A7_edgelist_allnodes.rds")
+        "~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_1_2_A7_edgelist_individual_allnodes.rds")
 saveRDS(A9_individual, 
-        "~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_1_2_A9_edgelist_allnodes.rds")
+        "~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_1_2_A9_edgelist_individual_allnodes.rds")
 
 cat("[INFO] Saved A7 edgelist at its cutoff: ", cutoff_A7, " edges\n")
 cat("[INFO] Saved A9 edgelist at its cutoff: ", cutoff_A9, " edges\n")
 
+####ALL####
+
+cutoff_max <- max(cutoff_A7,cutoff_A9)
+
+A7_max <- vroom(
+  "/STORAGE/csbig/jruiz/cesc_network/2_7_Full_counts_A7_annot.sort",
+  col_names = c("GenA", "GenB", "MI"),
+  show_col_types = FALSE
+) %>% na.omit() %>% dplyr::slice(1:cutoff_max)
+
+A9_max <- vroom(
+  "/STORAGE/csbig/jruiz/cesc_network/2_8_Full_counts_A9_annot.sort",
+  col_names = c("GenA", "GenB", "MI"),
+  show_col_types = FALSE
+) %>% na.omit() %>% dplyr::slice(1:cutoff_max)
 
 
+saveRDS(A7_max, 
+        "~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_1_2_A7_edgelist__max_allnodes.rds")
+saveRDS(A9_max, 
+        "~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_1_2_A9_edgelist_max_allnodes.rds")
+
+cat("[INFO] Saved A7 edgelist at its cutoff: ", cutoff_max, " edges\n")
+cat("[INFO] Saved A9 edgelist at its cutoff: ", cutoff_max, " edges\n")
 
 
 #════════════════════════════════════

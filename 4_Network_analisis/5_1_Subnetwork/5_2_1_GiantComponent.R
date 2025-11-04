@@ -23,8 +23,8 @@ cat("\n[INFO] xmax per network -> A7:", xmax_A7, "| A9:", xmax_A9, "\n")
 # --------------------------------------------------------
 # Cargar edgelists (ordenados por MI)
 # --------------------------------------------------------
-A7_Full <- readRDS("~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_1_2_A7_edgelist_allnodes.rds")
-A9_Full <- readRDS("~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_1_2_A9_edgelist_allnodes.rds")
+A7_Full <- readRDS("~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_1_2_A7_edgelist__max_allnodes.rds")
+A9_Full <- readRDS("~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_1_2_A9_edgelist_max_allnodes.rds")
 
 imax_A7 <- min(xmax_A7, nrow(A7_Full))
 imax_A9 <- min(xmax_A9, nrow(A9_Full))
@@ -300,7 +300,8 @@ p <- ggplot() +
   scale_y_continuous(limits = y_lim, expand = c(0, 0), labels = label_comma()) +
   
   labs(
-    title = "Growth of the Largest Connected Component in Cervical Cancer Co-expression Networks",
+    title = "Growth of the Largest Connected Component \
+ in Cervical Cancer Co-expression Networks",
     x     = "Number of Edges (MI-sorted)",
     y     = "Number of Genes in Largest Connected Component"
   ) +
@@ -345,12 +346,11 @@ saveRDS(graph_A7_elbow, "~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_2_4_
 saveRDS(graph_A9_elbow, "~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A9_elbow.rds")
 
 #All
+graph_A7_max_elbow <- graph_from_data_frame(d = A7_Full, directed = FALSE)
+graph_A9_max_elbow <- graph_from_data_frame(d = A9_Full, directed = FALSE)
 
-A7_Full <- graph_from_data_frame(d = A7_Full, directed = FALSE)
-A9_Full <- graph_from_data_frame(d = A9_Full, directed = FALSE)
-
-saveRDS(A7_Full, "~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A7_FULL.rds") 
-saveRDS(A9_Full, "~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A9_full.rds")
+saveRDS(graph_A7_max_elbow, "~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A7_max.rds") 
+saveRDS(graph_A9_max_elbow, "~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A9_max.rds")
 
 
 cat("Graphs exported successfully!\n")
