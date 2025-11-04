@@ -17,8 +17,8 @@ library(scales)
 # Load Graphs
 ################################################################################
 
-A7_HPV <- readRDS('~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A7_elbow.rds')
-A9_HPV <- readRDS('~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A9_elbow.rds')
+A7_HPV <- readRDS('~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A7_FULL.rds')
+A9_HPV <- readRDS('~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A9_full.rds')
 
 ################################################################################
 # Degree Distribution (PDF)
@@ -89,8 +89,7 @@ p_pdf <- ggplot(df_combined, aes(x = Degree, y = Probability,
   )
 
 ggsave("~/CESC_Network/4_Network_analisis/5_2_Network_topology/5_2_2_Degree_distribution.png",
-       p_pdf, width = 7, height = 6, dpi = 300)
-print(p_pdf)
+       p_pdf, width = 7, height = 6, dpi = 600)
 
 ################################################################################
 #  Complementary Cumulative Distribution (CCDF)

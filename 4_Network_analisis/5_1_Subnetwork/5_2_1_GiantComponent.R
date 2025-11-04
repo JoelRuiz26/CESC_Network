@@ -344,6 +344,15 @@ graph_A9_elbow <- graph_from_data_frame(d = Subnetwork_A9_elbow, directed = FALS
 saveRDS(graph_A7_elbow, "~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A7_elbow.rds") 
 saveRDS(graph_A9_elbow, "~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A9_elbow.rds")
 
+#All
+
+A7_Full <- graph_from_data_frame(d = A7_Full, directed = FALSE)
+A9_Full <- graph_from_data_frame(d = A9_Full, directed = FALSE)
+
+saveRDS(A7_Full, "~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A7_FULL.rds") 
+saveRDS(A9_Full, "~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A9_full.rds")
+
+
 cat("Graphs exported successfully!\n")
 
 #load("/STORAGE/csbig/jruiz/cesc_network/5_2_2_GiantComponent.RData")
