@@ -37,7 +37,7 @@ counts <- counts[rowSums(counts[,-1]) > 0, ]
 dim(counts) #[1] 48780   281
 
 # Get annotation from Ensembl (GENCODE v43 ~ Ensembl v110 default)
-mart <- useEnsembl("ensembl", dataset="hsapiens_gene_ensembl")
+mart <- useEnsembl("ensembl", dataset="hsapiens_gene_ensembl", GRCh = 37)
 myannot <- getBM(attributes = c("ensembl_gene_id", 
                                 "percentage_gene_gc_content", "gene_biotype",
                                 "start_position", "end_position", "hgnc_id", "hgnc_symbol"),
@@ -46,7 +46,7 @@ myannot <- getBM(attributes = c("ensembl_gene_id",
                  mart = mart) %>%
   dplyr::rename(feature = ensembl_gene_id) %>%
   mutate(length = abs(end_position - start_position)) %>%
-  filter(hgnc_id != "" & hgnc_symbol != "") %>%
+  #filter(hgnc_id != "" & hgnc_symbol != "") %>%
   distinct(feature, .keep_all = TRUE)
 
 # Filter counts to those with valid annotations
@@ -211,8 +211,8 @@ dev.off()
 #Filter low counts
 counts_filtered <- filtered.data(
   counts, factor = "HPV_clade", norm = FALSE, depth = NULL, method = 1, cpm = 0, p.adj = "fdr")
-#12301 features are to be kept for differential expression analysis with filtering method 1
-length(unique(rownames(counts_filtered))) #[1] 12301
+#13207 features are to be kept for differential expression analysis with filtering method 1
+length(unique(rownames(counts_filtered))) #[1] 13207
 #sync
 myannot_filtered <- myannot[myannot$feature %in% rownames(counts_filtered), ]
 stopifnot(all(rownames(counts_filtered) %in% myannot_filtered$feature))
@@ -232,11 +232,10 @@ mydataEDA <- newSeqExpressionSet(
   phenoData = AnnotatedDataFrame(data = factors))
 
 #order for less bias
-#lFull <- withinLaneNormalization(mydataEDA, "length", which = "full")#corrects length bias 
-#gcFull <- withinLaneNormalization(lFull, 
-#                                  "percentage_gene_gc_content", which = "full")#corrects GC bias 
-normCounts(mydataEDA) <- counts(mydataEDA)
-fullfullTMM <-NOISeq::tmm(normCounts(mydataEDA), long = 1000, lc = 0, k = 0)
+gcFull <- withinLaneNormalization(mydataEDA, 
+                                  "percentage_gene_gc_content", which = "full")#corrects GC bias 
+lFull <- withinLaneNormalization(gcFull, "length", which = "full")#corrects length bias 
+fullfullTMM <-NOISeq::tmm(normCounts(lFull), long = 1000, lc = 0, k = 0)
 #norm.counts <- betweenLaneNormalization(normCounts(lFull),
 # which = "median", offset = FALSE)
 
@@ -290,7 +289,7 @@ ffTMMARSyn=ARSyNseq(noiseqData_filtered, factor = "HPV_type", batch = F,
 #noiseqData_batch = NOISeq::readData(data = expr_batchcorrected, 
 #                                       factors=factors)
 
-myPCA_after = dat(ffTMMARSyn  , type = "PCA", norm = T,logtransf = F)
+myPCA_after = dat(ffTMMARSyn  , type = "PCA", norm = T,logtransf = T)
 
 
 pdf("plots_prepro_data/QC_PCA_scores_HPVclade_after.pdf", width = 8, height = 6)
@@ -467,6 +466,8 @@ Final_SNT_vs_PP_annot <- Final_SNT_vs_PP_annot %>%
   dplyr::select(HGNC_symbol, everything(), -Gene) %>%
   dplyr::rename(Gene = HGNC_symbol)
 Final_SNT_vs_PP_annot <- Final_SNT_vs_PP_annot %>% dplyr::group_by(Gene) %>% dplyr::summarise(dplyr::across(where(is.numeric), ~mean(., na.rm=TRUE)), .groups="drop"); rownames(Final_SNT_vs_PP_annot) <- Final_SNT_vs_PP_annot$Gene
+dim(Final_SNT_vs_PP_annot)
+#[1] 11457   281
 
 # Save matrix annoted
 vroom::vroom_write(Final_SNT_vs_PP_annot,
@@ -489,6 +490,7 @@ vroom::vroom_write(Final_A9_NW,
                    file = "~/CESC_Network/2_Prepro_TCGA_GTEx/2_8_Full_counts_A9_annot.tsv", 
                    delim = "\t")
 
-#save.image("~/CESC_Network/2_Prepro_TCGA_GTEx/2_9_Image_Post_Prepro.RData")
-#load("~/CESC_Network/2_Prepro_TCGA_GTEx/2_9_Image_Post_Prepro.RData")
+save.image("/STORAGE/csbig/jruiz/cesc_network/2_9_Image_Post_Prepro.RData")
+
+load("/STORAGE/csbig/jruiz/cesc_network/2_9_Image_Post_Prepro.RData")
 
