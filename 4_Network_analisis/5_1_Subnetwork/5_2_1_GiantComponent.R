@@ -19,11 +19,7 @@ xmax_A7 <- readRDS("~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_1_1_A7_cu
 xmax_A9 <- readRDS("~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_1_1_A9_cutoff_links.rds")
 
 cat("\n[INFO] xmax per network -> A7:", xmax_A7, "| A9:", xmax_A9, "\n")
-#[INFO] xmax per network -> A7: 515088 | A9: 689404 
-
-#xmax_A7 <- 515088
-#xmax_A9 <- 689404
-
+#[INFO] xmax per network -> A7: 577445 | A9: 729501 
 # --------------------------------------------------------
 # Cargar edgelists (ordenados por MI)
 # --------------------------------------------------------
@@ -33,6 +29,8 @@ A9_Full <- readRDS("~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_1_2_A9_ed
 imax_A7 <- min(xmax_A7, nrow(A7_Full))
 imax_A9 <- min(xmax_A9, nrow(A9_Full))
 cat("[INFO] Usable edges -> A7:", imax_A7, "| A9:", imax_A9, "\n")
+#[INFO] Usable edges -> A7: 577445 | A9: 729501 
+imax_max <- max(imax_A7, imax_A9)
 
 # ========================================================
 # Utilidades
@@ -223,7 +221,7 @@ if (!is.null(recA9)) {
 
 
 # ========================================================
-# 4) Figura (revista, desde el origen, sin diagonal)
+# 4) Plot
 # ========================================================
 
 # 1) Asegura que las curvas arrancan en (0,0)
@@ -252,7 +250,7 @@ elbows <- tibble(
 )
 
 # 3) Límites del panel (curvas intactas)
-x_end <- 2e6                  # cámbialo a 3e6 si lo prefieres
+x_end <- imax_max                  # cámbialo a 3e6 si lo prefieres
 x_lim <- c(0, x_end)
 y_max <- max(metrics_A7p$Largest_Component, metrics_A9p$Largest_Component, na.rm = TRUE)
 y_lim <- c(0, y_max * 1.03)   # holgura mínima arriba
@@ -334,7 +332,7 @@ ggsave("GC_elbows_labels_stacked.png", p, width = 14, height = 6.5, dpi = 600)
 # --------------------------------------------------------
 save.image("/STORAGE/csbig/jruiz/cesc_network/5_2_2_GiantComponent.RData")
 
-ggsave("~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_2_3_GC_graph_elbow.png",
+ggsave("~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_2_3_GC_graph_elbow.png",
         plot = p, width = 12, height = 8, dpi = 600)
 
 Subnetwork_A7_elbow <- A7_Full %>% slice(1:elbow_links_A7)
