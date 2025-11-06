@@ -11,7 +11,6 @@
 library(igraph)
 library(ggplot2)
 library(scales)
-install.packages("cli")
 
 ################################################################################
 # Load Graphs
@@ -50,13 +49,15 @@ df_A9 <- get_degree_dist_df(A9_HPV, "HPV_A9")
 df_combined <- rbind(df_A7, df_A9)
 
 # Professional-style plot
+################################################################################
+# Degree Distribution (PDF) — sin línea
+################################################################################
+
 p_pdf <- ggplot(df_combined, aes(x = Degree, y = Probability, 
-                                 color = Network, shape = Network, linetype = Network)) +
+                                 color = Network, shape = Network)) +
   geom_point(alpha = 0.7, size = 2) +
-  geom_smooth(method = "loess", se = FALSE, span = 0.3, size = 1) +
   scale_color_manual(values = c(HPV_A7 = "#003366", HPV_A9 = "#FF0000")) +
   scale_shape_manual(values = c(HPV_A7 = 16, HPV_A9 = 17)) +
-  scale_linetype_manual(values = c(HPV_A7 = "solid", HPV_A9 = "dashed")) +
   scale_x_log10(breaks = trans_breaks("log10", function(x) 10^x),
                 labels = trans_format("log10", math_format(10^.x))) +
   scale_y_log10(breaks = trans_breaks("log10", function(x) 10^x),
@@ -67,8 +68,7 @@ p_pdf <- ggplot(df_combined, aes(x = Degree, y = Probability,
     x = "Degree (k)",
     y = "Probability p(k)",
     color = "Network",
-    shape = "Network",
-    linetype = "Network"
+    shape = "Network"
   ) +
   theme_bw(base_family = "Times New Roman") +
   theme(
@@ -79,7 +79,7 @@ p_pdf <- ggplot(df_combined, aes(x = Degree, y = Probability,
     panel.grid.major   = element_line(color = "grey90"),
     panel.grid.minor   = element_line(color = "grey95"),
     axis.line          = element_blank(),
-    legend.position    = c(0.95, 0.95),         # top-right inside
+    legend.position    = c(0.95, 0.95),
     legend.justification = c("right", "top"),
     legend.direction   = "vertical",
     legend.background  = element_rect(fill = alpha("white", 0.8), color = "black"),
@@ -90,6 +90,7 @@ p_pdf <- ggplot(df_combined, aes(x = Degree, y = Probability,
 
 ggsave("~/CESC_Network/4_Network_analisis/5_2_Network_topology/5_2_2_Degree_distribution.png",
        p_pdf, width = 7, height = 6, dpi = 600)
+
 
 ################################################################################
 #  Complementary Cumulative Distribution (CCDF)
@@ -181,7 +182,6 @@ p_ccdf <- ggplot(df_ccdf, aes(Degree, CCDF, color = Network)) +
     legend.background   = element_rect(fill = alpha("white", 0.8), color = "black")
   )
 
-print(p_ccdf)
 
 
 ggsave("~/CESC_Network/4_Network_analisis/5_2_Network_topology/5_1_2_Degree_CCDF_distribution.png",
