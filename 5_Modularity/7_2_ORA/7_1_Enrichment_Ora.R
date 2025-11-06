@@ -15,10 +15,10 @@ plan(multicore, workers = 3)  # Configura el uso de 3 cores
 set.seed(123)
 
 ### Cargar redes ###
-graph_A7 <- readRDS(file = "~/CESC_Network/5_Modularity/7_1_Louvain/7_1_1_Louvain_A7_graph.rds")
-graph_A9 <- readRDS(file = "~/CESC_Network/5_Modularity/7_1_Louvain/7_1_1_Louvain_A9_graph.rds")
 #graph_A7 <- readRDS(file = "~/CESC_Network/5_Modularity/7_1_Louvain/7_1_1_Louvain_A7_graph.rds")
 #graph_A9 <- readRDS(file = "~/CESC_Network/5_Modularity/7_1_Louvain/7_1_1_Louvain_A9_graph.rds")
+graph_A7 <- readRDS(file = "~/CESC_Network/5_Modularity/7_1_Louvain/7_1_1_Louvain_A7_graph.rds")
+graph_A9 <- readRDS(file = "~/CESC_Network/5_Modularity/7_1_Louvain/7_1_1_Louvain_A9_graph.rds")
 
 
 ### Cargar universo de genes ###
@@ -99,8 +99,14 @@ print(length(unique(ora_A7$Community_Name)))
 print(length(unique(ora_A9$Community_Name)))
 
 ### Guardar resultados ###
-write.table(ora_A7, file = "~/CESC_Network/5_Modularity/7_2_ORA/7_2_1_Ora7_louvain.tsv", sep = "\t", row.names = FALSE, quote = FALSE)
-write.table(ora_A9, file = "~/CESC_Network/5_Modularity/7_2_ORA/7_2_1_Ora9_louvain.tsv", sep = "\t", row.names = FALSE, quote = FALSE)
+#write.table(ora_A7, file = "~/CESC_Network/5_Modularity/7_2_ORA/7_2_1_Ora7_louvain.tsv", sep = "\t", row.names = FALSE, quote = FALSE)
+#write.table(ora_A9, file = "~/CESC_Network/5_Modularity/7_2_ORA/7_2_1_Ora9_louvain.tsv", sep = "\t", row.names = FALSE, quote = FALSE)
+
+write.table(ora_A7, file = "~/CESC_Network/5_Modularity/7_2_ORA/7_2_1_Ora7_info.tsv", sep = "\t", row.names = FALSE, quote = FALSE)
+write.table(ora_A9, file = "~/CESC_Network/5_Modularity/7_2_ORA/7_2_1_Ora9_info.tsv", sep = "\t", row.names = FALSE, quote = FALSE)
+
 
 end_time <- Sys.time()
 cat("Tiempo total:", round(end_time - start_time, 2), "minutos\n")
+#louvain Tiempo total: 8.98 minutos
+#infomap Tiempo total: 9.08 minutos
