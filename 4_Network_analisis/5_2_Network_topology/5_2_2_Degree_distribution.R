@@ -8,10 +8,10 @@
 #   Both graphs highlight the heavy-tailed, heterogeneous nature typical of
 #   biological networks, showing hubs with high degree.
 ################################################################################
-
 library(igraph)
 library(ggplot2)
 library(scales)
+install.packages("cli")
 
 ################################################################################
 # Load Graphs
