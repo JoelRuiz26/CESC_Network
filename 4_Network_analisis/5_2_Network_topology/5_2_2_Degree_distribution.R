@@ -186,4 +186,3 @@ p_ccdf <- ggplot(df_ccdf, aes(Degree, CCDF, color = Network)) +
 
 ggsave("~/CESC_Network/4_Network_analisis/5_2_Network_topology/5_1_2_Degree_CCDF_distribution.png",
        p_ccdf, width = 7, height = 6, dpi = 300)
-
