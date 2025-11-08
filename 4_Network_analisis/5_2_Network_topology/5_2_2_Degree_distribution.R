@@ -19,6 +19,10 @@ library(scales)
 A7_HPV <- readRDS('~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A7_max.rds')
 A9_HPV <- readRDS('~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A9_max.rds')
 
+#A7_HPV <- readRDS('~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A7_elbow.rds')
+#A9_HPV <- readRDS('~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A9_elbow.rds')
+
+
 ################################################################################
 # Degree Distribution (PDF)
 ################################################################################
@@ -88,8 +92,10 @@ p_pdf <- ggplot(df_combined, aes(x = Degree, y = Probability,
     legend.text        = element_text(size = 10)
   )
 
-ggsave("~/CESC_Network/4_Network_analisis/5_2_Network_topology/5_2_2_Degree_distribution.png",
+ggsave("~/CESC_Network/4_Network_analisis/5_2_Network_topology/5_2_2_Degree_distribution_max.png",
        p_pdf, width = 7, height = 6, dpi = 600)
+#ggsave("~/CESC_Network/4_Network_analisis/5_2_Network_topology/5_2_2_Degree_distribution_elbow.png",
+#       p_pdf, width = 7, height = 6, dpi = 600)
 
 
 ################################################################################
@@ -184,5 +190,8 @@ p_ccdf <- ggplot(df_ccdf, aes(Degree, CCDF, color = Network)) +
 
 
 
-ggsave("~/CESC_Network/4_Network_analisis/5_2_Network_topology/5_1_2_Degree_CCDF_distribution.png",
-       p_ccdf, width = 7, height = 6, dpi = 300)
+ggsave("~/CESC_Network/4_Network_analisis/5_2_Network_topology/5_1_2_Degree_CCDF_distribution_max.png",
+       p_ccdf, width = 7, height = 6, dpi = 600)
+
+#ggsave("~/CESC_Network/4_Network_analisis/5_2_Network_topology/5_1_2_Degree_CCDF_distribution_elbow.png",
+#       p_ccdf, width = 7, height = 6, dpi = 600)

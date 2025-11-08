@@ -355,5 +355,5 @@ saveRDS(graph_A9_max_elbow, "~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_
 
 cat("Graphs exported successfully!\n")
 
-#load("/STORAGE/csbig/jruiz/cesc_network/5_2_2_GiantComponent.RData")
+load("/STORAGE/csbig/jruiz/cesc_network/5_2_2_GiantComponent.RData")
 

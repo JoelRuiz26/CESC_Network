@@ -1,14 +1,13 @@
 #Explore_enrichment
-
 ### Cargar librerías ###
 library(igraph)
 library(tidyverse)
 library(vroom)
 library(ggplot2)
 library(patchwork)
-
+ 
 ###Cargar resultados ###
-#ora_A7 <- vroom(file = "~/CESC_Network/5_Modularity/7_2_ORA/7_2_1_Ora7_louvain.tsv")
+#ora_A7 <- vroomvroom(file = "~/CESC_Network/5_Modularity/7_2_ORA/7_2_1_Ora7_louvain.tsv")
 #ora_A9 <- vroom(file = "~/CESC_Network/5_Modularity/7_2_ORA/7_2_1_Ora9_louvain.tsv")
 ora_A7 <- vroom(file = "~/CESC_Network/5_Modularity/7_2_ORA/7_2_1_Ora7_info.tsv")
 ora_A9 <- vroom(file = "~/CESC_Network/5_Modularity/7_2_ORA/7_2_1_Ora9_info.tsv")

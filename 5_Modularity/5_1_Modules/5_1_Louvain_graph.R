@@ -1,4 +1,4 @@
-#Script for Infomap cluster 
+#Script for Louvain cluster 
 #Input: Networks (.graphml) 
 #Output: Networks (graphml) with community named by PageRank algorithm and filterred for enrichment.
 #By Joel Ruiz
@@ -14,9 +14,9 @@ graph_A7 <- readRDS('~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_2_4_Subn
 graph_A9 <- readRDS('~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A9_max.rds')
 
 ###### For A7 network ######
-### Infomap ###
-Infomap_A7 <- cluster_infomap(graph_A7)        # comunidades
-V(graph_A7)$Community <- Infomap_A7$membership 
+### Louvain ###
+Louvain_A7 <- cluster_louvain(graph_A7)        #125 communities
+V(graph_A7)$Community <- Louvain_A7$membership 
 
 ### PageRank ###
 page_ranks_A7 <- page_rank(graph_A7)$vector
@@ -35,9 +35,9 @@ filtered_graph_A7 <- induced_subgraph(graph_A7, vids = nodes_to_keep_A7)
 
 
 ###### For A9 network ######
-### Infomap ###
-Infomap_A9 <- cluster_infomap(graph_A9)
-V(graph_A9)$Community <- Infomap_A9$membership
+### Louvain ###
+Louvain_A9 <- cluster_louvain(graph_A9) #235
+V(graph_A9)$Community <- Louvain_A9$membership
 
 ### PageRank ###
 page_ranks_A9 <- page_rank(graph_A9)$vector
@@ -56,52 +56,60 @@ filtered_graph_A9 <- induced_subgraph(graph_A9, vids = nodes_to_keep_A9)
 
 
 ### Save filtered graphs ###
-saveRDS(filtered_graph_A9, file = "~/CESC_Network/5_Modularity/7_1_Louvain/7_2_1_Infomap_A9_graph.rds")
-saveRDS(filtered_graph_A7, file = "~/CESC_Network/5_Modularity/7_1_Louvain/7_2_1_Infomap_A7_graph.rds")
+saveRDS(filtered_graph_A9, file = "~/CESC_Network/5_Modularity/5_1_Modules/5_2_1_Louvain_A9_graph_max.rds")
+saveRDS(filtered_graph_A7, file = "~/CESC_Network/5_Modularity/5_1_Modules/5_2_1_Louvain_A7_graph_max.rds")
 
 
 ### Verify ###
 # Dataframe para A7
-A7_Infomap_genes <- tibble(
+A7_Louvain_genes <- tibble(
   Community = as.integer(V(filtered_graph_A7)$Community),
   Community_name = as.character(V(filtered_graph_A7)$Community_name),
   gene = as.character(V(filtered_graph_A7)$name)
 ) 
 
-A7_sizes <- A7_Infomap_genes %>%
+A7_sizes <- A7_Louvain_genes %>%
   group_by(Community, Community_name) %>%
   summarise(size = n(), .groups = "drop")
 
-ggplot(A7_sizes, aes(x = reorder(Community_name, -size), y = size)) +
-  geom_bar(stat = "identity", fill = "steelblue") +
-  labs(title = "Tamaño de Nodos por Comunidad (A7) - Infomap",
-       x = "Comunidad",
-       y = "Tamaño de Nodos") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-
 # Dataframe para A9
-A9_Infomap_genes <- tibble(
+A9_Louvain_genes <- tibble(
   Community = as.integer(V(filtered_graph_A9)$Community),
   Community_name = as.character(V(filtered_graph_A9)$Community_name),
   gene = as.character(V(filtered_graph_A9)$name)
 ) 
 
-A9_sizes <- A9_Infomap_genes %>%
+A9_sizes <- A9_Louvain_genes %>%
   group_by(Community, Community_name) %>%
   summarise(size = n(), .groups = "drop")
 
-ggplot(A9_sizes, aes(x = reorder(Community_name, -size), y = size)) +
-  geom_bar(stat = "identity", fill = "coral") +
-  labs(title = "Tamaño de Nodos por Comunidad (A9) - Infomap",
-       x = "Comunidad",
-       y = "Tamaño de Nodos") +
+
+# === Plots como objetos ===
+pA7 <- ggplot(A7_sizes, aes(x = reorder(Community_name, -size), y = size)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  labs(title = "Tamaño de Nodos por Comunidad (A7) - Louvain",
+       x = "Comunidad", y = "Tamaño de Nodos") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
+pA9 <- ggplot(A9_sizes, aes(x = reorder(Community_name, -size), y = size)) +
+  geom_bar(stat = "identity", fill = "coral") +
+  labs(title = "Tamaño de Nodos por Comunidad (A9) - Louvain",
+       x = "Comunidad", y = "Tamaño de Nodos") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
+# === Combinar en una sola grilla y guardar en PNG ===
+if (!requireNamespace("patchwork", quietly = TRUE)) install.packages("patchwork")
+library(patchwork)
 
-#A7_SIZES en promedio son de 300 genes, pero hay uno de 3mil, en A9 no estan
+combined <- pA7 + pA9 + patchwork::plot_layout(ncol = 2)
 
+outdir <- "~/CESC_Network/5_Modularity/5_1_Modules/"
+if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
+
+outfile <- file.path(outdir, "5_2_2_Louvain_community_sizes_A7_A9_max.png")
+ggsave(filename = outfile, plot = combined, width = 18, height = 9, dpi = 300, bg = "white")
+
+message("[OK] PNG guardado en: ", outfile)
 
