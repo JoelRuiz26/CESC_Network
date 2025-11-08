@@ -12,7 +12,8 @@ library(EDASeq)
 library(vroom)
 library(tidyverse)
 library(ggplot2)
-library(limma)
+library(txdbmaker)
+library(BSgenome.Hsapiens.UCSC.hg38)
 
 # ===================== SEED FOR REPRODUCIBILITY ===================== #
 set.seed(123)
@@ -36,8 +37,12 @@ counts <- unstranded_counts %>%
 counts <- counts[rowSums(counts[,-1]) > 0, ]
 dim(counts) #[1] 48780   281
 
-# Get annotation from Ensembl (GENCODE v43 ~ Ensembl v110 default)
-mart <- useEnsembl("ensembl", dataset="hsapiens_gene_ensembl", GRCh = 37)
+
+######################MODIFICATION#######################################333
+# Get annotation from Ensembl release 81 ( GENCODE v23, GRCh38)
+#mart <- useEnsembl("ensembl", dataset="hsapiens_gene_ensembl", GRCh = 37) #incorrect
+mart <- useEnsembl(biomart = "ensembl",  dataset  = "hsapiens_gene_ensembl", version  = 81)
+
 myannot <- getBM(attributes = c("ensembl_gene_id", 
                                 "percentage_gene_gc_content", "gene_biotype",
                                 "start_position", "end_position", "hgnc_id", "hgnc_symbol"),
@@ -66,6 +71,91 @@ dim(counts) #[1] 34577   280
 
 #save for enrichment
 #saveRDS(myannot, file = "~/CESC_Network/2_Prepro_TCGA_GTEx/2_1_Universe_annotation_table.rds")
+
+
+
+######################MODIFICATION#######################################333
+
+# ============ GENCODE v23 (GRCh38) ============
+# Descarga previa del GTF (si no lo tienes):
+dir.create("~/refs", showWarnings = FALSE, recursive = TRUE)
+ download.file(
+   "https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_23/gencode.v23.annotation.gtf.gz",
+   destfile = "~/refs/gencode.v23.annotation.gtf.gz", mode = "wb"
+ )
+
+gtf <- "~/refs/gencode.v23.annotation.gtf.gz"
+# --- Construir TxDb y extraer exones por gen ---
+txdb <- makeTxDbFromGFF(gtf, format = "gtf")
+ex_by_gene_all <- exonsBy(txdb, by = "gene")
+
+# --- Normalizar IDs: quitar versión (GTF trae ENSG.x) y alinear con counts$gene ---
+gene_ids_orig    <- names(ex_by_gene_all)                 # p. ej. ENSG00000223972.5
+gene_ids_novers  <- sub("\\..*$", "", gene_ids_orig)      # ENSG00000223972
+
+keep_idx         <- gene_ids_novers %in% counts$gene
+ex_by_gene       <- ex_by_gene_all[keep_idx]
+feature_ids      <- gene_ids_novers[keep_idx]             # estos sí existen en counts$gene
+
+# --- Genoma de referencia hg38 ---
+hg38 <- BSgenome.Hsapiens.UCSC.hg38
+
+# --- Función longitud exónica no redundante y %GC (devuelve SIEMPRE 'feature') ---
+calc_len_gc <- function(feature_id, gr) {
+  rr <- reduce(gr, ignore.strand = TRUE)
+  if (length(rr) == 0L) {
+    return(tibble(feature = feature_id, length = 0L, gc_percent = NA_real_))
+  }
+  seqs <- getSeq(hg38, rr)
+  total_len <- sum(width(rr))
+  lf <- letterFrequency(seqs, letters = c("G","C"), as.prob = FALSE)
+  gc_count <- sum(lf[, "G"] + lf[, "C"])
+  tibble(
+    feature    = feature_id,
+    length     = as.integer(total_len),
+    gc_percent = ifelse(total_len > 0, (gc_count / total_len) * 100, NA_real_)
+  )
+}
+
+# --- Calcular anotación por gen (ahora sí se llena) ---
+annot_len_gc <- purrr::map2_dfr(feature_ids, ex_by_gene, calc_len_gc)
+
+# --- Extraer gene_name y gene_type del GTF (traen versión); quítasela para unir con 'feature' ---
+# --- Extraer gene_name y gene_type del GTF (traen versión); quítasela para unir con 'feature' ---
+gtf_gr    <- import(gtf)
+gene_rows <- gtf_gr[gtf_gr$type == "gene"]
+
+gene_meta <- tibble(
+  feature_with_ver = mcols(gene_rows)$gene_id,   # ENSG... con versión
+  hgnc_symbol      = mcols(gene_rows)$gene_name,
+  gene_biotype     = mcols(gene_rows)$gene_type
+) %>%
+  mutate(feature = sub("\\..*$", "", feature_with_ver)) %>%  # ENSG sin versión
+  distinct(feature, .keep_all = TRUE) %>%
+  dplyr::select(feature, hgnc_symbol, gene_biotype)
+
+
+# --- Unir todo y seguir tu flujo ---
+# --- Unir todo y seguir tu flujo ---
+myannot <- annot_len_gc %>%
+  left_join(gene_meta, by = "feature") %>%
+  distinct(feature, .keep_all = TRUE)
+
+
+# --- Sincronizar con counts (como ya lo hacías) ---
+counts <- counts %>% filter(gene %in% myannot$feature)
+myannot <- myannot %>%
+  filter(feature %in% counts$gene) %>%
+  arrange(match(feature, counts$gene))
+
+rownames(counts) <- counts$gene
+counts <- counts %>% select(-gene)
+
+######################END MODIFICATION##################################
+###########################################################333
+
+
+
 
 
 # ========== SYNC DATA ========== #
@@ -492,5 +582,5 @@ vroom::vroom_write(Final_A9_NW,
 
 save.image("/STORAGE/csbig/jruiz/cesc_network/2_9_Image_Post_Prepro.RData")
 
-load("/STORAGE/csbig/jruiz/cesc_network/2_9_Image_Post_Prepro.RData")
+#load("/STORAGE/csbig/jruiz/cesc_network/2_9_Image_Post_Prepro.RData")
 

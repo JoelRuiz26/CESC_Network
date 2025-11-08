@@ -7,8 +7,11 @@ library(tidyverse)
 ### ========================
 ### Cargar grafos originales
 ### ========================
-graph_A7 <- readRDS("~/CESC_Network/5_Modularity/5_1_Modules/5_2_1_Louvain_A7_graph_max.rds")
-graph_A9 <- readRDS("~/CESC_Network/5_Modularity/5_1_Modules/5_2_1_Louvain_A9_graph_max.rds")
+graph_A7_louv <- readRDS("~/CESC_Network/5_Modularity/5_1_Modules/5_2_1_Louvain_A7_graph_max.rds")
+graph_A9_louv <- readRDS("~/CESC_Network/5_Modularity/5_1_Modules/5_2_1_Louvain_A9_graph_max.rds")
+
+graph_A7_info <- readRDS("~/CESC_Network/5_Modularity/5_1_Modules/5_1_1_Infomap_A7_graph_max.rds")
+graph_A9_info <- readRDS("~/CESC_Network/5_Modularity/5_1_Modules/5_1_1_Infomap_A9_graph_max.rds")
 
 ### ========================
 ### FUNCION para crear metared
@@ -98,19 +101,29 @@ build_community_network <- function(graph) {
 ### ========================
 ### Construir redes de comunidades
 ### ========================
-community_graph_A7 <- build_community_network(graph_A7)
-community_graph_A9 <- build_community_network(graph_A9)
+community_graph_A7_louv <- build_community_network(graph_A7_louv)
+community_graph_A9_louv <- build_community_network(graph_A9_louv)
+
+community_graph_A7_info <- build_community_network(graph_A7_info)
+community_graph_A9_info <- build_community_network(graph_A9_info)
 
 ### ========================
 ### Guardar en RDS
 ### ========================
-saveRDS(community_graph_A7, "~/CESC_Network/5_Modularity/5_3_Module_Graph/5_3_1_1_Community_Graph_A7_louv_max.rds")
-saveRDS(community_graph_A9, "~/CESC_Network/5_Modularity/5_3_Module_Graph/5_3_1_1_Community_Graph_A9_louv_max.rds")
+saveRDS(community_graph_A7_louv, "~/CESC_Network/5_Modularity/5_3_Module_Graph/5_3_1_1_Community_Graph_A7_louv_max.rds")
+saveRDS(community_graph_A9_louv, "~/CESC_Network/5_Modularity/5_3_Module_Graph/5_3_1_1_Community_Graph_A9_louv_max.rds")
+
+saveRDS(community_graph_A7_info, "~/CESC_Network/5_Modularity/5_3_Module_Graph/5_3_1_1_Community_Graph_A7_info_max.rds")
+saveRDS(community_graph_A9_info, "~/CESC_Network/5_Modularity/5_3_Module_Graph/5_3_1_1_Community_Graph_A9_info_max.rds")
 
 ### ========================
 ### Exportar en GraphML
 ### ========================
-write_graph(community_graph_A7, "/STORAGE/csbig/jruiz/cesc_network/5_3_1_1_Community_Graph_A7_louv_max.graphml", format = "graphml")
-write_graph(community_graph_A9, "/STORAGE/csbig/jruiz/cesc_network/5_3_1_1_Community_Graph_A9_louv_max.graphml", format = "graphml")
+write_graph(community_graph_A7_louv, "/STORAGE/csbig/jruiz/cesc_network/5_3_1_1_Community_Graph_A7_louv_max.graphml", format = "graphml")
+write_graph(community_graph_A9_louv, "/STORAGE/csbig/jruiz/cesc_network/5_3_1_1_Community_Graph_A9_louv_max.graphml", format = "graphml")
+
+write_graph(community_graph_A7_info, "/STORAGE/csbig/jruiz/cesc_network/5_3_1_1_Community_Graph_A7_info_max.graphml", format = "graphml")
+write_graph(community_graph_A9_info, "/STORAGE/csbig/jruiz/cesc_network/5_3_1_1_Community_Graph_A9_info_max.graphml", format = "graphml")
+
 
 message("✅ All done!")
