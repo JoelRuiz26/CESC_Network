@@ -7,10 +7,10 @@ library(ggplot2)
 library(patchwork)
  
 ###Cargar resultados ###
-#ora_A7 <- vroomvroom(file = "~/CESC_Network/5_Modularity/7_2_ORA/7_2_1_Ora7_louvain.tsv")
-#ora_A9 <- vroom(file = "~/CESC_Network/5_Modularity/7_2_ORA/7_2_1_Ora9_louvain.tsv")
-ora_A7 <- vroom(file = "~/CESC_Network/5_Modularity/7_2_ORA/7_2_1_Ora7_info.tsv")
-ora_A9 <- vroom(file = "~/CESC_Network/5_Modularity/7_2_ORA/7_2_1_Ora9_info.tsv")
+ora_A7 <- vroom(file = "~/CESC_Network/5_Modularity/5_2_ORA/5_2_2_Ora7_louv_max_SIMPLIFIED_0_2.tsv")
+ora_A9 <- vroom(file = "~/CESC_Network/5_Modularity/5_2_ORA/5_2_2_Ora9_louv_max_SIMPLIFIED_0_2.tsv")
+#ora_A7 <- vroom(file = "~/CESC_Network/5_Modularity/7_2_ORA/7_2_1_Ora7_info.tsv")
+#ora_A9 <- vroom(file = "~/CESC_Network/5_Modularity/7_2_ORA/7_2_1_Ora9_info.tsv")
 
 
 # ====== PREPARAR DATA ======
@@ -66,8 +66,8 @@ combined_plot <- (plot_A7 + plot_A9) +
 combined_plot
 
 # ====== GUARDAR EN PDF ======
-#ggsave("~/CESC_Network/5_Modularity/7_2_ORA/7_2_1_Community_Size_Barplots_louvain.png", combined_plot, width = 14, height = 7)
-ggsave("~/CESC_Network/5_Modularity/7_2_ORA/7_2_1_Community_Size_Barplots_info.png", combined_plot, width = 14, height = 7)
+ggsave("~/CESC_Network/5_Modularity/5_2_ORA/5_2_2_1_Community_Size_louvain_max_simpl.png", combined_plot, width = 14, height = 7)
+#ggsave("~/CESC_Network/5_Modularity/7_2_ORA/7_2_1_Community_Size_Barplots_info.png", combined_plot, width = 14, height = 7)
 
 
 

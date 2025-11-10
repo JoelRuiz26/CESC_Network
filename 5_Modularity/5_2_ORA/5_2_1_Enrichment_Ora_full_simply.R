@@ -180,9 +180,12 @@ write.table(ora_A9_simpl,
 cat("[A7] módulos:", length(unique(ora_A7_full$Community_Name)),
     " | FULL términos únicos:", length(unique(ora_A7_full$Description)),
     " | SIMPL términos únicos:", length(unique(ora_A7_simpl$Description)), "\n")
+#[A7] módulos: 12  | FULL términos únicos: 904  | SIMPL términos únicos: 58 
+
 cat("[A9] módulos:", length(unique(ora_A9_full$Community_Name)),
     " | FULL términos únicos:", length(unique(ora_A9_full$Description)),
     " | SIMPL términos únicos:", length(unique(ora_A9_simpl$Description)), "\n")
+#[A9] módulos: 23  | FULL términos únicos: 477  | SIMPL términos únicos: 58 
 
 end_time <- Sys.time()
 cat("Tiempo total:", round(end_time - start_time, 2), "minutos\n")
