@@ -5,14 +5,12 @@
 # =========================================================== #
 setwd("~/CESC_Network/2_Prepro_TCGA_GTEx/")
 # ===================== LOAD REQUIRED LIBRARIES ===================== #
-library(biomaRt)
 library(NOISeq)
 library(edgeR)
 library(EDASeq)
 library(vroom)
 library(tidyverse)
 library(ggplot2)
-library(txdbmaker)
 library(BSgenome.Hsapiens.UCSC.hg38)
 
 # ===================== SEED FOR REPRODUCIBILITY ===================== #
@@ -35,80 +33,47 @@ counts <- unstranded_counts %>%
 
 # Remove genes with all zero counts
 counts <- counts[rowSums(counts[,-1]) > 0, ]
-dim(counts) #[1] 48780   281
+dim(counts) #[1] 49109   281
 
+# ===================== ANNOTATION FROM GENCODE v23 (GRCh38) ===================== #
+# GTF v23 (alineado a Toil hg38). 
+#  dir.create("/STORAGE/csbig/jruiz/cesc_network/refs/", showWarnings = FALSE, recursive = TRUE)
+#download.file(
+#  "https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_23/gencode.v23.annotation.gtf.gz",
+#  destfile = "/STORAGE/csbig/jruiz/cesc_network/refs/gencode.v23.annotation.gtf.gz", mode = "wb"
+#)
 
-######################MODIFICATION#######################################333
-# Get annotation from Ensembl release 81 ( GENCODE v23, GRCh38)
-#mart <- useEnsembl("ensembl", dataset="hsapiens_gene_ensembl", GRCh = 37) #incorrect
-mart <- useEnsembl(biomart = "ensembl",  dataset  = "hsapiens_gene_ensembl", version  = 81)
+gtf <- "/STORAGE/csbig/jruiz/cesc_network/refs/gencode.v23.annotation.gtf.gz"
 
-myannot <- getBM(attributes = c("ensembl_gene_id", 
-                                "percentage_gene_gc_content", "gene_biotype",
-                                "start_position", "end_position", "hgnc_id", "hgnc_symbol"),
-                 filters = "ensembl_gene_id", 
-                 values = counts$gene,
-                 mart = mart) %>%
-  dplyr::rename(feature = ensembl_gene_id) %>%
-  mutate(length = abs(end_position - start_position)) %>%
-  #filter(hgnc_id != "" & hgnc_symbol != "") %>%
-  distinct(feature, .keep_all = TRUE)
-
-# Filter counts to those with valid annotations
-counts <- counts %>% filter(gene %in% myannot$feature)
-dim(counts) #[1] 34577   281
-
-# Reorder myannot to match counts order
-myannot <- myannot %>%
-  filter(feature %in% counts$gene) %>%
-  arrange(match(feature, counts$gene))
-dim(myannot) #[1] 34577     8
-
-#Set rownames as ENSG for analysis
-rownames(counts) <- counts$gene
-counts <- counts %>% dplyr::select(-gene)
-dim(counts) #[1] 34577   280
-
-#save for enrichment
-#saveRDS(myannot, file = "~/CESC_Network/2_Prepro_TCGA_GTEx/2_1_Universe_annotation_table.rds")
-
-
-
-######################MODIFICATION#######################################333
-
-# ============ GENCODE v23 (GRCh38) ============
-# Descarga previa del GTF (si no lo tienes):
-dir.create("~/refs", showWarnings = FALSE, recursive = TRUE)
- download.file(
-   "https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_23/gencode.v23.annotation.gtf.gz",
-   destfile = "~/refs/gencode.v23.annotation.gtf.gz", mode = "wb"
- )
-
-gtf <- "~/refs/gencode.v23.annotation.gtf.gz"
-# --- Construir TxDb y extraer exones por gen ---
+# --- TxDb y exones por gen ---
 txdb <- makeTxDbFromGFF(gtf, format = "gtf")
+# UCSC para compatibilidad con BSgenome
+try({ GenomeInfoDb::seqlevelsStyle(txdb) <- "UCSC" }, silent = TRUE)
+
 ex_by_gene_all <- exonsBy(txdb, by = "gene")
 
-# --- Normalizar IDs: quitar versión (GTF trae ENSG.x) y alinear con counts$gene ---
-gene_ids_orig    <- names(ex_by_gene_all)                 # p. ej. ENSG00000223972.5
-gene_ids_novers  <- sub("\\..*$", "", gene_ids_orig)      # ENSG00000223972
+# --- ENSG sin versión y filtrado al universo de 'counts' ---
+gene_ids_orig   <- names(ex_by_gene_all)                 # e.g. ENSG000001.12
+gene_ids_novers <- sub("\\..*$", "", gene_ids_orig)      # ENSG000001
+keep_idx        <- gene_ids_novers %in% counts$gene
 
-keep_idx         <- gene_ids_novers %in% counts$gene
-ex_by_gene       <- ex_by_gene_all[keep_idx]
-feature_ids      <- gene_ids_novers[keep_idx]             # estos sí existen en counts$gene
+ex_by_gene  <- ex_by_gene_all[keep_idx]
+feature_ids <- gene_ids_novers[keep_idx]
 
-# --- Genoma de referencia hg38 ---
+# --- Genoma de referencia ---
 hg38 <- BSgenome.Hsapiens.UCSC.hg38
 
-# --- Función longitud exónica no redundante y %GC (devuelve SIEMPRE 'feature') ---
+# --- Función: longitud exónica no redundante + %GC ---
 calc_len_gc <- function(feature_id, gr) {
-  rr <- reduce(gr, ignore.strand = TRUE)
+  # Por seguridad, estilo UCSC
+  try({ GenomeInfoDb::seqlevelsStyle(gr) <- "UCSC" }, silent = TRUE)
+  rr <- GenomicRanges::reduce(gr, ignore.strand = TRUE)
   if (length(rr) == 0L) {
     return(tibble(feature = feature_id, length = 0L, gc_percent = NA_real_))
   }
   seqs <- getSeq(hg38, rr)
   total_len <- sum(width(rr))
-  lf <- letterFrequency(seqs, letters = c("G","C"), as.prob = FALSE)
+  lf <- letterFrequency(seqs, letters = c("G", "C"), as.prob = FALSE)
   gc_count <- sum(lf[, "G"] + lf[, "C"])
   tibble(
     feature    = feature_id,
@@ -117,16 +82,17 @@ calc_len_gc <- function(feature_id, gr) {
   )
 }
 
-# --- Calcular anotación por gen (ahora sí se llena) ---
-annot_len_gc <- purrr::map2_dfr(feature_ids, ex_by_gene, calc_len_gc)
+# --- Cálculo en bloque ---
+ex_by_gene_list <- as.list(ex_by_gene)
+annot_len_gc <- purrr::map2_dfr(feature_ids, ex_by_gene_list, calc_len_gc)
 
-# --- Extraer gene_name y gene_type del GTF (traen versión); quítasela para unir con 'feature' ---
-# --- Extraer gene_name y gene_type del GTF (traen versión); quítasela para unir con 'feature' ---
-gtf_gr    <- import(gtf)
+# ===================== SYMBOL & BIOTYPE FROM THE SAME GTF ===================== #
+gtf_gr <- import(gtf)
+try({ GenomeInfoDb::seqlevelsStyle(gtf_gr) <- "UCSC" }, silent = TRUE)
+
 gene_rows <- gtf_gr[gtf_gr$type == "gene"]
-
 gene_meta <- tibble(
-  feature_with_ver = mcols(gene_rows)$gene_id,   # ENSG... con versión
+  feature_with_ver = mcols(gene_rows)$gene_id,   # ENSG con versión
   hgnc_symbol      = mcols(gene_rows)$gene_name,
   gene_biotype     = mcols(gene_rows)$gene_type
 ) %>%
@@ -134,29 +100,38 @@ gene_meta <- tibble(
   distinct(feature, .keep_all = TRUE) %>%
   dplyr::select(feature, hgnc_symbol, gene_biotype)
 
-
-# --- Unir todo y seguir tu flujo ---
-# --- Unir todo y seguir tu flujo ---
+# ===================== JOIN: LENGTH/GC + SYMBOL/BIOTYPE ===================== #
 myannot <- annot_len_gc %>%
-  left_join(gene_meta, by = "feature") %>%
-  distinct(feature, .keep_all = TRUE)
+  dplyr::left_join(gene_meta, by = "feature") %>%
+  dplyr::distinct(feature, .keep_all = TRUE)
+dim(myannot)
+#[1] 49109     5
+length(unique(myannot$hgnc_symbol))
+#[1] 48505
 
+# ===================== SYNC WITH COUNTS & FINALIZE ===================== #
+# Filtra counts a genes con anotación válida
+counts <- counts %>% dplyr::filter(gene %in% myannot$feature)
+dim(counts)
+#[1] 49109   281
 
-# --- Sincronizar con counts (como ya lo hacías) ---
-counts <- counts %>% filter(gene %in% myannot$feature)
+# Reordena anotación para que coincida con el orden de 'counts'
 myannot <- myannot %>%
-  filter(feature %in% counts$gene) %>%
-  arrange(match(feature, counts$gene))
+  dplyr::filter(feature %in% counts$gene) %>%
+  dplyr::arrange(match(feature, counts$gene))
 
+# Rownames = ENSG y elimina columna 'gene' en matriz
 rownames(counts) <- counts$gene
-counts <- counts %>% select(-gene)
+counts <- counts %>% dplyr::select(-gene)
 
-######################END MODIFICATION##################################
-###########################################################333
+# Dimensiones finales (aprox. ~35k genes)
+dim(counts)
+#[1] 49109   280
+dim(myannot)
+#[1] 49109     5
 
-
-
-
+# Opcional: guardar para ORA/otros análisis
+#saveRDS(myannot, file = "~/CESC_Network/2_Prepro_TCGA_GTEx/2_1_Universe_annotation_table.rds")
 
 # ========== SYNC DATA ========== #
 factors$specimenID <- sub("^(TCGA-[A-Z0-9]{2}-[A-Z0-9]{4}-[0-9]{2}).*$", "\\1", factors$specimenID)
@@ -174,7 +149,7 @@ table(factors$HPV_clade)
 # =====================  CREATE NOISeq OBJECT ===================== #
 # Create named vectors for annotations USING ENSG (unique IDs)
 mylength <- setNames(myannot$length, myannot$feature)
-mygc <- setNames(myannot$percentage_gene_gc_content, myannot$feature)
+mygc <- setNames(myannot$gc_percent, myannot$feature)
 mybiotype <- setNames(myannot$gene_biotype, myannot$feature)
 
 noiseqData_before <- NOISeq::readData(
@@ -183,9 +158,6 @@ noiseqData_before <- NOISeq::readData(
   gc = mygc,
   biotype = mybiotype,
   length = mylength)
-
-
-
 
 #saveRDS(noiseqData_before, file = "~/CESC_Network/2_Prepro_TCGA_GTEx/2_2_Noiseq_before.rds")
 
@@ -299,10 +271,16 @@ dev.off()
 
 # ===================== FILTER FOR EDASeq QC ===================== #
 #Filter low counts
+#convert as integer
+counts <- round(as.matrix(counts))
+storage.mode(counts) <- "integer"
+stopifnot(all(counts >= 0, na.rm = TRUE))
+
 counts_filtered <- filtered.data(
   counts, factor = "HPV_clade", norm = FALSE, depth = NULL, method = 1, cpm = 0, p.adj = "fdr")
-#13207 features are to be kept for differential expression analysis with filtering method 1
-length(unique(rownames(counts_filtered))) #[1] 13207
+#13705 features are to be kept for differential expression analysis with filtering method 1
+length(unique(rownames(counts_filtered))) #[1] 13705
+
 #sync
 myannot_filtered <- myannot[myannot$feature %in% rownames(counts_filtered), ]
 stopifnot(all(rownames(counts_filtered) %in% myannot_filtered$feature))
@@ -314,16 +292,27 @@ rownames(factors) <- factors$specimenID
 # Ensure full synchrony
 stopifnot(all(rownames(factors) == colnames(counts_filtered)))
 counts_filtered <- counts_filtered[rowSums(is.na(counts_filtered))==0 & rowSums(counts_filtered)>0, colSums(is.na(counts_filtered))==0 & colSums(counts_filtered)>0, drop=FALSE]
+#
+myannot_filtered_df <- myannot_filtered %>%
+  as.data.frame() %>%
+  mutate(
+    length     = as.integer(length),
+    gc_percent = as.numeric(gc_percent)
+  )
+rownames(myannot_filtered_df) <- myannot_filtered_df$feature
+
+stopifnot(all(rownames(counts_filtered) %in% rownames(myannot_filtered_df)))
+myannot_filtered_df <- myannot_filtered_df[rownames(counts_filtered), , drop = FALSE]
 
 # Create EDASeq object
 mydataEDA <- newSeqExpressionSet(
   counts = as.matrix(counts_filtered),
-  featureData = AnnotatedDataFrame(data = myannot_filtered),
+  featureData = AnnotatedDataFrame(data = myannot_filtered_df),
   phenoData = AnnotatedDataFrame(data = factors))
 
 #order for less bias
 gcFull <- withinLaneNormalization(mydataEDA, 
-                                  "percentage_gene_gc_content", which = "full")#corrects GC bias 
+                                  "gc_percent", which = "full")#corrects GC bias 
 lFull <- withinLaneNormalization(gcFull, "length", which = "full")#corrects length bias 
 fullfullTMM <-NOISeq::tmm(normCounts(lFull), long = 1000, lc = 0, k = 0)
 #norm.counts <- betweenLaneNormalization(normCounts(lFull),
@@ -332,6 +321,7 @@ fullfullTMM <-NOISeq::tmm(normCounts(lFull), long = 1000, lc = 0, k = 0)
 noiseqData_filtered = NOISeq::readData(data = fullfullTMM, 
                                    factors=factors)
 
+dim(fullfullTMM) #[1] 13705   280
 #myPCA_pre = dat(noiseqData_filtered, type = "PCA", norm = T,logtransf = F)
 #explo.plot(myPCA_sample, plottype= "scores", factor = "HPV_clade")
 #explo.plot(myPCA_sample, plottype= "scores", factor = "source")
@@ -372,63 +362,61 @@ table(mycd_filtered@dat$DiagnosticTest[, "Diagnostic Test"])
 #  design = model.matrix(~ sample_type, data = factors))
 
 ###
-ffTMMARSyn=ARSyNseq(noiseqData_filtered, factor = "HPV_type", batch = F,
-                    norm = "n",  logtransf = F)
-###
+#ffTMMARSyn=ARSyNseq(noiseqData_filtered, factor = "HPV_type", batch = F,
+#                    norm = "n",  logtransf = F)
 
+ffTMMARSyn_s=ARSyNseq(noiseqData_filtered, factor = "source", batch = T,
+                    norm = "n",  logtransf = F)
+
+###
 #noiseqData_batch = NOISeq::readData(data = expr_batchcorrected, 
 #                                       factors=factors)
 
-myPCA_after = dat(ffTMMARSyn  , type = "PCA", norm = T,logtransf = T)
+#myPCA_after = dat(ffTMMARSyn  , type = "PCA", norm = T,logtransf = T)
+
+#pdf("plots_prepro_data/QC_PCA_scores_HPVclade_after.pdf", width = 8, height = 6)
+#explo.plot(myPCA_after, plottype = "scores", factor = "source")
+#dev.off()
+
+#pdf("plots_prepro_data/QC_PCA_scores_source_after.pdf", width = 8, height = 6)
+#explo.plot(myPCA_after, plottype = "scores", factor = "HPV_clade")
+#dev.off()
 
 
-pdf("plots_prepro_data/QC_PCA_scores_HPVclade_after.pdf", width = 8, height = 6)
-explo.plot(myPCA_after, plottype = "scores", factor = "source")
+myPCA_after_s = dat(ffTMMARSyn_s  , type = "PCA", norm = T,logtransf = T)
+
+pdf("plots_prepro_data/QC_PCA_scores_HPVclade_after_s.pdf", width = 8, height = 6)
+explo.plot(myPCA_after_s, plottype = "scores", factor = "source")
 dev.off()
 
-pdf("plots_prepro_data/QC_PCA_scores_source_after.pdf", width = 8, height = 6)
-explo.plot(myPCA_after, plottype = "scores", factor = "HPV_clade")
+pdf("plots_prepro_data/QC_PCA_scores_source_after_s.pdf", width = 8, height = 6)
+explo.plot(myPCA_after_s, plottype = "scores", factor = "HPV_clade")
 dev.off()
 
 # ===================== FINAL QUALITY CHECK ===================== #
-mylength_n <- setNames(myannot_filtered$length, myannot_filtered$feature)
-mygcn_n <- setNames(myannot_filtered$percentage_gene_gc_content, myannot_filtered$feature)
-mybiotype_n <- setNames(myannot_filtered$gene_biotype, myannot_filtered$feature)
+mylength_n <- setNames(myannot_filtered_df$length, myannot_filtered_df$feature)
+mygcn_n <- setNames(myannot_filtered_df$gc_percent, myannot_filtered_df$feature)
+mybiotype_n <- setNames(myannot_filtered_df$gene_biotype, myannot_filtered_df$feature)
 
-noiseqData_norm = NOISeq::readData(data = ffTMMARSyn, 
+noiseqData_norm_s = NOISeq::readData(data = ffTMMARSyn_s, 
                                    factors=factors,
                                    gc = mygcn_n,
                                    biotype = mybiotype_n,
                                    length = mylength_n)
 
-#  _2 = second ARSyNseq (factor = source, batch= T, + factor = HPV_clade, batch = F) 
-#ffTMMARSyn_norm=ARSyNseq(noiseqData_norm, factor = "HPV_clade", batch = F,
-#                    norm = "n",  logtransf = F)
-#noiseqData_norm_2 = NOISeq::readData(data = exprs(ffTMMARSyn_norm), 
-#                                   factors=factors,
-#                                   gc = mygcn_n,
-#                                   biotype = mybiotype_n,
-#                                   length = mylength_n)
-#myPCA_after_2 = dat(ffTMMARSyn_norm, type = "PCA", norm = T,logtransf = F)
-#pdf("plots_prepro_data/QC_PCA_scores_HPVclade_after_2.pdf", width = 8, height = 6)
-#explo.plot(myPCA_after_2, plottype = "scores", factor = "source")
-#dev.off()
-#pdf("plots_prepro_data/QC_PCA_scores_source_after_2.pdf", width = 8, height = 6)
-#explo.plot(myPCA_after_2, plottype = "scores", factor = "HPV_clade")
-#dev.off()
 # 3.3.3) RNA composition
-#mycd_norm_2 <- dat(noiseqData_norm_2, type = "cd", norm = TRUE)
+mycd_norm_2 <- dat(noiseqData_norm_s, type = "cd", norm = TRUE)
 # Verify diagnostic
-#table(mycd_norm_2@dat$DiagnosticTest[, "Diagnostic Test"])
-#FAILED PASSED bind #b=T source and #b=F HPV_clade
-#51    238 
+table(mycd_norm_2@dat$DiagnosticTest[, "Diagnostic Test"])
+#FAILED PASSED bind #b=T source
+#   36    243 
 
 # ===================== IDENTIFY QUALITY CONTROL AFTER NORMALIZATION ===================== #
 ### 3) Quality control of count data--- ---
 # 3.2) Sequencing depth & Expression Quantification
 # 3.2.1) Count distribution per sample
 pdf("plots_prepro_data/QC_boxplot_counts_after.pdf", width = 8, height = 6)
-mycountsbio_HPV = NOISeq::dat(noiseqData_norm, type = "countsbio", factor = "HPV_clade", norm = TRUE)
+mycountsbio_HPV = NOISeq::dat(noiseqData_norm_s, type = "countsbio", factor = "HPV_clade", norm = TRUE)
 explo.plot(mycountsbio_HPV,
            plottype = "boxplot",
            samples = NULL)
@@ -444,7 +432,7 @@ dev.off()
 # Plot global distribution of CPM
 pdf("plots_prepro_data/QC_histogram_CPM_distribution_after.pdf", width = 8, height = 6)
 
-log_cpm_means <- rowMeans(cpm(noiseqData_norm@assayData$exprs, log = TRUE))
+log_cpm_means <- rowMeans(cpm(noiseqData_norm_s@assayData$exprs, log = TRUE))
 hist_data <- hist(log_cpm_means, plot = FALSE, breaks = 30)
 hist(log_cpm_means,
      ylab = "Number of genes",
@@ -464,7 +452,7 @@ dev.off()
 
 # 3.3) Sequencing bias detection
 # 3.3.1) Length bias
-mylengthbias_SampleType = NOISeq::dat(noiseqData_norm, factor = "HPV_clade", type = "lengthbias", norm = TRUE)
+mylengthbias_SampleType = NOISeq::dat(noiseqData_norm_s, factor = "HPV_clade", type = "lengthbias", norm = TRUE)
 pdf("plots_prepro_data/QC_length_bias_global_after.pdf", width = 8, height = 6)
 par(cex.axis=1.5, cex.lab=1.5, cex.main=2)
 explo.plot(mylengthbias_SampleType, samples = NULL, toplot = "global")
@@ -486,7 +474,7 @@ explo.plot(mylengthbias_SampleType, samples = 3, toplot = "global")
 dev.off()
 
 # 3.3.2) GC content bias
-myGCbias_Sample = dat(noiseqData_norm, factor = "HPV_clade", type = "GCbias", norm = TRUE)
+myGCbias_Sample = dat(noiseqData_norm_s, factor = "HPV_clade", type = "GCbias", norm = TRUE)
 
 pdf("plots_prepro_data/QC_GC_bias_global_after.pdf", width = 8, height = 6)
 par(cex.axis=1.5, cex.lab=1.5, cex.main=2)
@@ -509,25 +497,21 @@ explo.plot(myGCbias_Sample, samples = 3, toplot = "global")
 dev.off()
 
 # 3.3.3) RNA composition
-mycd_norm<- dat(noiseqData_norm, type = "cd", norm = TRUE)
+mycd_norm<- dat(noiseqData_norm_s, type = "cd", norm = TRUE)
 # Verify diagnostic
 table(mycd_norm@dat$DiagnosticTest[, "Diagnostic Test"])
-#FAILED PASSED #source b=T  
-#25    264 
-#FAILED PASSED #b=F HPV_clade 
-#68    221 
 
-#FAILED PASSED    limma corrected (I've used this)
-# 67    222 
+#FAILED PASSED #b=F HPV_clade 
+# 62    217 
 
 pdf("plots_prepro_data/QC_Mvalues_mycd_after.pdf", width = 10, height = 6)
 par(mar = c(5, 4, 4, 2) - 1)
 par(cex.axis = 1.5, cex.lab = 1.5, cex.main = 2, xaxs = "i")
-explo.plot(mycd_norm_2, samples = c(266:276))
+explo.plot(mycd_norm, samples = c(266:276))
 dev.off()
 
 # 3.4) PCA
-myPCA_sample_after = dat(noiseqData_norm, type = "PCA", norm = TRUE, logtransf = FALSE)
+myPCA_sample_after = dat(noiseqData_norm_s, type = "PCA", norm = TRUE, logtransf = FALSE)
 pdf("plots_prepro_data/QC_PCA_scores_HPVclade_after.pdf", width = 8, height = 6)
 explo.plot(myPCA_sample_after, plottype= "scores", factor = "HPV_clade")
 dev.off()
@@ -537,27 +521,27 @@ explo.plot(myPCA_sample_after, plottype= "scores", factor = "source")
 dev.off()
 
 # ===================== SAVE FINAL  ===================== #
-Final_SNT_vs_PP <- exprs(ffTMMARSyn) %>% as.data.frame()
+Final_SNT_vs_PP <- exprs(ffTMMARSyn_s) %>% as.data.frame()
 Final_SNT_vs_PP$Gene <- rownames(Final_SNT_vs_PP)  #Add column for input ARACNE
 Final_SNT_vs_PP <- Final_SNT_vs_PP[, c(ncol(Final_SNT_vs_PP), 1:(ncol(Final_SNT_vs_PP)-1))]  
-dim(Final_SNT_vs_PP) #[1] 12301    281
+dim(Final_SNT_vs_PP) #[1] 13705   281
 
 # Save full matrix
-vroom::vroom_write(Final_SNT_vs_PP, file = "~/CESC_Network/2_Prepro_TCGA_GTEx/2_3_Full_counts_A7_A9_notAnot_12301.tsv", delim = "\t")
+vroom::vroom_write(Final_SNT_vs_PP, file = "~/CESC_Network/2_Prepro_TCGA_GTEx/2_3_Full_counts_A7_A9_notAnot_13705.tsv", delim = "\t")
 # Save metadata
 vroom::vroom_write(factors, file = "~/CESC_Network/2_Prepro_TCGA_GTEx/2_4_Factors.tsv", delim = "\t")
 #Save annotation
 vroom::vroom_write(myannot_filtered, file = "~/CESC_Network/2_Prepro_TCGA_GTEx/2_5_Myannot.tsv", delim = "\t")
 
 # Matrix annoted
-Final_SNT_vs_PP$HGNC_symbol <- myannot_filtered$hgnc_symbol[match(Final_SNT_vs_PP$Gene, myannot_filtered$feature)]
+Final_SNT_vs_PP$HGNC_symbol <- myannot_filtered_df$hgnc_symbol[match(Final_SNT_vs_PP$Gene, myannot_filtered_df$feature)]
 Final_SNT_vs_PP_annot <- Final_SNT_vs_PP %>% filter(!is.na(HGNC_symbol) & HGNC_symbol != "")
 Final_SNT_vs_PP_annot <- Final_SNT_vs_PP_annot %>%
   dplyr::select(HGNC_symbol, everything(), -Gene) %>%
   dplyr::rename(Gene = HGNC_symbol)
 Final_SNT_vs_PP_annot <- Final_SNT_vs_PP_annot %>% dplyr::group_by(Gene) %>% dplyr::summarise(dplyr::across(where(is.numeric), ~mean(., na.rm=TRUE)), .groups="drop"); rownames(Final_SNT_vs_PP_annot) <- Final_SNT_vs_PP_annot$Gene
 dim(Final_SNT_vs_PP_annot)
-#[1] 11457   281
+#[1] 13677   281
 
 # Save matrix annoted
 vroom::vroom_write(Final_SNT_vs_PP_annot,

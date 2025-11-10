@@ -23,7 +23,7 @@ cat("\n[INFO] xmax per network -> A7:", xmax_A7, "| A9:", xmax_A9, "\n")
 # --------------------------------------------------------
 # Cargar edgelists (ordenados por MI)
 # --------------------------------------------------------
-A7_Full <- readRDS("~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_1_2_A7_edgelist__max_allnodes.rds")
+A7_Full <- readRDS("~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_1_2_A7_edgelist_max_allnodes.rds")
 A9_Full <- readRDS("~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_1_2_A9_edgelist_max_allnodes.rds")
 #All
 graph_A7_max_elbow <- graph_from_data_frame(d = A7_Full, directed = FALSE)
@@ -355,5 +355,5 @@ saveRDS(graph_A9_elbow, "~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_2_4_
 
 cat("Graphs exported successfully!\n")
 
-load("/STORAGE/csbig/jruiz/cesc_network/5_2_2_GiantComponent.RData")
+#load("/STORAGE/csbig/jruiz/cesc_network/5_2_2_GiantComponent.RData")
 

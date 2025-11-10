@@ -170,7 +170,7 @@ A9_max <- vroom(
 
 
 saveRDS(A7_max, 
-        "~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_1_2_A7_edgelist__max_allnodes.rds")
+        "~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_1_2_A7_edgelist_max_allnodes.rds")
 saveRDS(A9_max, 
         "~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_1_2_A9_edgelist_max_allnodes.rds")
 
