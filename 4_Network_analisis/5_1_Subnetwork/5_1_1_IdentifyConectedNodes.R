@@ -28,7 +28,7 @@ library(tools)
 # Assumes the input file is pre-sorted by MI
 # --------------------------------------------------------
 #                               Set a huge slice of edgelist that could have all nodes
-analyze_network <- function(file_path, max_rows = 10000000) {
+analyze_network <- function(file_path, max_rows = 5575461) {
   
   # Load the edge list (up to max_rows)
   edge_list <- vroom(
@@ -72,11 +72,11 @@ analyze_network <- function(file_path, max_rows = 10000000) {
 # Analyze both networks
 # --------------------------------------------------------
 results_A7 <- analyze_network(
-  "/STORAGE/csbig/jruiz/cesc_network/2_7_Full_counts_A7_annot.sort"
+  "/STORAGE/csbig/jruiz/cesc_network/2_7_Full_counts_A7_annot_pvalue.sort"
 )
 
 results_A9 <- analyze_network(
-  "/STORAGE/csbig/jruiz/cesc_network/2_8_Full_counts_A9_annot.sort"
+  "/STORAGE/csbig/jruiz/cesc_network/2_8_Full_counts_A9_annot_pvalue.sort"
 )
 
 # --------------------------------------------------------
@@ -133,13 +133,13 @@ cat("═════════════════════════
 # Save BOTH edgelists sliced at THEIR OWN cutoff
 # --------------------------------------------------------
 A7_individual <- vroom(
-  "/STORAGE/csbig/jruiz/cesc_network/2_7_Full_counts_A7_annot.sort",
+  "/STORAGE/csbig/jruiz/cesc_network/2_7_Full_counts_A7_annot_pvalue.sort",
   col_names = c("GenA", "GenB", "MI"),
   show_col_types = FALSE
 ) %>% na.omit() %>% dplyr::slice(1:cutoff_A7)
 
 A9_individual <- vroom(
-  "/STORAGE/csbig/jruiz/cesc_network/2_8_Full_counts_A9_annot.sort",
+  "/STORAGE/csbig/jruiz/cesc_network/2_8_Full_counts_A9_annot_pvalue.sort",
   col_names = c("GenA", "GenB", "MI"),
   show_col_types = FALSE
 ) %>% na.omit() %>% dplyr::slice(1:cutoff_A9)
@@ -157,13 +157,13 @@ cat("[INFO] Saved A9 edgelist at its cutoff: ", cutoff_A9, " edges\n")
 cutoff_max <- max(cutoff_A7,cutoff_A9)
 
 A7_max <- vroom(
-  "/STORAGE/csbig/jruiz/cesc_network/2_7_Full_counts_A7_annot.sort",
+  "/STORAGE/csbig/jruiz/cesc_network/2_7_Full_counts_A7_annot_pvalue.sort",
   col_names = c("GenA", "GenB", "MI"),
   show_col_types = FALSE
 ) %>% na.omit() %>% dplyr::slice(1:cutoff_max)
 
 A9_max <- vroom(
-  "/STORAGE/csbig/jruiz/cesc_network/2_8_Full_counts_A9_annot.sort",
+  "/STORAGE/csbig/jruiz/cesc_network/2_8_Full_counts_A9_annot_pvalue.sort",
   col_names = c("GenA", "GenB", "MI"),
   show_col_types = FALSE
 ) %>% na.omit() %>% dplyr::slice(1:cutoff_max)
@@ -178,30 +178,35 @@ cat("[INFO] Saved A7 edgelist at its cutoff: ", cutoff_max, " edges\n")
 cat("[INFO] Saved A9 edgelist at its cutoff: ", cutoff_max, " edges\n")
 
 
+
+
 #════════════════════════════════════
 #NETWORK ANALYSIS REPORT - 2_7_Full_counts_A7_annot
 #════════════════════════════════════
-
-#• Total unique nodes: 11457
+#• Total unique nodes: 13677
 #• Rows analyzed: 10000000
-#• Cutoff row found: 577445
-#• Nodes covered: 11457/11457
+#• Cutoff row found: 5036902
+#• Nodes covered: 13677/13677
 #• Coverage percent: 100%
-#════════════════════════════════════#
+#════════════════════════════════════
 
 #════════════════════════════════════
 #NETWORK ANALYSIS REPORT - 2_8_Full_counts_A9_annot
 #════════════════════════════════════
-#• Total unique nodes: 11457
+#• Total unique nodes: 13677
 #• Rows analyzed: 10000000
-#• Cutoff row found: 729501
-#• Nodes covered: 11457/11457
+#• Cutoff row found: 5797088
+#• Nodes covered: 13677/13677
 #• Coverage percent: 100%
 #════════════════════════════════════
 
 #════════════════════════════════════
 #INDIVIDUAL THRESHOLDS SAVED
 #════════════════════════════════════
-#A7 cutoff row:  577445 
-#A9 cutoff row:  729501 
+#A7 cutoff row:  5036902 
+#A9 cutoff row:  5797088 
 #════════════════════════════════════
+#[INFO] Saved A7 edgelist at its cutoff:  5036902  edges
+#[INFO] Saved A9 edgelist at its cutoff:  5797088  edges
+
+
