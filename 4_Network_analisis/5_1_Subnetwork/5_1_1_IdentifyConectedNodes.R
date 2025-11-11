@@ -28,7 +28,12 @@ library(tools)
 # Assumes the input file is pre-sorted by MI
 # --------------------------------------------------------
 #                               Set a huge slice of edgelist that could have all nodes
-analyze_network <- function(file_path, max_rows = 5575461) {
+# --------------------------------------------------------
+# Function to analyze a single network file
+# Assumes the input file is pre-sorted by MI
+# --------------------------------------------------------
+#                               Set a huge slice of edgelist that could have all nodes
+analyze_network <- function(file_path, max_rows = 10000000) {
   
   # Load the edge list (up to max_rows)
   edge_list <- vroom(
@@ -36,8 +41,11 @@ analyze_network <- function(file_path, max_rows = 5575461) {
     col_names = c("GenA", "GenB", "MI"),
     show_col_types = FALSE
   ) %>%
-    na.omit() %>%
-    slice(1:max_rows)
+    na.omit()
+  
+  # ✅ Ajuste dinámico: usar el mínimo entre nrow(edge_list) y max_rows
+  max_rows <- min(nrow(edge_list), max_rows)
+  edge_list <- edge_list %>% slice(1:max_rows)
   
   # Extract all unique nodes (genes)
   all_nodes <- unique(c(edge_list$GenA, edge_list$GenB))
@@ -56,7 +64,7 @@ analyze_network <- function(file_path, max_rows = 5575461) {
     }
   }
   
-  # Return structured summary
+  # Return structured summary (sin cambios)
   return(list(
     network_name = file_path_sans_ext(basename(file_path)),
     total_nodes = total_nodes,
@@ -178,24 +186,22 @@ cat("[INFO] Saved A7 edgelist at its cutoff: ", cutoff_max, " edges\n")
 cat("[INFO] Saved A9 edgelist at its cutoff: ", cutoff_max, " edges\n")
 
 
-
-
 #════════════════════════════════════
-#NETWORK ANALYSIS REPORT - 2_7_Full_counts_A7_annot
+#NETWORK ANALYSIS REPORT - 2_7_Full_counts_A7_annot_pvalue
 #════════════════════════════════════
 #• Total unique nodes: 13677
-#• Rows analyzed: 10000000
-#• Cutoff row found: 5036902
+#• Rows analyzed: 5297063
+#• Cutoff row found: 436040
 #• Nodes covered: 13677/13677
 #• Coverage percent: 100%
 #════════════════════════════════════
 
 #════════════════════════════════════
-#NETWORK ANALYSIS REPORT - 2_8_Full_counts_A9_annot
+#NETWORK ANALYSIS REPORT - 2_8_Full_counts_A9_annot_pvalue
 #════════════════════════════════════
 #• Total unique nodes: 13677
 #• Rows analyzed: 10000000
-#• Cutoff row found: 5797088
+#• Cutoff row found: 416627
 #• Nodes covered: 13677/13677
 #• Coverage percent: 100%
 #════════════════════════════════════
@@ -203,10 +209,10 @@ cat("[INFO] Saved A9 edgelist at its cutoff: ", cutoff_max, " edges\n")
 #════════════════════════════════════
 #INDIVIDUAL THRESHOLDS SAVED
 #════════════════════════════════════
-#A7 cutoff row:  5036902 
-#A9 cutoff row:  5797088 
+#A7 cutoff row:  436040 
+#A9 cutoff row:  416627 
 #════════════════════════════════════
-#[INFO] Saved A7 edgelist at its cutoff:  5036902  edges
-#[INFO] Saved A9 edgelist at its cutoff:  5797088  edges
-
-
+#[INFO] Saved A7 edgelist at its cutoff:  436040  edges
+#[INFO] Saved A9 edgelist at its cutoff:  416627  edges
+#[INFO] Saved A7 edgelist at its cutoff:  436040  edges
+#[INFO] Saved A9 edgelist at its cutoff:  436040  edges

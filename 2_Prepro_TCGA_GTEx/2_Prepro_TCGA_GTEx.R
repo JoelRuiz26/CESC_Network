@@ -12,6 +12,7 @@ library(vroom)
 library(tidyverse)
 library(ggplot2)
 library(BSgenome.Hsapiens.UCSC.hg38)
+library(GenomicFeatures)
 
 # ===================== SEED FOR REPRODUCIBILITY ===================== #
 set.seed(123)
@@ -37,11 +38,11 @@ dim(counts) #[1] 49109   281
 
 # ===================== ANNOTATION FROM GENCODE v23 (GRCh38) ===================== #
 # GTF v23 (alineado a Toil hg38). 
-#  dir.create("/STORAGE/csbig/jruiz/cesc_network/refs/", showWarnings = FALSE, recursive = TRUE)
-#download.file(
-#  "https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_23/gencode.v23.annotation.gtf.gz",
-#  destfile = "/STORAGE/csbig/jruiz/cesc_network/refs/gencode.v23.annotation.gtf.gz", mode = "wb"
-#)
+  dir.create("/STORAGE/csbig/jruiz/cesc_network/refs/", showWarnings = FALSE, recursive = TRUE)
+download.file(
+  "https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_23/gencode.v23.annotation.gtf.gz",
+  destfile = "/STORAGE/csbig/jruiz/cesc_network/refs/gencode.v23.annotation.gtf.gz", mode = "wb"
+)
 
 gtf <- "/STORAGE/csbig/jruiz/cesc_network/refs/gencode.v23.annotation.gtf.gz"
 
@@ -131,7 +132,7 @@ dim(myannot)
 #[1] 49109     5
 
 # Opcional: guardar para ORA/otros análisis
-#saveRDS(myannot, file = "~/CESC_Network/2_Prepro_TCGA_GTEx/2_1_Universe_annotation_table.rds")
+saveRDS(myannot, file = "~/CESC_Network/2_Prepro_TCGA_GTEx/2_1_Universe_annotation_table.rds")
 
 # ========== SYNC DATA ========== #
 factors$specimenID <- sub("^(TCGA-[A-Z0-9]{2}-[A-Z0-9]{4}-[0-9]{2}).*$", "\\1", factors$specimenID)
@@ -159,7 +160,7 @@ noiseqData_before <- NOISeq::readData(
   biotype = mybiotype,
   length = mylength)
 
-#saveRDS(noiseqData_before, file = "~/CESC_Network/2_Prepro_TCGA_GTEx/2_2_Noiseq_before.rds")
+saveRDS(noiseqData_before, file = "~/CESC_Network/2_Prepro_TCGA_GTEx/2_2_Noiseq_before.rds")
 
 # =====================  IDENTIFY QUALITY CONTROL ===================== #
 ### 3) Quality control of count data--- ---
@@ -365,7 +366,7 @@ table(mycd_filtered@dat$DiagnosticTest[, "Diagnostic Test"])
 #ffTMMARSyn=ARSyNseq(noiseqData_filtered, factor = "HPV_type", batch = F,
 #                    norm = "n",  logtransf = F)
 
-ffTMMARSyn_s=ARSyNseq(noiseqData_filtered, factor = "source", batch = T,
+ffTMMARSyn_s=ARSyNseq(noiseqData_filtered, factor = "HPV_clade", batch = F,
                     norm = "n",  logtransf = F)
 
 ###
@@ -531,7 +532,7 @@ vroom::vroom_write(Final_SNT_vs_PP, file = "~/CESC_Network/2_Prepro_TCGA_GTEx/2_
 # Save metadata
 vroom::vroom_write(factors, file = "~/CESC_Network/2_Prepro_TCGA_GTEx/2_4_Factors.tsv", delim = "\t")
 #Save annotation
-vroom::vroom_write(myannot_filtered, file = "~/CESC_Network/2_Prepro_TCGA_GTEx/2_5_Myannot.tsv", delim = "\t")
+vroom::vroom_write(myannot_filtered_df, file = "~/CESC_Network/2_Prepro_TCGA_GTEx/2_5_Myannot.tsv", delim = "\t")
 
 # Matrix annoted
 Final_SNT_vs_PP$HGNC_symbol <- myannot_filtered_df$hgnc_symbol[match(Final_SNT_vs_PP$Gene, myannot_filtered_df$feature)]
@@ -555,6 +556,9 @@ Final_A7_NW <- Final_SNT_vs_PP_annot %>%
 vroom::vroom_write(Final_A7_NW, 
                    file = "~/CESC_Network/2_Prepro_TCGA_GTEx/2_7_Full_counts_A7_annot.tsv", 
                    delim = "\t")
+vroom::vroom_write(Final_A7_NW, 
+                   file = "~/CESC_Network/3_Network/ARACNE-multicore/launch/2_7_Full_counts_A7_annot_pvalue.tsv", 
+                   delim = "\t")
 
 # Save A9 for network
 Factors_A9 <- factors %>% filter(HPV_clade == "A9_clade")
@@ -562,6 +566,9 @@ Final_A9_NW <- Final_SNT_vs_PP_annot %>%
   dplyr::select(Gene, all_of(Factors_A9$specimenID))
 vroom::vroom_write(Final_A9_NW, 
                    file = "~/CESC_Network/2_Prepro_TCGA_GTEx/2_8_Full_counts_A9_annot.tsv", 
+                   delim = "\t")
+vroom::vroom_write(Final_A9_NW, 
+                   file = "~/CESC_Network/3_Network/ARACNE-multicore/launch/2_8_Full_counts_A9_annot_pvalue.tsv", 
                    delim = "\t")
 
 save.image("/STORAGE/csbig/jruiz/cesc_network/2_9_Image_Post_Prepro.RData")

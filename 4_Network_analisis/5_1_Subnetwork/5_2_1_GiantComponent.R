@@ -19,7 +19,7 @@ xmax_A7 <- readRDS("~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_1_1_A7_cu
 xmax_A9 <- readRDS("~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_1_1_A9_cutoff_links.rds")
 
 cat("\n[INFO] xmax per network -> A7:", xmax_A7, "| A9:", xmax_A9, "\n")
-#[INFO] xmax per network -> A7: 577445 | A9: 729501 
+#[INFO] xmax per network -> A7: 435261 | A9: 631909  
 # --------------------------------------------------------
 # Cargar edgelists (ordenados por MI)
 # --------------------------------------------------------

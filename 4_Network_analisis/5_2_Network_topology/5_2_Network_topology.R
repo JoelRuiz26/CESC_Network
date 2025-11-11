@@ -73,18 +73,19 @@ colnames(t_topological_metrics) <- c("HPV-A7","HPV-A9")
 t_topological_metrics <- t_topological_metrics %>% dplyr::slice(-1)
           print(t_topological_metrics)
           
-#          HPV-A7     HPV-A9
-#          Numero_de_nodos                       11457      11457
+#                                             HPV-A7     HPV-A9
+#          Numero_de_nodos                       13677      13677
 #          Componentes_conectados                    1          1
-#          Grado_promedio                     127.3459   127.3459
-#          Coeficiente_de_agrupamiento       0.1681555  0.2377677
-#          Asortatividad                     0.3592412  0.2377206
+#          Grado_promedio                     63.76252   63.76252
+#          Coeficiente_de_agrupamiento      0.01622261 0.05713703
+#          Asortatividad                    -0.5341832 -0.2307324
 #          jaccard_nodes                             1          1
-#          jaccard_edges                    0.08677989 0.08677989
-#          Tamano_del_componente_principal       11457      11457
+#          jaccard_edges                    0.06044853 0.06044853
+#          Tamano_del_componente_principal       13677      13677
 #          Porcentaje_componente_principal         100        100
 #          Diametro                                  4          5
-#          Longitud_promedio_caminos_cortos   2.602994   2.515115
+#          Longitud_promedio_caminos_cortos   2.682809   2.796043
+          
           
 
 # Save tsv (Output 2)
