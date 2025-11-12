@@ -8,14 +8,14 @@ library(vroom)
 ### ========================
 ### 1️⃣ Cargar metaredes desde RDS
 ### ========================
-community_graph_A7 <- readRDS("~/CESC_Network/5_Modularity/7_3_Module_Graph/7_3_1_Community_Graph_A7.rds")
-community_graph_A9 <- readRDS("~/CESC_Network/5_Modularity/7_3_Module_Graph/7_3_1_Community_Graph_A9.rds")
+community_graph_A7 <- readRDS("~/CESC_Network/5_Modularity/5_3_Module_Graph/5_3_1_1_Community_Graph_A7_louv_max.rds")
+community_graph_A9 <- readRDS("~/CESC_Network/5_Modularity/5_3_Module_Graph/5_3_1_1_Community_Graph_A9_louv_max.rds")
 
 ### ========================
 ### 2️⃣ Cargar tablas ORA
 ### ========================
-ora_A7 <- vroom("~/CESC_Network/5_Modularity/7_2_ORA/7_2_1_Ora7.tsv")
-ora_A9 <- vroom("~/CESC_Network/5_Modularity/7_2_ORA/7_2_1_Ora9.tsv")
+ora_A7 <- vroom("~/CESC_Network/5_Modularity/5_2_ORA/5_2_2_Ora7_louv_max_SIMPLIFIED_0_2.tsv")
+ora_A9 <- vroom("~/CESC_Network/5_Modularity/5_2_ORA/5_2_2_Ora9_louv_max_SIMPLIFIED_0_2.tsv")
 
 ### ========================
 ### 3️⃣ Función para construir red combinada
@@ -117,6 +117,10 @@ combined_graph_A9 <- build_combined_enrichment_network(ora_A9, community_graph_A
 ### ========================
 ### 5️⃣ Guardar en GraphML
 ### ========================
-write_graph(combined_graph_A7, "~/CESC_Network/5_Modularity/7_3_Module_Graph/7_3_4_Bipartite_Enrichment_A7.graphml", format = "graphml")
-write_graph(combined_graph_A9, "~/CESC_Network/5_Modularity/7_3_Module_Graph/7_3_4_Bipartite_Enrichment_A9.graphml", format = "graphml")
+write_graph(combined_graph_A7, "/STORAGE/csbig/jruiz/cesc_network/5_3_4_Bipartite_Enrichment_A7.graphml", format = "graphml")
+write_graph(combined_graph_A9, "/STORAGE/csbig/jruiz/cesc_network/5_3_4_Bipartite_Enrichment_A9.graphml", format = "graphml")
+
+saveRDS(combined_graph_A7, "~/CESC_Network/5_Modularity/5_3_Module_Graph/5_3_4_Bipartite_Enrichment_A7.rds")
+saveRDS(combined_graph_A9, "~/CESC_Network/5_Modularity/5_3_Module_Graph/5_3_4_Bipartite_Enrichment_A9.rds")
+
 message("✅ All done! Combined GraphML files created.")
