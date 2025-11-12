@@ -7,7 +7,8 @@
 # Description:
 #   - For each network: identifies the row (edge count) 
 #     at which all unique genes are included at least once.
-# Input: 
+# Input: Control_GTEx_OVARY.rds    DE_full_OVARY_limma.rds  DE_OVARY_ALL_limma.rds        DE_OVARY_signific_limma.rds
+
 #   -Edge list (.sort) with highest mutual information 
 # Output:
 #   - Reports summary statistics to the console.
@@ -33,7 +34,7 @@ library(tools)
 # Assumes the input file is pre-sorted by MI
 # --------------------------------------------------------
 #                               Set a huge slice of edgelist that could have all nodes
-analyze_network <- function(file_path, max_rows = 10000000) {
+analyze_network <- function(file_path, max_rows = 5000000) {
   
   # Load the edge list (up to max_rows)
   edge_list <- vroom(
@@ -185,34 +186,36 @@ saveRDS(A9_max,
 cat("[INFO] Saved A7 edgelist at its cutoff: ", cutoff_max, " edges\n")
 cat("[INFO] Saved A9 edgelist at its cutoff: ", cutoff_max, " edges\n")
 
-
 #════════════════════════════════════
 #NETWORK ANALYSIS REPORT - 2_7_Full_counts_A7_annot_pvalue
 #════════════════════════════════════
-#• Total unique nodes: 13677
-#• Rows analyzed: 5297063
-#• Cutoff row found: 436040
-#• Nodes covered: 13677/13677
+#• Total unique nodes: 10846
+#• Rows analyzed: 5000000
+#• Cutoff row found: 206905
+#• Nodes covered: 10846/10846
 #• Coverage percent: 100%
 #════════════════════════════════════
 
 #════════════════════════════════════
 #NETWORK ANALYSIS REPORT - 2_8_Full_counts_A9_annot_pvalue
 #════════════════════════════════════
-#• Total unique nodes: 13677
-#• Rows analyzed: 10000000
-#• Cutoff row found: 416627
-#• Nodes covered: 13677/13677
+#• Total unique nodes: 10846
+#• Rows analyzed: 5000000
+#• Cutoff row found: 443707
+#• Nodes covered: 10846/10846
 #• Coverage percent: 100%
-#════════════════════════════════════
+#════════════════════════════════════#
 
 #════════════════════════════════════
 #INDIVIDUAL THRESHOLDS SAVED
 #════════════════════════════════════
-#A7 cutoff row:  436040 
-#A9 cutoff row:  416627 
+#A7 cutoff row:  206905 
+#A9 cutoff row:  443707 
 #════════════════════════════════════
-#[INFO] Saved A7 edgelist at its cutoff:  436040  edges
-#[INFO] Saved A9 edgelist at its cutoff:  416627  edges
-#[INFO] Saved A7 edgelist at its cutoff:  436040  edges
-#[INFO] Saved A9 edgelist at its cutoff:  436040  edges
+#[INFO] Saved A7 edgelist at its cutoff:  206905  edges
+#[INFO] Saved A9 edgelist at its cutoff:  443707  edges
+#[INFO] Saved A7 edgelist at its cutoff:  443707  edges
+#[INFO] Saved A9 edgelist at its cutoff:  443707  edges
+
+
+

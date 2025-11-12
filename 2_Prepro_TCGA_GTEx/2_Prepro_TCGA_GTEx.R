@@ -13,6 +13,9 @@ library(tidyverse)
 library(ggplot2)
 library(BSgenome.Hsapiens.UCSC.hg38)
 library(GenomicFeatures)
+library(HGNChelper)
+library(org.Hs.eg.db)
+library(AnnotationDbi)
 
 # ===================== SEED FOR REPRODUCIBILITY ===================== #
 set.seed(123)
@@ -38,7 +41,7 @@ dim(counts) #[1] 49109   281
 
 # ===================== ANNOTATION FROM GENCODE v23 (GRCh38) ===================== #
 # GTF v23 (alineado a Toil hg38). 
-  dir.create("/STORAGE/csbig/jruiz/cesc_network/refs/", showWarnings = FALSE, recursive = TRUE)
+dir.create("/STORAGE/csbig/jruiz/cesc_network/refs/", showWarnings = FALSE, recursive = TRUE)
 download.file(
   "https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_23/gencode.v23.annotation.gtf.gz",
   destfile = "/STORAGE/csbig/jruiz/cesc_network/refs/gencode.v23.annotation.gtf.gz", mode = "wb"
@@ -88,23 +91,32 @@ ex_by_gene_list <- as.list(ex_by_gene)
 annot_len_gc <- purrr::map2_dfr(feature_ids, ex_by_gene_list, calc_len_gc)
 
 # ===================== SYMBOL & BIOTYPE FROM THE SAME GTF ===================== #
-gtf_gr <- import(gtf)
+gtf_gr <- rtracklayer::import(gtf)  # FIX: usar rtracklayer::import explícito
 try({ GenomeInfoDb::seqlevelsStyle(gtf_gr) <- "UCSC" }, silent = TRUE)
 
 gene_rows <- gtf_gr[gtf_gr$type == "gene"]
 gene_meta <- tibble(
-  feature_with_ver = mcols(gene_rows)$gene_id,   # ENSG con versión
-  hgnc_symbol      = mcols(gene_rows)$gene_name,
-  gene_biotype     = mcols(gene_rows)$gene_type
+  feature_with_ver = as.character(mcols(gene_rows)$gene_id),   # ENSG con versión
+  hgnc_symbol      = as.character(mcols(gene_rows)$gene_name),
+  gene_biotype     = as.character(mcols(gene_rows)$gene_type)
 ) %>%
   mutate(feature = sub("\\..*$", "", feature_with_ver)) %>%  # ENSG sin versión
   distinct(feature, .keep_all = TRUE) %>%
   dplyr::select(feature, hgnc_symbol, gene_biotype)
 
 # ===================== JOIN: LENGTH/GC + SYMBOL/BIOTYPE ===================== #
+# FIX: asegurar que 'feature' exista y sea character en ambos data.frames antes del join
+annot_len_gc <- annot_len_gc %>%
+  dplyr::as_tibble() %>%
+  { if (!"feature" %in% names(.)) dplyr::mutate(., feature = feature_ids[seq_len(nrow(.))]) else . } %>%
+  dplyr::mutate(feature = as.character(feature))
+
+gene_meta <- gene_meta %>% dplyr::mutate(feature = as.character(feature))
+
 myannot <- annot_len_gc %>%
   dplyr::left_join(gene_meta, by = "feature") %>%
   dplyr::distinct(feature, .keep_all = TRUE)
+
 dim(myannot)
 #[1] 49109     5
 length(unique(myannot$hgnc_symbol))
@@ -146,6 +158,7 @@ dim(factors) #[1] 280   9
 table(factors$HPV_clade)
 #A7_clade            A9_clade Solid Tissue Normal 
 #65                 202                  13
+
 
 # =====================  CREATE NOISeq OBJECT ===================== #
 # Create named vectors for annotations USING ENSG (unique IDs)
@@ -248,14 +261,14 @@ explo.plot(myGCbias_Sample, samples = 3, toplot = "global")
 dev.off()
 
 # 3.3.3) RNA composition
-mycd <- dat(noiseqData_before, type = "cd", norm = FALSE) # Slow operation
-pdf("plots_prepro_data/QC_Mvalues_mycd_before.pdf", width = 10, height = 6)
-par(mar = c(5, 4, 4, 2) - 1)
-par(cex.axis = 1.5, cex.lab = 1.5, cex.main = 2, xaxs = "i")
-explo.plot(mycd, samples = c(268:279))
-dev.off()
+#mycd <- dat(noiseqData_before, type = "cd", norm = FALSE) # Slow operation
+#pdf("plots_prepro_data/QC_Mvalues_mycd_before.pdf", width = 10, height = 6)
+#par(mar = c(5, 4, 4, 2) - 1)
+#par(cex.axis = 1.5, cex.lab = 1.5, cex.main = 2, xaxs = "i")
+#explo.plot(mycd, samples = c(268:279))
+#dev.off()
 # Verify diagnostic
-table(mycd@dat$DiagnosticTest[, "Diagnostic Test"])
+#table(mycd@dat$DiagnosticTest[, "Diagnostic Test"])
 #FAILED PASSED 
 #288      1 
 
@@ -327,10 +340,10 @@ dim(fullfullTMM) #[1] 13705   280
 #explo.plot(myPCA_sample, plottype= "scores", factor = "HPV_clade")
 #explo.plot(myPCA_sample, plottype= "scores", factor = "source")
 #dev.off()
-mycd_filtered <- dat(noiseqData_filtered, type = "cd", norm = TRUE ) # Slow operation
+#mycd_filtered <- dat(noiseqData_filtered, type = "cd", norm = TRUE ) # Slow operation
 
 # Verify diagnostic
-table(mycd_filtered@dat$DiagnosticTest[, "Diagnostic Test"])
+#table(mycd_filtered@dat$DiagnosticTest[, "Diagnostic Test"])
 #FAILED PASSED 
 #29    260 
 
@@ -406,9 +419,9 @@ noiseqData_norm_s = NOISeq::readData(data = ffTMMARSyn_s,
                                    length = mylength_n)
 
 # 3.3.3) RNA composition
-mycd_norm_2 <- dat(noiseqData_norm_s, type = "cd", norm = TRUE)
+#mycd_norm_2 <- dat(noiseqData_norm_s, type = "cd", norm = TRUE)
 # Verify diagnostic
-table(mycd_norm_2@dat$DiagnosticTest[, "Diagnostic Test"])
+#table(mycd_norm_2@dat$DiagnosticTest[, "Diagnostic Test"])
 #FAILED PASSED bind #b=T source
 #   36    243 
 
@@ -498,18 +511,18 @@ explo.plot(myGCbias_Sample, samples = 3, toplot = "global")
 dev.off()
 
 # 3.3.3) RNA composition
-mycd_norm<- dat(noiseqData_norm_s, type = "cd", norm = TRUE)
+#mycd_norm<- dat(noiseqData_norm_s, type = "cd", norm = TRUE)
 # Verify diagnostic
-table(mycd_norm@dat$DiagnosticTest[, "Diagnostic Test"])
+#table(mycd_norm@dat$DiagnosticTest[, "Diagnostic Test"])
 
 #FAILED PASSED #b=F HPV_clade 
 # 62    217 
 
-pdf("plots_prepro_data/QC_Mvalues_mycd_after.pdf", width = 10, height = 6)
-par(mar = c(5, 4, 4, 2) - 1)
-par(cex.axis = 1.5, cex.lab = 1.5, cex.main = 2, xaxs = "i")
-explo.plot(mycd_norm, samples = c(266:276))
-dev.off()
+#pdf("plots_prepro_data/QC_Mvalues_mycd_after.pdf", width = 10, height = 6)
+#par(mar = c(5, 4, 4, 2) - 1)
+#par(cex.axis = 1.5, cex.lab = 1.5, cex.main = 2, xaxs = "i")
+#explo.plot(mycd_norm, samples = c(266:276))
+#dev.off()
 
 # 3.4) PCA
 myPCA_sample_after = dat(noiseqData_norm_s, type = "PCA", norm = TRUE, logtransf = FALSE)
@@ -534,15 +547,50 @@ vroom::vroom_write(factors, file = "~/CESC_Network/2_Prepro_TCGA_GTEx/2_4_Factor
 #Save annotation
 vroom::vroom_write(myannot_filtered_df, file = "~/CESC_Network/2_Prepro_TCGA_GTEx/2_5_Myannot.tsv", delim = "\t")
 
-# Matrix annoted
-Final_SNT_vs_PP$HGNC_symbol <- myannot_filtered_df$hgnc_symbol[match(Final_SNT_vs_PP$Gene, myannot_filtered_df$feature)]
-Final_SNT_vs_PP_annot <- Final_SNT_vs_PP %>% filter(!is.na(HGNC_symbol) & HGNC_symbol != "")
-Final_SNT_vs_PP_annot <- Final_SNT_vs_PP_annot %>%
-  dplyr::select(HGNC_symbol, everything(), -Gene) %>%
-  dplyr::rename(Gene = HGNC_symbol)
-Final_SNT_vs_PP_annot <- Final_SNT_vs_PP_annot %>% dplyr::group_by(Gene) %>% dplyr::summarise(dplyr::across(where(is.numeric), ~mean(., na.rm=TRUE)), .groups="drop"); rownames(Final_SNT_vs_PP_annot) <- Final_SNT_vs_PP_annot$Gene
+
+# ===================== MATRIX ANNOTED (HGNC APROBADO) ===================== #
+# (Mapeo ENSG -> símbolo usando 'myannot_filtered_df')
+map_idx <- match(Final_SNT_vs_PP$Gene, myannot_filtered_df$feature)
+Final_SNT_vs_PP$HGNC_symbol <- myannot_filtered_df$hgnc_symbol[map_idx]
+
+# Mantén SOLO filas con símbolo no vacío
+tmp <- Final_SNT_vs_PP %>%
+  dplyr::filter(!is.na(HGNC_symbol) & HGNC_symbol != "")
+
+# --- Validación HGNC: corrige sinónimos y filtra a "Approved == TRUE" ---
+# Mantiene posición 1:1 con 'tmp'
+hgnc_chk <- HGNChelper::checkGeneSymbols(tmp$HGNC_symbol)
+
+# símbolo corregido si aplica; si no, el original
+sym_fixed <- ifelse(is.na(hgnc_chk$Suggested.Symbol) | hgnc_chk$Suggested.Symbol == "",
+                    hgnc_chk$x, hgnc_chk$Suggested.Symbol)
+
+# Quédate SOLO con símbolos aprobados por HGNC
+keep_idx <- which(hgnc_chk$Approved)
+tmp <- tmp[keep_idx, , drop = FALSE]
+sym_fixed <- sym_fixed[keep_idx]
+
+# (Opcional pero recomendable) descarta símbolos que no luzcan HGNC (seguridad extra)
+ok_pat <- grepl("^[A-Z0-9\\-]+$", sym_fixed)
+tmp <- tmp[ok_pat, , drop = FALSE]
+sym_fixed <- sym_fixed[ok_pat]
+
+# Congela el orden de primera aparición del símbolo corregido
+sym_levels <- unique(sym_fixed)
+tmp <- tmp %>% mutate(Gene_f = factor(sym_fixed, levels = sym_levels),
+                      Gene_sym = sym_fixed)
+
+# Colapsa por símbolo (promedio si hay varios ENSG por el mismo símbolo), preservando orden
+Final_SNT_vs_PP_annot <- tmp %>%
+  dplyr::select(Gene = Gene_sym, Gene_f, dplyr::everything(), -Gene) %>%
+  dplyr::group_by(Gene, Gene_f) %>%
+  dplyr::summarise(dplyr::across(where(is.numeric), ~mean(., na.rm = TRUE)), .groups = "drop") %>%
+  dplyr::arrange(Gene_f) %>%
+  dplyr::select(-Gene_f)
+
+rownames(Final_SNT_vs_PP_annot) <- Final_SNT_vs_PP_annot$Gene
 dim(Final_SNT_vs_PP_annot)
-#[1] 13677   281
+
 
 # Save matrix annoted
 vroom::vroom_write(Final_SNT_vs_PP_annot,
@@ -574,4 +622,3 @@ vroom::vroom_write(Final_A9_NW,
 save.image("/STORAGE/csbig/jruiz/cesc_network/2_9_Image_Post_Prepro.RData")
 
 #load("/STORAGE/csbig/jruiz/cesc_network/2_9_Image_Post_Prepro.RData")
-
