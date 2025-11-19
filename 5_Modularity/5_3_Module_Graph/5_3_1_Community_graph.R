@@ -34,7 +34,6 @@ build_community_network <- function(graph) {
     left_join(nodes, by = c("to" = "name")) %>%
     rename(community_to = community)
   
-  # Filtrar solo enlaces ENTRE comunidades diferentes y contar
   # Filtrar solo enlaces ENTRE comunidades diferentes y sumar
   community_edges <- edges %>%
     filter(community_from != community_to) %>%
@@ -53,6 +52,7 @@ build_community_network <- function(graph) {
       .groups = "drop"
     ) %>%
     dplyr::select(-community_pair)
+  
   # ======== Atributos de nodos (size y PageRank promedio)
   
   ## Community size
@@ -73,7 +73,8 @@ build_community_network <- function(graph) {
       .groups = "drop"
     ) %>%
     mutate(
-      normalized_pagerank = (avg_pagerank - min(avg_pagerank)) / (max(avg_pagerank) - min(avg_pagerank))
+      normalized_pagerank = (avg_pagerank - min(avg_pagerank)) /
+        (max(avg_pagerank) - min(avg_pagerank))
     )
   
   # ======== Armar lista de nodos para grafo
@@ -93,7 +94,8 @@ build_community_network <- function(graph) {
     directed = FALSE
   )
   
-  message("✔️ Built community-level graph with ", vcount(community_graph), " nodes and ", ecount(community_graph), " edges.")
+  message("✔️ Built community-level graph with ", vcount(community_graph),
+          " nodes and ", ecount(community_graph), " edges.")
   
   return(community_graph)
 }
@@ -102,13 +104,77 @@ build_community_network <- function(graph) {
 ### Construir redes de comunidades
 ### ========================
 community_graph_A7_louv <- build_community_network(graph_A7_louv)
+#✔️ Processing graph with 10846 nodes and 443707 edges.
+#✔️ Built community-level graph with 20 nodes and 190 edges.
+
 community_graph_A9_louv <- build_community_network(graph_A9_louv)
+#✔️ Processing graph with 10846 nodes and 443707 edges.
+#✔️ Built community-level graph with 34 nodes and 561 edges.
 
 community_graph_A7_info <- build_community_network(graph_A7_info)
 community_graph_A9_info <- build_community_network(graph_A9_info)
 
 ### ========================
-### Guardar en RDS
+### NUEVO: función para tabla tipo edgelist + atributos
+### ========================
+build_edge_df <- function(g) {
+  # edgelist con peso (weight = # de enlaces entre módulos)
+  edges <- igraph::as_data_frame(g, what = "edges")  # from, to, weight
+  
+  # atributos de cada módulo (nodo)
+  verts <- igraph::as_data_frame(g, what = "vertices") %>%
+    dplyr::select(name, size, avg_pagerank, normalized_pagerank)
+  
+  edges %>%
+    left_join(
+      verts %>%
+        rename(
+          from = name,
+          size_from = size,
+          avg_pagerank_from = avg_pagerank,
+          norm_pagerank_from = normalized_pagerank
+        ),
+      by = "from"
+    ) %>%
+    left_join(
+      verts %>%
+        rename(
+          to = name,
+          size_to = size,
+          avg_pagerank_to = avg_pagerank,
+          norm_pagerank_to = normalized_pagerank
+        ),
+      by = "to"
+    )
+}
+
+### ========================
+### NUEVO: construir las tablas edgelist + atributos
+### ========================
+community_A7_louv_df  <- build_edge_df(community_graph_A7_louv)
+community_A9_louv_df  <- build_edge_df(community_graph_A9_louv)
+community_A7_info_df  <- build_edge_df(community_graph_A7_info)
+community_A9_info_df  <- build_edge_df(community_graph_A9_info)
+
+
+### ========================
+### NUEVO: guardar las tablas como RDS (y luego si quieres TSV)
+### ========================
+saveRDS(community_A7_louv_df,
+        "~/CESC_Network/5_Modularity/5_3_Module_Graph/5_3_1_1_Community_Graph_A7_louv_edgelist_df.rds")
+saveRDS(community_A9_louv_df,
+        "~/CESC_Network/5_Modularity/5_3_Module_Graph/5_3_1_1_Community_Graph_A9_louv_edgelist_df.rds")
+
+saveRDS(community_A7_info_df,
+        "~/CESC_Network/5_Modularity/5_3_Module_Graph/5_3_1_1_Community_Graph_A7_info_edgelist_df.rds")
+saveRDS(community_A9_info_df,
+        "~/CESC_Network/5_Modularity/5_3_Module_Graph/5_3_1_1_Community_Graph_A9_info_edgelist_df.rds")
+
+### (Opcional) si luego quieres TSV:
+# readr::write_tsv(community_A7_louv_df, "A7_louv_edgelist_attrib.tsv")
+
+### ========================
+### Guardar en RDS (grafos, como ya tenías)
 ### ========================
 saveRDS(community_graph_A7_louv, "~/CESC_Network/5_Modularity/5_3_Module_Graph/5_3_1_1_Community_Graph_A7_louv_max.rds")
 saveRDS(community_graph_A9_louv, "~/CESC_Network/5_Modularity/5_3_Module_Graph/5_3_1_1_Community_Graph_A9_louv_max.rds")
@@ -117,13 +183,12 @@ saveRDS(community_graph_A7_info, "~/CESC_Network/5_Modularity/5_3_Module_Graph/5
 saveRDS(community_graph_A9_info, "~/CESC_Network/5_Modularity/5_3_Module_Graph/5_3_1_1_Community_Graph_A9_info_max.rds")
 
 ### ========================
-### Exportar en GraphML
+### Exportar en GraphML (igual que antes)
 ### ========================
 write_graph(community_graph_A7_louv, "/STORAGE/csbig/jruiz/cesc_network/5_3_1_1_Community_Graph_A7_louv_max.graphml", format = "graphml")
 write_graph(community_graph_A9_louv, "/STORAGE/csbig/jruiz/cesc_network/5_3_1_1_Community_Graph_A9_louv_max.graphml", format = "graphml")
 
 write_graph(community_graph_A7_info, "/STORAGE/csbig/jruiz/cesc_network/5_3_1_1_Community_Graph_A7_info_max.graphml", format = "graphml")
 write_graph(community_graph_A9_info, "/STORAGE/csbig/jruiz/cesc_network/5_3_1_1_Community_Graph_A9_info_max.graphml", format = "graphml")
-
 
 message("✅ All done!")
