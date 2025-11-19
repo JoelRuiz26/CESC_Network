@@ -1,194 +1,186 @@
 ### ========================
-### Cargar librerías
+### Load libraries
 ### ========================
 library(igraph)
 library(tidyverse)
 
 ### ========================
-### Cargar grafos originales
+### Load original graphs
 ### ========================
 graph_A7_louv <- readRDS("~/CESC_Network/5_Modularity/5_1_Modules/5_2_1_Louvain_A7_graph_max.rds")
 graph_A9_louv <- readRDS("~/CESC_Network/5_Modularity/5_1_Modules/5_2_1_Louvain_A9_graph_max.rds")
-
 graph_A7_info <- readRDS("~/CESC_Network/5_Modularity/5_1_Modules/5_1_1_Infomap_A7_graph_max.rds")
 graph_A9_info <- readRDS("~/CESC_Network/5_Modularity/5_1_Modules/5_1_1_Infomap_A9_graph_max.rds")
 
+out_rds_dir <- "~/CESC_Network/5_Modularity/5_3_Module_Graph"
+out_gml_dir <- "/STORAGE/csbig/jruiz/cesc_network"
+
 ### ========================
-### FUNCION para crear metared
+### Single function: build community graph + edge table
 ### ========================
-build_community_network <- function(graph) {
+build_comm_graph_and_df <- function(graph) {
+  message("Processing graph: ", vcount(graph), " nodes, ", ecount(graph), " edges")
   
-  message("✔️ Processing graph with ", vcount(graph), " nodes and ", ecount(graph), " edges.")
+  # Chequeo de atributos necesarios
+  if (!all(c("Community", "Community_name", "PageRank") %in% vertex_attr_names(graph))) {
+    stop("Faltan atributos de vértice: se requieren 'Community', 'Community_name' y 'PageRank'.")
+  }
   
-  # Nodos con su comunidad asignada
-  nodes <- data.frame(
-    name = V(graph)$name,
-    community = V(graph)$Community_name
+  # ----------------------------
+  # 1) Info a nivel de gen
+  # ----------------------------
+  nodes <- tibble(
+    gene          = V(graph)$name,           # gen
+    comm_id       = V(graph)$Community,      # ID de comunidad (membership)
+    comm_name     = V(graph)$Community_name, # gen representante del módulo
+    pagerank      = V(graph)$PageRank
   )
   
-  # Edgelist original con las comunidades
-  edges <- as.data.frame(get.edgelist(graph)) %>%
-    rename(from = V1, to = V2) %>%
-    left_join(nodes, by = c("from" = "name")) %>%
-    rename(community_from = community) %>%
-    left_join(nodes, by = c("to" = "name")) %>%
-    rename(community_to = community)
+  # Cada gen debe pertenecer a un único módulo
+  if (any(duplicated(nodes$gene))) {
+    warning("Hay genes repetidos en V(graph)$name; la red original no debería tener nodos duplicados.")
+  }
   
-  # Filtrar solo enlaces ENTRE comunidades diferentes y sumar
-  community_edges <- edges %>%
-    filter(community_from != community_to) %>%
+  # ----------------------------
+  # 2) Atributos de cada módulo
+  #    (agrupamos por comm_id, NO por comm_name)
+  # ----------------------------
+  vertices <- nodes %>%
+    group_by(comm_id) %>%
+    summarise(
+      community        = first(comm_name),         # nombre del módulo = gen representativo
+      size             = n(),                      # tamaño del módulo
+      avg_pagerank     = mean(pagerank, na.rm = TRUE),
+      .groups          = "drop"
+    )
+  
+  # Normalizar PageRank medio (por módulo)
+  vertices <- vertices %>%
     mutate(
-      community_pair = ifelse(
-        community_from < community_to,
-        paste(community_from, community_to, sep = "|"),
-        paste(community_to, community_from, sep = "|")
+      normalized_pagerank = ifelse(
+        max(avg_pagerank) == min(avg_pagerank),
+        0,
+        (avg_pagerank - min(avg_pagerank)) /
+          (max(avg_pagerank) - min(avg_pagerank))
       )
-    ) %>%
-    group_by(community_pair) %>%
-    summarise(
-      community_from = first(community_from),
-      community_to = first(community_to),
-      weight = n(),
-      .groups = "drop"
-    ) %>%
-    dplyr::select(-community_pair)
+    )
   
-  # ======== Atributos de nodos (size y PageRank promedio)
+  # Chequeo clave: ¿un mismo gen (community_name) representando >1 módulo?
+  dup_comm_names <- vertices$community[duplicated(vertices$community)]
+  if (length(dup_comm_names) > 0) {
+    stop(
+      "El/los gen(es) siguiente(s) aparecen como 'Community_name' de más de un módulo: ",
+      paste(unique(dup_comm_names), collapse = ", "),
+      ".\nUn gen no puede representar dos módulos diferentes: revisa la asignación de Community_name."
+    )
+  }
   
-  ## Community size
-  community_size <- nodes %>% 
-    count(community, name = "size")
-  
-  ## Normalized avg PageRank per community
-  pagerank_values <- data.frame(
-    name = V(graph)$name,
-    pagerank = V(graph)$PageRank
-  )
-  
-  community_pagerank <- nodes %>%
-    left_join(pagerank_values, by = "name") %>%
-    group_by(community) %>%
-    summarise(
-      avg_pagerank = mean(pagerank, na.rm = TRUE),
-      .groups = "drop"
-    ) %>%
+  # Para igraph, 'name' será el nombre de comunidad (gen representante)
+  vertices <- vertices %>%
     mutate(
-      normalized_pagerank = (avg_pagerank - min(avg_pagerank)) /
-        (max(avg_pagerank) - min(avg_pagerank))
-    )
+      name = community
+    ) %>%
+    select(name, comm_id, community, size, avg_pagerank, normalized_pagerank)
   
-  # ======== Armar lista de nodos para grafo
-  vertices <- community_size %>%
-    left_join(community_pagerank, by = c("community")) %>%
-    rename(
-      name = community,
-      size = size,
-      avg_pagerank = avg_pagerank,
-      normalized_pagerank = normalized_pagerank
-    )
+  # ----------------------------
+  # 3) Agregar aristas entre módulos
+  #    (trabajamos con comm_id y luego traducimos a community_name)
+  # ----------------------------
+  edges_by_gene <- as.data.frame(get.edgelist(graph), stringsAsFactors = FALSE) %>%
+    rename(gene_from = V1, gene_to = V2) %>%
+    left_join(nodes[, c("gene", "comm_id")], by = c("gene_from" = "gene")) %>%
+    rename(comm_from = comm_id) %>%
+    left_join(nodes[, c("gene", "comm_id")], by = c("gene_to" = "gene")) %>%
+    rename(comm_to = comm_id) %>%
+    filter(!is.na(comm_from), !is.na(comm_to), comm_from != comm_to) %>%
+    mutate(
+      comm_min = pmin(comm_from, comm_to),
+      comm_max = pmax(comm_from, comm_to)
+    ) %>%
+    count(comm_min, comm_max, name = "weight")
   
-  # ======== Crear grafo de comunidades
-  community_graph <- graph_from_data_frame(
-    d = community_edges,
-    vertices = vertices,
+  # Mapear IDs de comunidad → nombres de comunidad (genes)
+  edges_named <- edges_by_gene %>%
+    left_join(vertices %>% select(comm_id, community), by = c("comm_min" = "comm_id")) %>%
+    rename(from = community) %>%
+    left_join(vertices %>% select(comm_id, community), by = c("comm_max" = "comm_id")) %>%
+    rename(to = community) %>%
+    transmute(from, to, weight)
+  
+  # ----------------------------
+  # 4) Construir la metared de módulos
+  # ----------------------------
+  g_comm <- graph_from_data_frame(
+    d = edges_named,
+    vertices = vertices,  # 'name' = gene representante del módulo
     directed = FALSE
   )
+  message("Built community graph: ", vcount(g_comm), " nodes, ", ecount(g_comm), " edges")
   
-  message("✔️ Built community-level graph with ", vcount(community_graph),
-          " nodes and ", ecount(community_graph), " edges.")
+  # ----------------------------
+  # 5) Dataframe final de aristas con atributos de los módulos
+  # ----------------------------
+  verts <- igraph::as_data_frame(g_comm, what = "vertices") %>%
+    select(name, comm_id, community, size, avg_pagerank, normalized_pagerank)
   
-  return(community_graph)
-}
-
-### ========================
-### Construir redes de comunidades
-### ========================
-community_graph_A7_louv <- build_community_network(graph_A7_louv)
-#✔️ Processing graph with 10846 nodes and 443707 edges.
-#✔️ Built community-level graph with 20 nodes and 190 edges.
-
-community_graph_A9_louv <- build_community_network(graph_A9_louv)
-#✔️ Processing graph with 10846 nodes and 443707 edges.
-#✔️ Built community-level graph with 34 nodes and 561 edges.
-
-community_graph_A7_info <- build_community_network(graph_A7_info)
-community_graph_A9_info <- build_community_network(graph_A9_info)
-
-### ========================
-### NUEVO: función para tabla tipo edgelist + atributos
-### ========================
-build_edge_df <- function(g) {
-  # edgelist con peso (weight = # de enlaces entre módulos)
-  edges <- igraph::as_data_frame(g, what = "edges")  # from, to, weight
-  
-  # atributos de cada módulo (nodo)
-  verts <- igraph::as_data_frame(g, what = "vertices") %>%
-    dplyr::select(name, size, avg_pagerank, normalized_pagerank)
-  
-  edges %>%
+  edge_df <- igraph::as_data_frame(g_comm, what = "edges") %>%
     left_join(
       verts %>%
         rename(
-          from = name,
-          size_from = size,
-          avg_pagerank_from = avg_pagerank,
-          norm_pagerank_from = normalized_pagerank
+          from  = name,
+          size_from          = size,
+          avg_pagerank_from  = avg_pagerank,
+          norm_pagerank_from = normalized_pagerank,
+          comm_id_from       = comm_id
         ),
       by = "from"
     ) %>%
     left_join(
       verts %>%
         rename(
-          to = name,
-          size_to = size,
-          avg_pagerank_to = avg_pagerank,
-          norm_pagerank_to = normalized_pagerank
+          to  = name,
+          size_to          = size,
+          avg_pagerank_to  = avg_pagerank,
+          norm_pagerank_to = normalized_pagerank,
+          comm_id_to       = comm_id
         ),
       by = "to"
     )
+  
+  list(graph = g_comm, edge_df = edge_df)
 }
 
 ### ========================
-### NUEVO: construir las tablas edgelist + atributos
+### Helper para guardar
 ### ========================
-community_A7_louv_df  <- build_edge_df(community_graph_A7_louv)
-community_A9_louv_df  <- build_edge_df(community_graph_A9_louv)
-community_A7_info_df  <- build_edge_df(community_graph_A7_info)
-community_A9_info_df  <- build_edge_df(community_graph_A9_info)
-
-
-### ========================
-### NUEVO: guardar las tablas como RDS (y luego si quieres TSV)
-### ========================
-saveRDS(community_A7_louv_df,
-        "~/CESC_Network/5_Modularity/5_3_Module_Graph/5_3_1_1_Community_Graph_A7_louv_edgelist_df.rds")
-saveRDS(community_A9_louv_df,
-        "~/CESC_Network/5_Modularity/5_3_Module_Graph/5_3_1_1_Community_Graph_A9_louv_edgelist_df.rds")
-
-saveRDS(community_A7_info_df,
-        "~/CESC_Network/5_Modularity/5_3_Module_Graph/5_3_1_1_Community_Graph_A7_info_edgelist_df.rds")
-saveRDS(community_A9_info_df,
-        "~/CESC_Network/5_Modularity/5_3_Module_Graph/5_3_1_1_Community_Graph_A9_info_edgelist_df.rds")
-
-### (Opcional) si luego quieres TSV:
-# readr::write_tsv(community_A7_louv_df, "A7_louv_edgelist_attrib.tsv")
-
-### ========================
-### Guardar en RDS (grafos, como ya tenías)
-### ========================
-saveRDS(community_graph_A7_louv, "~/CESC_Network/5_Modularity/5_3_Module_Graph/5_3_1_1_Community_Graph_A7_louv_max.rds")
-saveRDS(community_graph_A9_louv, "~/CESC_Network/5_Modularity/5_3_Module_Graph/5_3_1_1_Community_Graph_A9_louv_max.rds")
-
-saveRDS(community_graph_A7_info, "~/CESC_Network/5_Modularity/5_3_Module_Graph/5_3_1_1_Community_Graph_A7_info_max.rds")
-saveRDS(community_graph_A9_info, "~/CESC_Network/5_Modularity/5_3_Module_Graph/5_3_1_1_Community_Graph_A9_info_max.rds")
+process_graph <- function(graph, label) {
+  res <- build_comm_graph_and_df(graph)
+  
+  saveRDS(
+    res$graph,
+    file.path(out_rds_dir, paste0("5_3_1_1_Community_Graph_", label, "_max.rds"))
+  )
+  
+  saveRDS(
+    res$edge_df,
+    file.path(out_rds_dir, paste0("5_3_1_1_Community_Graph_", label, "_edgelist_df.rds"))
+  )
+  
+  write_graph(
+    res$graph,
+    file.path(out_gml_dir, paste0("5_3_1_1_Community_Graph_", label, "_max.graphml")),
+    format = "graphml"
+  )
+  
+  invisible(res)
+}
 
 ### ========================
-### Exportar en GraphML (igual que antes)
+### Run para los cuatro grafos
 ### ========================
-write_graph(community_graph_A7_louv, "/STORAGE/csbig/jruiz/cesc_network/5_3_1_1_Community_Graph_A7_louv_max.graphml", format = "graphml")
-write_graph(community_graph_A9_louv, "/STORAGE/csbig/jruiz/cesc_network/5_3_1_1_Community_Graph_A9_louv_max.graphml", format = "graphml")
-
-write_graph(community_graph_A7_info, "/STORAGE/csbig/jruiz/cesc_network/5_3_1_1_Community_Graph_A7_info_max.graphml", format = "graphml")
-write_graph(community_graph_A9_info, "/STORAGE/csbig/jruiz/cesc_network/5_3_1_1_Community_Graph_A9_info_max.graphml", format = "graphml")
+res_A7_louv <- process_graph(graph_A7_louv, "A7_louv")
+res_A9_louv <- process_graph(graph_A9_louv, "A9_louv")
+res_A7_info <- process_graph(graph_A7_info, "A7_info")
+res_A9_info <- process_graph(graph_A9_info, "A9_info")
 
 message("✅ All done!")

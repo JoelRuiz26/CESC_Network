@@ -44,15 +44,19 @@ if (length(case_A9) < length(muestras_clado_A9)) warning("Some A9 samples are no
 cases_union <- unique(c(case_A7, case_A9))
 
 ## --- Controls: GTEx normal + TCGA adjacent (cervix) ---
+## --- Controls: GTEx normal + TCGA adjacent (cervix) ---
 controls_all <- phenoDF %>%
-  filter(grepl("CERVIX", biopsy.site, ignore.case = TRUE),
-         (data.source == "GTEX" & sample.type == "normal") |
-           (data.source == "TCGA" & sample.type == "adjacent")) %>%
-  pull(sample.id)
+  dplyr::filter(
+    grepl("CERVIX", biopsy.site, ignore.case = TRUE),
+    (data.source == "GTEX" & sample.type == "normal") |
+      (data.source == "TCGA" & sample.type == "adjacent")
+  ) %>%
+  dplyr::pull(sample.id)
+
 control_union <- unique(controls_all)
 
-## --- Save a controls table (optional) ---
-controls_tbl <- phenoDF %>% filter(sample.id %in% control_union)
+## (Optional) Save a controls table
+controls_tbl <- phenoDF %>% dplyr::filter(sample.id %in% control_union)
 saveRDS(controls_tbl, file.path(out_dir, "Control_GTEx_TCGAadj.rds"))
 
 ## =========================
@@ -94,20 +98,21 @@ merged_gene_info$Symbol  <- merged_gene_info$gene
 merged_gene_info$gene    <- NULL
 
 ## Join by Ensembl (exact or stripped)
-row_annot <- tibble(identifier = tr_ids) |>
+row_annot <- tibble(identifier = tr_ids) %>% 
   left_join(merged_gene_info, by = dplyr::join_by(identifier == ensembl))
 
 if (sum(is.na(row_annot$Symbol)) > 0) {
-  map_stripped <- merged_gene_info |>
+  map_stripped <- merged_gene_info %>% 
     mutate(ensembl_stripped = sub("\\.\\d+$", "", ensembl))
   row_annot <- tibble(identifier = tr_ids,
-                      id_stripped = sub("\\.\\d+$", "", tr_ids)) |>
-    left_join(map_stripped, by = dplyr::join_by(id_stripped == ensembl_stripped)) |>
-    select(identifier, Symbol, everything(), -id_stripped, -ensembl_stripped)
+                      id_stripped = sub("\\.\\d+$", "", tr_ids)) %>% 
+    left_join(map_stripped, by = dplyr::join_by(id_stripped == ensembl_stripped)) %>% 
+    dplyr::select(identifier, Symbol, everything(), -id_stripped, -ensembl_stripped)
 }
 
 stopifnot(identical(rownames(counts_all), tr_ids))
-save.image("/STORAGE/csbig/jruiz/MatrixOctad.RData")
+#save.image("/STORAGE/csbig/jruiz/MatrixOctad.RData")
+#load("/STORAGE/csbig/jruiz/MatrixOctad.RData")
 
 ## -------------------------
 ## [ADDED / FIXED] GC% and gene length without relying on BioMart GC%
@@ -162,6 +167,7 @@ gr_genes <- GenomicRanges::GRanges(
 
 ## Extract sequences and compute GC%
 seqs <- BSgenome::getSeq(BSgenome.Hsapiens.UCSC.hg38, gr_genes)
+
 gc_counts  <- rowSums(Biostrings::letterFrequency(seqs, c("G","C")))
 gc_percent <- 100 * (gc_counts / pmax(1, width(seqs)))
 
@@ -171,7 +177,7 @@ bm_tbl2 <- bm_tbl %>%
     ensembl_gene_id_nover = bm_tbl$ensembl_gene_id,
     gc_percent            = as.numeric(gc_percent)
   ) %>%
-  select(ensembl_gene_id_nover,
+  dplyr::select(ensembl_gene_id_nover,
          external_gene_name, gene_biotype,
          chromosome_name, start_position, end_position, strand,
          gene_length_bp, gc_percent)
@@ -182,33 +188,63 @@ row_annot <- row_annot %>%
   left_join(bm_tbl2, by = "ensembl_gene_id_nover") %>%
   ## Prefer OCTAD Symbol; keep BioMart as fallback
   mutate(Symbol = dplyr::coalesce(Symbol, external_gene_name)) %>%
-  select(identifier, Symbol, everything(), -external_gene_name)
+  dplyr::select(identifier, Symbol, everything(), -external_gene_name)
 
 ## QC messages
 coverage_coords <- mean(!is.na(row_annot$gene_length_bp))
 coverage_gc     <- mean(!is.na(row_annot$gc_percent))
 message(sprintf("Coordinate coverage: %.1f%% | GC%% coverage: %.1f%%",
                 100*coverage_coords, 100*coverage_gc))
-
+#Coordinate coverage: 91.8% | GC% coverage: 91.8%
 ## Save final row annotation
 saveRDS(row_annot, file.path(out_dir, "RowAnnot_EH7272_PLUS_GC_Length_hg38_from_coords.rds"))
 
 ## =========================
 ## COLUMN ANNOTATION (sample metadata)
 ## =========================
+## =========================
+## COLUMN ANNOTATION (sample metadata)  -- FIXED
+## =========================
+
+## IDs present in HDF5 meta and in your matrix
 h5_samples <- as.character(rhdf5::h5read(h5_path, "meta/samples"))
 col_ids    <- intersect(colnames(counts_all), h5_samples)
 
+## Select ONLY columns that exist in your phenoDF.
+## Based on your colnames(phenoDF), valid choices include:
+## "sample.id","sample.type","biopsy.site","cancer","data.source","gender",
+## "read.count.file","age_in_year","metastatic_site","tumor_grade",
+## "tumor_stage","gain_list","loss_list","mutation_list","subtype".
+##
+## We use any_of() so the code won’t fail if some are missing in other runs.
 col_annot <- phenoDF %>%
-  filter(sample.id %in% col_ids) %>%
-  select(sample.id, data.source, sample.type, biopsy.site, disease, tissue)
+  dplyr::filter(sample.id %in% col_ids) %>%
+  dplyr::select(dplyr::any_of(c(
+    "sample.id",
+    "data.source",
+    "sample.type",
+    "biopsy.site",
+    "cancer",
+    "gender",
+    "tumor_grade",
+    "tumor_stage",
+    "subtype",
+    "age_in_year",
+    "metastatic_site",
+    "read.count.file"  # optional, useful for provenance
+    # "gain_list","loss_list","mutation_list"  # add if you want these long fields
+  )))
 
-## Exact order as in the matrix
-col_annot <- col_annot[match(colnames(counts_all), col_annot$sample.id), ]
+## Ensure the exact same order as in the matrix
+col_annot <- col_annot[match(colnames(counts_all), col_annot$sample.id), , drop = FALSE]
 
-## Final alignment check
+## Final alignment check (should be TRUE)
 stopifnot(identical(colnames(counts_all), col_annot$sample.id))
 
+## Save
 saveRDS(col_annot, file.path(out_dir, "ColAnnot_from_EH7274.rds"))
 
+
 message("✓ Done: counts_all + row_annot (with GC% & length) + col_annot saved in: ", normalizePath(out_dir))
+
+
