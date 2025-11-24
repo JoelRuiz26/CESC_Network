@@ -91,7 +91,7 @@ extract_communities_and_ora <- function(graph, universe,
                                         simplify_by = "p.adjust",
                                         simplify_measure = "Wang",
                                         simplify_select = min,
-                                        min_count = 3) {
+                                        min_count = 1) {
   communities <- unique(V(graph)$Community)
   ontologies  <- c("BP", "CC", "MF")
   

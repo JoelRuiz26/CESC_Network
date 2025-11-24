@@ -186,36 +186,38 @@ saveRDS(A9_max,
 cat("[INFO] Saved A7 edgelist at its cutoff: ", cutoff_max, " edges\n")
 cat("[INFO] Saved A9 edgelist at its cutoff: ", cutoff_max, " edges\n")
 
+
+
+
 #════════════════════════════════════
 #NETWORK ANALYSIS REPORT - 2_7_Full_counts_A7_annot_pvalue
 #════════════════════════════════════
-#• Total unique nodes: 10846
+#• Total unique nodes: 19502
 #• Rows analyzed: 5000000
-#• Cutoff row found: 206905
-#• Nodes covered: 10846/10846
+#• Cutoff row found: 515795
+#• Nodes covered: 19502/19502
 #• Coverage percent: 100%
-#════════════════════════════════════
+#════════════════════════════════════#
 
 #════════════════════════════════════
 #NETWORK ANALYSIS REPORT - 2_8_Full_counts_A9_annot_pvalue
 #════════════════════════════════════
-#• Total unique nodes: 10846
+#• Total unique nodes: 19502
 #• Rows analyzed: 5000000
-#• Cutoff row found: 443707
-#• Nodes covered: 10846/10846
+#• Cutoff row found: 761196
+#• Nodes covered: 19502/19502
 #• Coverage percent: 100%
 #════════════════════════════════════#
 
 #════════════════════════════════════
 #INDIVIDUAL THRESHOLDS SAVED
 #════════════════════════════════════
-#A7 cutoff row:  206905 
-#A9 cutoff row:  443707 
+#A7 cutoff row:  515795 
+#A9 cutoff row:  761196 
 #════════════════════════════════════
-#[INFO] Saved A7 edgelist at its cutoff:  206905  edges
-#[INFO] Saved A9 edgelist at its cutoff:  443707  edges
-#[INFO] Saved A7 edgelist at its cutoff:  443707  edges
-#[INFO] Saved A9 edgelist at its cutoff:  443707  edges
-
+#[INFO] Saved A7 edgelist at its cutoff:  515795  edges
+#[INFO] Saved A9 edgelist at its cutoff:  761196  edges
+#[INFO] Saved A7 edgelist at its cutoff:  761196  edges
+#[INFO] Saved A9 edgelist at its cutoff:  761196  edges#
 
 

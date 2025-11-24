@@ -55,7 +55,7 @@ build_mod_GO_network <- function(df_modules,
       size_from          = size,
       avg_pagerank_from  = avg_pagerank,
       norm_pagerank_from = norm_pagerank,
-      size_to            = 1,      # GO node: no size
+      size_to            = NA_integer_,      # GO node: no size
       avg_pagerank_to    = NA_real_,         # GO node: no PageRank
       norm_pagerank_to   = NA_real_,
       Ontology           = Ontology          # BP / MF / CC
