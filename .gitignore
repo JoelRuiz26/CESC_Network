@@ -1,24 +1,18 @@
-# Ignore everything by default
+# Ignore everything
 *
 
-# Allow Git to descend into subdirectories
+# Allow directories
 !**/
 
-# Track only specific files in any directory
+# Allow specific tracked file types
 !.gitignore
 !README*
 !*.R
-
-# (Optional) Allow bash and markdown scripts
 !*.sh
-#!*.md
 !*.png
 !*.pdf
-# (Optional) Allow specific folders
-#!docs/
-#!config/
 
-# Explicitly ignore common data/bioinformatics file types
+# Ignore bioinformatics and data files
 *.RData
 *.rds
 *.tsv
@@ -58,7 +52,7 @@
 *.txt
 .DS_Store
 
-# Ignore common temporary or metadata folders
+# Ignore folders
 .Rproj.user/
 __pycache__/
 cache/
