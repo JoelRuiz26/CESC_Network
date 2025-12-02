@@ -2,7 +2,7 @@
 *
 
 # Allow Git to descend into subdirectories
-!*/
+!**/
 
 # Track only specific files in any directory
 !.gitignore
