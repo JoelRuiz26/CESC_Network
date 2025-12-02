@@ -60,12 +60,10 @@ myannot <- gene_metadata %>%
 # rownames(counts) <- sub("\\..*$", "", rownames(counts))
 
 # ----------------- Sync genes between counts and annotation ----------------- #
-common_genes <- intersect(rownames(counts), myannot$feature)
+common_genes <- rownames(counts)[rownames(counts) %in% myannot$feature]
 
 counts  <- counts[common_genes, , drop = FALSE]
-myannot <- myannot %>%
-  dplyr::filter(feature %in% common_genes) %>%
-  dplyr::arrange(match(feature, common_genes))
+myannot <- myannot[match(common_genes, myannot$feature), ]
 
 stopifnot(identical(rownames(counts), myannot$feature))
 
@@ -250,7 +248,7 @@ stopifnot(identical(rownames(counts_filtered), rownames(myannot_filtered_df)))
 mydataEDA <- EDASeq::newSeqExpressionSet(
   counts      = counts_filtered,
   featureData = Biobase::AnnotatedDataFrame(myannot_filtered_df),
-  phenoData   = Biobase::AnnotatedDataFrame(factors_filtered)
+  phenoData   = Biobase::AnnotatedDataFrame(factors)
 )
 
 #order for less bias
@@ -264,7 +262,7 @@ fullfullTMM <-NOISeq::tmm(normCounts(lFull), long = 1000, lc = 0, k = 0)
 dim(fullfullTMM) #[1] 19528   280
 
 noiseqData_filtered = NOISeq::readData(data = fullfullTMM, 
-                                       factors=factors_filtered)
+                                       factors=factors)
 
 # ===================== SOLVE BATCH EFFECT ===================== #
 #factor = "something", batch = TRUE ⟶ "removes the effect of something (identified batch)."
@@ -284,7 +282,7 @@ mygcn_n <- setNames(myannot_filtered_df$gc_percent, myannot_filtered_df$feature)
 mybiotype_n <- setNames(myannot_filtered_df$gene_biotype, myannot_filtered_df$feature)
 
 noiseqData_norm_s = NOISeq::readData(data = ffTMMARSyn_s, 
-                                     factors=factors_filtered,
+                                     factors=factors,
                                      gc = mygcn_n,
                                      biotype = mybiotype_n,
                                      length = mylength_n)
@@ -382,9 +380,9 @@ explo.plot(myGCbias_Sample, samples = 3, toplot = "global")
 dev.off()
 
 # 3.3.3) RNA composition
-mycd_norm<- dat(noiseqData_norm_s, type = "cd", norm = TRUE)
+#mycd_norm<- dat(noiseqData_norm_s, type = "cd", norm = TRUE)
 # Verify diagnostic
-table(mycd_norm@dat$DiagnosticTest[, "Diagnostic Test"])
+#table(mycd_norm@dat$DiagnosticTest[, "Diagnostic Test"])
 #FAILED PASSED #b=F HPV_clade 
 #98    181 
 #pdf("plots_prepro_data/QC_Mvalues_mycd_after.pdf", width = 10, height = 6)
@@ -412,7 +410,7 @@ dim(Final_SNT_vs_PP) #[1] 19528   281
 # Save full matrix
 vroom::vroom_write(Final_SNT_vs_PP, file = "~/CESC_Network/2_Prepro_TCGA_GTEx/2_3_Full_counts_A7_A9_notAnot.tsv", delim = "\t")
 # Save metadata
-vroom::vroom_write(factors_filtered, file = "~/CESC_Network/2_Prepro_TCGA_GTEx/2_4_Factors.tsv", delim = "\t")
+vroom::vroom_write(factors, file = "~/CESC_Network/2_Prepro_TCGA_GTEx/2_4_Factors.tsv", delim = "\t")
 #Save annotation
 vroom::vroom_write(myannot_filtered_df, file = "~/CESC_Network/2_Prepro_TCGA_GTEx/2_5_Myannot.tsv", delim = "\t")
 
@@ -426,13 +424,17 @@ Final_SNT_vs_PP <- Final_SNT_vs_PP[!is.na(Final_SNT_vs_PP$Symbol), ]
 
 # keep highest meadian expression 
 expr_cols <- setdiff(colnames(Final_SNT_vs_PP), c("Gene", "Symbol"))
-keep_rows <- tapply(
+
+keep_rows_list <- tapply(
   1:nrow(Final_SNT_vs_PP),
   Final_SNT_vs_PP$Symbol,
-  function(i) i[ which.max(rowMeans(Final_SNT_vs_PP[i, expr_cols, drop=FALSE])) ]
+  function(i) i[ which.max(rowMeans(Final_SNT_vs_PP[i, expr_cols, drop = FALSE])) ]
 )
 
-Final_SNT_vs_PP_annot <- Final_SNT_vs_PP[unlist(keep_rows), ]
+# unlist = índices de filas elegidas; sort() = respeta el orden natural de la matriz original
+keep_rows <- sort(unlist(keep_rows_list, use.names = FALSE))
+
+Final_SNT_vs_PP_annot <- Final_SNT_vs_PP[keep_rows, ]
 
 # rename
 Final_SNT_vs_PP_annot$Gene <- Final_SNT_vs_PP_annot$Symbol
@@ -444,7 +446,7 @@ vroom::vroom_write(Final_SNT_vs_PP_annot,
                    delim = "\t")
 
 # Save A7 for network
-Factors_A7 <- factors_filtered %>% filter(HPV_clade == "A7_clade") %>% pull(sampleID)
+Factors_A7 <- factors %>% filter(HPV_clade == "A7_clade") %>% pull(sampleID)
 Final_A7_NW <- Final_SNT_vs_PP_annot %>%
   dplyr::select(Gene, Factors_A7)
 
@@ -456,7 +458,7 @@ vroom::vroom_write(Final_A7_NW,
                    delim = "\t")
 
 # Save A9 for network
-Factors_A9 <- factors_filtered %>% filter(HPV_clade == "A9_clade") %>% pull(sampleID)
+Factors_A9 <- factors %>% filter(HPV_clade == "A9_clade") %>% pull(sampleID)
 Final_A9_NW <- Final_SNT_vs_PP_annot %>%
   dplyr::select(Gene, Factors_A9)
 vroom::vroom_write(Final_A9_NW, 
