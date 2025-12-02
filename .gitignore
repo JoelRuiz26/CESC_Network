@@ -36,8 +36,6 @@
 *.fq
 *.sam
 *.vcf
-#*.pdf
-#*.png
 *.jpg
 *.jpeg
 *.tiff
