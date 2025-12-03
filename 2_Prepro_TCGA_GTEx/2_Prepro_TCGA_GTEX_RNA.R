@@ -415,9 +415,9 @@ vroom::vroom_write(factors, file = "~/CESC_Network/2_Prepro_TCGA_GTEx/2_4_Factor
 vroom::vroom_write(myannot_filtered_df, file = "~/CESC_Network/2_Prepro_TCGA_GTEx/2_5_Myannot.tsv", delim = "\t")
 
 # Save matrix annoted
+myannot_filtered_df <- myannot_filtered_df %>% filter(!str_detect(hgnc_symbol, "\\."))
 Final_SNT_vs_PP$Symbol <- myannot_filtered_df$hgnc_symbol[
-  match(Final_SNT_vs_PP$Gene, myannot_filtered_df$feature)
-]
+  match(Final_SNT_vs_PP$Gene, myannot_filtered_df$feature)]
 
 #left rows without symbol
 Final_SNT_vs_PP <- Final_SNT_vs_PP[!is.na(Final_SNT_vs_PP$Symbol), ]
@@ -431,7 +431,6 @@ keep_rows_list <- tapply(
   function(i) i[ which.max(rowMeans(Final_SNT_vs_PP[i, expr_cols, drop = FALSE])) ]
 )
 
-# unlist = índices de filas elegidas; sort() = respeta el orden natural de la matriz original
 keep_rows <- sort(unlist(keep_rows_list, use.names = FALSE))
 
 Final_SNT_vs_PP_annot <- Final_SNT_vs_PP[keep_rows, ]
@@ -446,7 +445,7 @@ vroom::vroom_write(Final_SNT_vs_PP_annot,
                    delim = "\t")
 
 # Save A7 for network
-Factors_A7 <- factors %>% filter(HPV_clade == "A7_clade") %>% pull(sampleID)
+Factors_A7 <- factors %>% dplyr::filter(HPV_clade == "A7_clade") %>% dplyr::pull(sampleID)
 Final_A7_NW <- Final_SNT_vs_PP_annot %>%
   dplyr::select(Gene, Factors_A7)
 
@@ -459,8 +458,7 @@ vroom::vroom_write(Final_A7_NW,
 
 # Save A9 for network
 Factors_A9 <- factors %>% filter(HPV_clade == "A9_clade") %>% pull(sampleID)
-Final_A9_NW <- Final_SNT_vs_PP_annot %>%
-  dplyr::select(Gene, Factors_A9)
+Final_A9_NW <- Final_SNT_vs_PP_annot %>% dplyr::select(Gene, Factors_A9)
 vroom::vroom_write(Final_A9_NW, 
                    file = "~/CESC_Network/2_Prepro_TCGA_GTEx/2_8_Full_counts_A9_annot.tsv", 
                    delim = "\t")
