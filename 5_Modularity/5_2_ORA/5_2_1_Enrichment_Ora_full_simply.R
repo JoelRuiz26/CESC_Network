@@ -26,13 +26,13 @@ graph_A9 <- readRDS("~/CESC_Network/5_Modularity/5_1_Modules/5_2_1_Louvain_A9_gr
 length(igraph::V(graph_A7)) # [1] 17481
 
 ### Universo ###
-#universo <- readr::read_rds("~/CESC_Network/2_Prepro_TCGA_GTEx/2_1_Universe_annotation_table.rds") %>%
-#  dplyr::pull(hgnc_symbol)
-#length(universo) #[1] 46731
-genes_A7 <- igraph::V(graph_A7)$name
-genes_A9 <- igraph::V(graph_A9)$name
-universo <- union(genes_A7, genes_A9)
-length(universo) #[1] 17481
+universo <- readr::read_rds("~/CESC_Network/2_Prepro_TCGA_GTEx/2_1_Universe_annotation_table.rds") %>%
+  dplyr::pull(hgnc_symbol)
+length(universo) #[1] 46731
+#genes_A7 <- igraph::V(graph_A7)$name
+#genes_A9 <- igraph::V(graph_A9)$name
+#universo <- union(genes_A7, genes_A9)
+#length(universo) #[1] 17481
 
 
 ### ORA con opción de simplificación ###
