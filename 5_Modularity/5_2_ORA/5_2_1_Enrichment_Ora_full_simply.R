@@ -23,10 +23,17 @@ set.seed(123)
 ### Cargar redes ###
 graph_A7 <- readRDS("~/CESC_Network/5_Modularity/5_1_Modules/5_2_1_Louvain_A7_graph_max.rds")
 graph_A9 <- readRDS("~/CESC_Network/5_Modularity/5_1_Modules/5_2_1_Louvain_A9_graph_max.rds")
+length(igraph::V(graph_A7)) # [1] 17481
 
 ### Universo ###
-universo <- readr::read_rds("~/CESC_Network/2_Prepro_TCGA_GTEx/2_1_Universe_annotation_table.rds") %>%
-  dplyr::pull(hgnc_symbol)
+#universo <- readr::read_rds("~/CESC_Network/2_Prepro_TCGA_GTEx/2_1_Universe_annotation_table.rds") %>%
+#  dplyr::pull(hgnc_symbol)
+#length(universo) #[1] 46731
+genes_A7 <- igraph::V(graph_A7)$name
+genes_A9 <- igraph::V(graph_A9)$name
+universo <- union(genes_A7, genes_A9)
+length(universo) #[1] 17481
+
 
 ### ORA con opción de simplificación ###
 perform_ora <- function(genes, universe, community_id, community_name, ontology,
