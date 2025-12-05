@@ -8,13 +8,13 @@ library(vroom)
 ### ========================
 ### Paths
 ### ========================
-mod_graph_dir <- "~/CESC_Network/5_Modularity/5_3_Module_Graph"
-ora_dir       <- "~/CESC_Network/5_Modularity/5_2_ORA"
+mod_graph_dir <- "~/CESC_Network/5_Modularity/5_4_Module_Graph/"
+ora_dir       <- "~/CESC_Network/5_Modularity/5_3_GSEA_module/"
 storage_dir   <- "/STORAGE/csbig/jruiz/cesc_network"
 
 ### ========================
 ### Helper function:
-### from module–module df + ORA to:
+### from module–module df + ORA/GSEA to:
 ###   - extended df (modules + GO edges)
 ###   - igraph object
 ###   - RDS (df + graph) + GraphML
@@ -50,8 +50,9 @@ build_mod_GO_network <- function(df_modules,
     left_join(mod_attr, by = "Community_Name") %>%
     transmute(
       from               = Community_Name,   # module name
-      to                 = Description,               # GO ID as node name
+      to                 = Description,      # GO term as node name
       weight             = 1L,               # fixed weight
+      NES                = NES,              # NES from GSEA
       size_from          = size,
       avg_pagerank_from  = avg_pagerank,
       norm_pagerank_from = norm_pagerank,
@@ -88,20 +89,28 @@ build_mod_GO_network <- function(df_modules,
     distinct(name, .keep_all = TRUE) %>%
     mutate(node_type = "module")
   
+  # --- GO term nodes (one row per GO term) ---
+  # Aquí hacemos el cambio sutil:
+  #   - Tomamos NES de df_ext (aristas módulo–GO).
+  #   - Si un GO aparece en varios módulos, nos quedamos con el NES de mayor |NES|.
   go_nodes <- df_ext %>%
     filter(!is.na(Ontology)) %>%   # only module–GO edges
     transmute(
-      name      = to,
-      Ontology  = Ontology,
+      name     = to,
+      Ontology = Ontology,
+      NES      = NES,
       node_type = "GO_term"
     ) %>%
+    group_by(name) %>%
+    slice_max(order_by = abs(NES), with_ties = FALSE) %>%  # NES "dominante"
+    ungroup() %>%
     distinct(name, .keep_all = TRUE)
   
   vertices_all <- bind_rows(module_nodes, go_nodes)
   
   # --- Build igraph object from extended edge table ---
   edges_all <- df_ext %>%
-    select(from, to, weight, Ontology)
+    dplyr::select(from, to, weight, Ontology, NES)  # NES sigue como atributo de arista
   
   g_mod_GO <- graph_from_data_frame(
     d        = edges_all,
@@ -162,21 +171,27 @@ df_modules_louv_A9 <- readRDS(
   )
 )
 
-# ORA A7 (simplified)
+# GSEA A7 (simplified)
 Ora_A7_SIMP <- vroom(
   file.path(
     ora_dir,
-    "5_2_2_Ora7_louv_max_SIMPLIFIED_0_2.tsv"
+    "5_3_1_GSEA_A7_SIMPLIFIED.tsv"
   )
-)
+) %>%
+  dplyr::rename(
+    Community_Name = Module_Name   # mapeo a nombre esperado
+  )
 
-# ORA A9 (simplified)  <-- ajusta el nombre si tu archivo difiere
+# GSEA A9 (simplified)
 Ora_A9_SIMP <- vroom(
   file.path(
     ora_dir,
-    "5_2_2_Ora9_louv_max_SIMPLIFIED_0_2.tsv"
+    "5_3_1_GSEA_A9_SIMPLIFIED.tsv"
   )
-)
+) %>%
+  dplyr::rename(
+    Community_Name = Module_Name
+  )
 
 ### ========================
 ### Run for A7 and A9
