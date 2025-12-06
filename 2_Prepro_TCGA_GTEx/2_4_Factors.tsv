@@ -1,0 +1,281 @@
+sampleID	source	bcr_patient_barcode	sample_type	HPV_type	HPV_clade	clinical_stage	Stage_group	histological_type	histological_group	tumor_tissue_site	vital_status	days_to_last_followup	days_to_death
+TCGA-4J-AA1J-01	TCGA	TCGA-4J-AA1J	Primary Tumor	HPV18	A7_clade	Stage IB2	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	542	NA
+TCGA-BI-A0VR-01	TCGA	TCGA-BI-A0VR	Primary Tumor	HPV16	A9_clade	Stage IIIB	Stage III	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	1505	NA
+TCGA-BI-A0VS-01	TCGA	TCGA-BI-A0VS	Primary Tumor	HPV16	A9_clade	Stage IB	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	1735	NA
+TCGA-BI-A20A-01	TCGA	TCGA-BI-A20A	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	720	NA
+TCGA-C5-A0TN-01	TCGA	TCGA-C5-A0TN	Primary Tumor	HPV16	A9_clade	Stage IB2	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	NA	348
+TCGA-C5-A1BE-01	TCGA	TCGA-C5-A1BE	Primary Tumor	HPV16	A9_clade	Stage IB2	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	NA	2094
+TCGA-C5-A1BF-01	TCGA	TCGA-C5-A1BF	Primary Tumor	HPV18	A7_clade	Stage IB	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	NA	570
+TCGA-C5-A1BI-01	TCGA	TCGA-C5-A1BI	Primary Tumor	HPV16	A9_clade	Stage IIIB	Stage III	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	1112	NA
+TCGA-C5-A1BJ-01	TCGA	TCGA-C5-A1BJ	Primary Tumor	HPV16	A9_clade	Stage IIB	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	4385	NA
+TCGA-C5-A1BK-01	TCGA	TCGA-C5-A1BK	Primary Tumor	HPV16	A9_clade	Stage IB	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	5385	NA
+TCGA-C5-A1BL-01	TCGA	TCGA-C5-A1BL	Primary Tumor	HPV16	A9_clade	Stage IB	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	5271	NA
+TCGA-C5-A1BM-01	TCGA	TCGA-C5-A1BM	Primary Tumor	HPV18	A7_clade	Stage IB	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	NA	2520
+TCGA-C5-A1BN-01	TCGA	TCGA-C5-A1BN	Primary Tumor	HPV45	A7_clade	Stage IB2	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	NA	166
+TCGA-C5-A1BQ-01	TCGA	TCGA-C5-A1BQ	Primary Tumor	HPV31	A9_clade	Stage IIIB	Stage III	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	NA	604
+TCGA-C5-A1M5-01	TCGA	TCGA-C5-A1M5	Primary Tumor	HPV33	A9_clade	Stage IB	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	NA	2052
+TCGA-C5-A1M6-01	TCGA	TCGA-C5-A1M6	Primary Tumor	HPV18	A7_clade	Stage IIB	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	NA	955
+TCGA-C5-A1M7-01	TCGA	TCGA-C5-A1M7	Primary Tumor	HPV18	A7_clade	Stage IB	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	1409	NA
+TCGA-C5-A1M8-01	TCGA	TCGA-C5-A1M8	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	919	NA
+TCGA-C5-A1M9-01	TCGA	TCGA-C5-A1M9	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Endocervical Type of Adenocarcinoma	Adenocarcinoma	Cervical	DECEASED	NA	1065
+TCGA-C5-A1ME-01	TCGA	TCGA-C5-A1ME	Primary Tumor	HPV18	A7_clade	Stage IB1	Stage I	Endocervical Type of Adenocarcinoma	Adenocarcinoma	Cervical	LIVING	1756	NA
+TCGA-C5-A1MF-01	TCGA	TCGA-C5-A1MF	Primary Tumor	HPV45	A7_clade	Stage IB2	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	1617	NA
+TCGA-C5-A1MH-01	TCGA	TCGA-C5-A1MH	Primary Tumor	HPV16	A9_clade	Stage IIIB	Stage III	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	NA	1186
+TCGA-C5-A1MI-01	TCGA	TCGA-C5-A1MI	Primary Tumor	HPV18	A7_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	NA	1083
+TCGA-C5-A1MJ-01	TCGA	TCGA-C5-A1MJ	Primary Tumor	HPV18	A7_clade	Stage IB1	Stage I	Endocervical Type of Adenocarcinoma	Adenocarcinoma	Cervical	DECEASED	NA	14
+TCGA-C5-A1MK-01	TCGA	TCGA-C5-A1MK	Primary Tumor	HPV58	A9_clade	Stage IIIB	Stage III	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	NA	74
+TCGA-C5-A1ML-01	TCGA	TCGA-C5-A1ML	Primary Tumor	HPV16	A9_clade	Stage IB2	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	NA	636
+TCGA-C5-A1MN-01	TCGA	TCGA-C5-A1MN	Primary Tumor	HPV16	A9_clade	Stage IIIB	Stage III	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	NA	1245
+TCGA-C5-A1MP-01	TCGA	TCGA-C5-A1MP	Primary Tumor	HPV16	A9_clade	Stage IB2	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	109	NA
+TCGA-C5-A1MQ-01	TCGA	TCGA-C5-A1MQ	Primary Tumor	HPV18	A7_clade	Stage IIA	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	1031	NA
+TCGA-C5-A2LS-01	TCGA	TCGA-C5-A2LS	Primary Tumor	HPV16	A9_clade	Stage IB2	Stage I	Endocervical Adenocarcinoma of the Usual Type	Adenocarcinoma	Cervical	LIVING	1345	NA
+TCGA-C5-A2LV-01	TCGA	TCGA-C5-A2LV	Primary Tumor	HPV16	A9_clade	Stage IB	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	2234	NA
+TCGA-C5-A2LX-01	TCGA	TCGA-C5-A2LX	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	2526	NA
+TCGA-C5-A2LY-01	TCGA	TCGA-C5-A2LY	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	2383	NA
+TCGA-C5-A2LZ-01	TCGA	TCGA-C5-A2LZ	Primary Tumor	HPV16	A9_clade	Stage IIIB	Stage III	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	NA	3046
+TCGA-C5-A2M1-01	TCGA	TCGA-C5-A2M1	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Endocervical Type of Adenocarcinoma	Adenocarcinoma	Cervical	LIVING	1169	NA
+TCGA-C5-A2M2-01	TCGA	TCGA-C5-A2M2	Primary Tumor	HPV16	A9_clade	Stage IB2	Stage I	Endocervical Type of Adenocarcinoma	Adenocarcinoma	Cervical	DECEASED	25	1011
+TCGA-C5-A3HD-01	TCGA	TCGA-C5-A3HD	Primary Tumor	HPV16	A9_clade	Stage IIB	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	1582	NA
+TCGA-C5-A3HE-01	TCGA	TCGA-C5-A3HE	Primary Tumor	HPV18	A7_clade	Stage IB2	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	548	NA
+TCGA-C5-A3HL-01	TCGA	TCGA-C5-A3HL	Primary Tumor	HPV16	A9_clade	Stage IB2	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	621	NA
+TCGA-C5-A7CG-01	TCGA	TCGA-C5-A7CG	Primary Tumor	HPV52	A9_clade	Stage IB	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	6408	NA
+TCGA-C5-A7CH-01	TCGA	TCGA-C5-A7CH	Primary Tumor	HPV16	A9_clade	Stage IIB	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	4694	NA
+TCGA-C5-A7CJ-01	TCGA	TCGA-C5-A7CJ	Primary Tumor	HPV16	A9_clade	Stage IIA	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	NA	3097
+TCGA-C5-A7CK-01	TCGA	TCGA-C5-A7CK	Primary Tumor	HPV16	A9_clade	Stage IVA	Stage IV	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	NA	4086
+TCGA-C5-A7CL-01	TCGA	TCGA-C5-A7CL	Primary Tumor	HPV16	A9_clade	Stage IIIB	Stage III	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	NA	471
+TCGA-C5-A7CO-01	TCGA	TCGA-C5-A7CO	Primary Tumor	HPV31	A9_clade	Stage IB2	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	4482	NA
+TCGA-C5-A7UC-01	TCGA	TCGA-C5-A7UC	Primary Tumor	HPV45	A7_clade	Stage IB	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	NA	523
+TCGA-C5-A7UE-01	TCGA	TCGA-C5-A7UE	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	4738	NA
+TCGA-C5-A7UH-01	TCGA	TCGA-C5-A7UH	Primary Tumor	HPV16	A9_clade	Stage IIIB	Stage III	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	3988	NA
+TCGA-C5-A7UI-01	TCGA	TCGA-C5-A7UI	Primary Tumor	HPV33	A9_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	NA	2888
+TCGA-C5-A7X3-01	TCGA	TCGA-C5-A7X3	Primary Tumor	HPV45	A7_clade	Stage IIIB	Stage III	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	NA	284
+TCGA-C5-A7X5-01	TCGA	TCGA-C5-A7X5	Primary Tumor	HPV35	A9_clade	Stage IVB	Stage IV	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	NA	414
+TCGA-C5-A7X8-01	TCGA	TCGA-C5-A7X8	Primary Tumor	HPV18	A7_clade	Stage IB1	Stage I	Mucinous Adenocarcinoma of Endocervical Type	Adenocarcinoma	Cervical	LIVING	83	NA
+TCGA-C5-A7XC-01	TCGA	TCGA-C5-A7XC	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	1551	NA
+TCGA-C5-A8XH-01	TCGA	TCGA-C5-A8XH	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	NA	1394
+TCGA-C5-A8XI-01	TCGA	TCGA-C5-A8XI	Primary Tumor	HPV52	A9_clade	Stage IB2	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	254	NA
+TCGA-C5-A8XJ-01	TCGA	TCGA-C5-A8XJ	Primary Tumor	HPV33	A9_clade	Stage IB	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	4467	NA
+TCGA-C5-A8XK-01	TCGA	TCGA-C5-A8XK	Primary Tumor	HPV16	A9_clade	NA	(NOT REPORTED)	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	3039	NA
+TCGA-C5-A8YR-01	TCGA	TCGA-C5-A8YR	Primary Tumor	HPV45	A7_clade	Stage IB	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	NA	837
+TCGA-C5-A8ZZ-01	TCGA	TCGA-C5-A8ZZ	Primary Tumor	HPV16	A9_clade	Stage IIB	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	636	NA
+TCGA-C5-A901-01	TCGA	TCGA-C5-A901	Primary Tumor	HPV16	A9_clade	NA	(NOT REPORTED)	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	518	NA
+TCGA-C5-A902-01	TCGA	TCGA-C5-A902	Primary Tumor	HPV16	A9_clade	Stage IB2	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	149	NA
+TCGA-C5-A905-01	TCGA	TCGA-C5-A905	Primary Tumor	HPV16	A9_clade	Stage IB	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	4879	NA
+TCGA-C5-A907-01	TCGA	TCGA-C5-A907	Primary Tumor	HPV18	A7_clade	Stage IB2	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	448	NA
+TCGA-DG-A2KH-01	TCGA	TCGA-DG-A2KH	Primary Tumor	HPV18	A7_clade	Stage IB1	Stage I	Adenosquamous	Adenosquamous	Cervical	LIVING	34	NA
+TCGA-DG-A2KJ-01	TCGA	TCGA-DG-A2KJ	Primary Tumor	HPV18	A7_clade	Stage IIIB	Stage III	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	2893	NA
+TCGA-DG-A2KK-01	TCGA	TCGA-DG-A2KK	Primary Tumor	HPV16	A9_clade	Stage IIIB	Stage III	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	2496	NA
+TCGA-DG-A2KL-01	TCGA	TCGA-DG-A2KL	Primary Tumor	HPV16	A9_clade	Stage IIA	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	1367	NA
+TCGA-DG-A2KM-01	TCGA	TCGA-DG-A2KM	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	1946	NA
+TCGA-DR-A0ZL-01	TCGA	TCGA-DR-A0ZL	Primary Tumor	HPV16	A9_clade	Stage IB	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	2669	NA
+TCGA-DS-A0VK-01	TCGA	TCGA-DS-A0VK	Primary Tumor	HPV16	A9_clade	Stage IB	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	NA	1118
+TCGA-DS-A0VL-01	TCGA	TCGA-DS-A0VL	Primary Tumor	HPV16	A9_clade	Stage IB	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	81	NA
+TCGA-DS-A0VM-01	TCGA	TCGA-DS-A0VM	Primary Tumor	HPV16	A9_clade	Stage IB	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	2128	NA
+TCGA-DS-A0VN-01	TCGA	TCGA-DS-A0VN	Primary Tumor	HPV16	A9_clade	Stage IB	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	2910	NA
+TCGA-DS-A1OA-01	TCGA	TCGA-DS-A1OA	Primary Tumor	HPV58	A9_clade	Stage IB	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	879	879
+TCGA-DS-A1OB-01	TCGA	TCGA-DS-A1OB	Primary Tumor	HPV31	A9_clade	Stage IB	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	NA	861
+TCGA-DS-A1OC-01	TCGA	TCGA-DS-A1OC	Primary Tumor	HPV16	A9_clade	Stage IB	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	376	NA
+TCGA-DS-A1OD-01	TCGA	TCGA-DS-A1OD	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	3874	NA
+TCGA-DS-A5RQ-01	TCGA	TCGA-DS-A5RQ	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	512	NA
+TCGA-DS-A7WF-01	TCGA	TCGA-DS-A7WF	Primary Tumor	HPV16	A9_clade	Stage IB2	Stage I	Adenosquamous	Adenosquamous	Cervical	DECEASED	NA	492
+TCGA-DS-A7WH-01	TCGA	TCGA-DS-A7WH	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Mucinous Adenocarcinoma of Endocervical Type	Adenocarcinoma	Cervical	LIVING	533	NA
+TCGA-DS-A7WI-01	TCGA	TCGA-DS-A7WI	Primary Tumor	HPV16	A9_clade	Stage IIA2	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	NA	252
+TCGA-EA-A1QS-01	TCGA	TCGA-EA-A1QS	Primary Tumor	HPV39	A7_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	1203	NA
+TCGA-EA-A1QT-01	TCGA	TCGA-EA-A1QT	Primary Tumor	HPV16	A9_clade	Stage IB	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	1243	NA
+TCGA-EA-A3HQ-01	TCGA	TCGA-EA-A3HQ	Primary Tumor	HPV16	A9_clade	Stage II	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	1136	NA
+TCGA-EA-A3HS-01	TCGA	TCGA-EA-A3HS	Primary Tumor	HPV16	A9_clade	Stage IB	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	959	NA
+TCGA-EA-A3HT-01	TCGA	TCGA-EA-A3HT	Primary Tumor	HPV16	A9_clade	Stage IB	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	954	NA
+TCGA-EA-A3HU-01	TCGA	TCGA-EA-A3HU	Primary Tumor	HPV16	A9_clade	Stage II	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	1013	NA
+TCGA-EA-A3QD-01	TCGA	TCGA-EA-A3QD	Primary Tumor	HPV16	A9_clade	Stage IIIB	Stage III	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	397	NA
+TCGA-EA-A3QE-01	TCGA	TCGA-EA-A3QE	Primary Tumor	HPV16	A9_clade	Stage IB	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	761	NA
+TCGA-EA-A3Y4-01	TCGA	TCGA-EA-A3Y4	Primary Tumor	HPV45	A7_clade	Stage IB	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	1122	NA
+TCGA-EA-A411-01	TCGA	TCGA-EA-A411	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	747	NA
+TCGA-EA-A439-01	TCGA	TCGA-EA-A439	Primary Tumor	HPV18	A7_clade	Stage IIA1	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	965	NA
+TCGA-EA-A43B-01	TCGA	TCGA-EA-A43B	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	791	NA
+TCGA-EA-A44S-01	TCGA	TCGA-EA-A44S	Primary Tumor	HPV16	A9_clade	Stage IIIB	Stage III	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	369	NA
+TCGA-EA-A50E-01	TCGA	TCGA-EA-A50E	Primary Tumor	HPV16	A9_clade	Stage IVA	Stage IV	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	8	227
+TCGA-EA-A5FO-01	TCGA	TCGA-EA-A5FO	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	815	NA
+TCGA-EA-A5O9-01	TCGA	TCGA-EA-A5O9	Primary Tumor	HPV16	A9_clade	Stage IB2	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	788	NA
+TCGA-EA-A5ZD-01	TCGA	TCGA-EA-A5ZD	Primary Tumor	HPV58	A9_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	830	NA
+TCGA-EA-A5ZE-01	TCGA	TCGA-EA-A5ZE	Primary Tumor	HPV59	A7_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	829	NA
+TCGA-EA-A5ZF-01	TCGA	TCGA-EA-A5ZF	Primary Tumor	HPV18	A7_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	828	NA
+TCGA-EA-A6QX-01	TCGA	TCGA-EA-A6QX	Primary Tumor	HPV58	A9_clade	Stage IIIB	Stage III	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	730	NA
+TCGA-EA-A78R-01	TCGA	TCGA-EA-A78R	Primary Tumor	HPV52	A9_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	410	NA
+TCGA-EA-A97N-01	TCGA	TCGA-EA-A97N	Primary Tumor	HPV16	A9_clade	Stage IB2	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	11	NA
+TCGA-EK-A2GZ-01	TCGA	TCGA-EK-A2GZ	Primary Tumor	HPV52	A9_clade	Stage IIIB	Stage III	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	383	NA
+TCGA-EK-A2H1-01	TCGA	TCGA-EK-A2H1	Primary Tumor	HPV16	A9_clade	Stage IB2	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	799	NA
+TCGA-EK-A2IR-01	TCGA	TCGA-EK-A2IR	Primary Tumor	HPV16	A9_clade	Stage IB2	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	3442	NA
+TCGA-EK-A2PG-01	TCGA	TCGA-EK-A2PG	Primary Tumor	HPV58	A9_clade	NA	(NOT REPORTED)	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	46	NA
+TCGA-EK-A2PI-01	TCGA	TCGA-EK-A2PI	Primary Tumor	HPV16	A9_clade	Stage IIIB	Stage III	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	586	NA
+TCGA-EK-A2PK-01	TCGA	TCGA-EK-A2PK	Primary Tumor	HPV18	A7_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	12	NA
+TCGA-EK-A2PL-01	TCGA	TCGA-EK-A2PL	Primary Tumor	HPV39	A7_clade	Stage IIIB	Stage III	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	13	NA
+TCGA-EK-A2R7-01	TCGA	TCGA-EK-A2R7	Primary Tumor	HPV18	A7_clade	Stage IB	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	27	NA
+TCGA-EK-A2R8-01	TCGA	TCGA-EK-A2R8	Primary Tumor	HPV45	A7_clade	Stage IB2	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	44	NA
+TCGA-EK-A2R9-01	TCGA	TCGA-EK-A2R9	Primary Tumor	HPV33	A9_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	4	NA
+TCGA-EK-A2RA-01	TCGA	TCGA-EK-A2RA	Primary Tumor	HPV52	A9_clade	Stage IIA2	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	1246	NA
+TCGA-EK-A2RB-01	TCGA	TCGA-EK-A2RB	Primary Tumor	HPV16	A9_clade	Stage IVB	Stage IV	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	9	NA
+TCGA-EK-A2RC-01	TCGA	TCGA-EK-A2RC	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	129	NA
+TCGA-EK-A2RE-01	TCGA	TCGA-EK-A2RE	Primary Tumor	HPV16	A9_clade	Stage IIA	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	57	NA
+TCGA-EK-A2RJ-01	TCGA	TCGA-EK-A2RJ	Primary Tumor	HPV59	A7_clade	Stage IB2	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	53	NA
+TCGA-EK-A2RK-01	TCGA	TCGA-EK-A2RK	Primary Tumor	HPV16	A9_clade	Stage IA2	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	13	NA
+TCGA-EK-A2RL-01	TCGA	TCGA-EK-A2RL	Primary Tumor	HPV16	A9_clade	Stage IB	Stage I	Endocervical Type of Adenocarcinoma	Adenocarcinoma	Cervical	DECEASED	721	1453
+TCGA-EK-A2RM-01	TCGA	TCGA-EK-A2RM	Primary Tumor	HPV18	A7_clade	Stage IB	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	50	NA
+TCGA-EK-A2RN-01	TCGA	TCGA-EK-A2RN	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	71	NA
+TCGA-EK-A2RO-01	TCGA	TCGA-EK-A2RO	Primary Tumor	HPV16	A9_clade	Stage IIB	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	2	NA
+TCGA-EK-A3GJ-01	TCGA	TCGA-EK-A3GJ	Primary Tumor	HPV58	A9_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	3	NA
+TCGA-EK-A3GK-01	TCGA	TCGA-EK-A3GK	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Endocervical Type of Adenocarcinoma	Adenocarcinoma	Cervical	LIVING	15	NA
+TCGA-EK-A3GM-01	TCGA	TCGA-EK-A3GM	Primary Tumor	HPV45	A7_clade	Stage IIA	Stage II	Endocervical Type of Adenocarcinoma	Adenocarcinoma	Cervical	LIVING	0	NA
+TCGA-EK-A3GN-01	TCGA	TCGA-EK-A3GN	Primary Tumor	HPV16	A9_clade	Stage IIIB	Stage III	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	27	NA
+TCGA-EX-A1H5-01	TCGA	TCGA-EX-A1H5	Primary Tumor	HPV16	A9_clade	Stage IIB	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	619	NA
+TCGA-EX-A1H6-01	TCGA	TCGA-EX-A1H6	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Endocervical Type of Adenocarcinoma	Adenocarcinoma	Cervical	LIVING	241	NA
+TCGA-EX-A3L1-01	TCGA	TCGA-EX-A3L1	Primary Tumor	HPV45	A7_clade	Stage IIA1	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	463	NA
+TCGA-EX-A449-01	TCGA	TCGA-EX-A449	Primary Tumor	HPV16	A9_clade	Stage IVB	Stage IV	Endocervical Type of Adenocarcinoma	Adenocarcinoma	Cervical	LIVING	447	NA
+TCGA-EX-A69L-01	TCGA	TCGA-EX-A69L	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	602	NA
+TCGA-EX-A69M-01	TCGA	TCGA-EX-A69M	Primary Tumor	HPV52	A9_clade	Stage IB2	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	186	253
+TCGA-EX-A8YF-01	TCGA	TCGA-EX-A8YF	Primary Tumor	HPV18	A7_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	473	NA
+TCGA-FU-A23K-01	TCGA	TCGA-FU-A23K	Primary Tumor	HPV18	A7_clade	Stage IIIB	Stage III	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	372	NA
+TCGA-FU-A23L-01	TCGA	TCGA-FU-A23L	Primary Tumor	HPV45	A7_clade	Stage IIA1	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	725	NA
+TCGA-FU-A2QG-01	TCGA	TCGA-FU-A2QG	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	579	NA
+TCGA-FU-A3EO-01	TCGA	TCGA-FU-A3EO	Primary Tumor	HPV16	A9_clade	Stage IIB	Stage II	Endocervical Type of Adenocarcinoma	Adenocarcinoma	Cervical	LIVING	490	NA
+TCGA-FU-A3EO-11	TCGA	TCGA-FU-A3EO	Solid Tissue Normal	Solid Tissue Normal	Solid Tissue Normal	Stage IIB	Stage II	Endocervical Type of Adenocarcinoma	Solid Tissue Normal	Cervical	LIVING	490	NA
+TCGA-FU-A3HY-01	TCGA	TCGA-FU-A3HY	Primary Tumor	HPV16	A9_clade	Stage IB2	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	954	NA
+TCGA-FU-A3NI-01	TCGA	TCGA-FU-A3NI	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	44	638
+TCGA-FU-A3TQ-01	TCGA	TCGA-FU-A3TQ	Primary Tumor	HPV16	A9_clade	Stage IIIB	Stage III	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	795	NA
+TCGA-FU-A3TX-01	TCGA	TCGA-FU-A3TX	Primary Tumor	HPV18	A7_clade	Stage IB2	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	45	NA
+TCGA-FU-A3WB-01	TCGA	TCGA-FU-A3WB	Primary Tumor	HPV16	A9_clade	Stage IIA2	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	491	NA
+TCGA-FU-A3YQ-01	TCGA	TCGA-FU-A3YQ	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	861	NA
+TCGA-FU-A40J-01	TCGA	TCGA-FU-A40J	Primary Tumor	HPV16	A9_clade	Stage IIIB	Stage III	Endocervical Type of Adenocarcinoma	Adenocarcinoma	Cervical	LIVING	426	NA
+TCGA-FU-A5XV-01	TCGA	TCGA-FU-A5XV	Primary Tumor	HPV18	A7_clade	Stage IIIB	Stage III	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	321	NA
+TCGA-FU-A770-01	TCGA	TCGA-FU-A770	Primary Tumor	HPV16	A9_clade	Stage IIIB	Stage III	Endocervical Adenocarcinoma of the Usual Type	Adenocarcinoma	Cervical	LIVING	34	NA
+TCGA-GH-A9DA-01	TCGA	TCGA-GH-A9DA	Primary Tumor	HPV45	A7_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	540	NA
+TCGA-HG-A2PA-01	TCGA	TCGA-HG-A2PA	Primary Tumor	HPV16	A9_clade	Stage IB2	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	773	773
+TCGA-HM-A3JJ-01	TCGA	TCGA-HM-A3JJ	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	NA	659
+TCGA-HM-A3JJ-11	TCGA	TCGA-HM-A3JJ	Solid Tissue Normal	Solid Tissue Normal	Solid Tissue Normal	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Solid Tissue Normal	Cervical	DECEASED	NA	659
+TCGA-HM-A3JK-01	TCGA	TCGA-HM-A3JK	Primary Tumor	HPV35	A9_clade	Stage IIA2	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	632	NA
+TCGA-HM-A4S6-01	TCGA	TCGA-HM-A4S6	Primary Tumor	HPV16	A9_clade	Stage IIIB	Stage III	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	454	NA
+TCGA-IR-A3L7-01	TCGA	TCGA-IR-A3L7	Primary Tumor	HPV18	A7_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	4483	NA
+TCGA-IR-A3LC-01	TCGA	TCGA-IR-A3LC	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	3935	NA
+TCGA-IR-A3LF-01	TCGA	TCGA-IR-A3LF	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Endocervical Adenocarcinoma of the Usual Type	Adenocarcinoma	Cervical	LIVING	2949	NA
+TCGA-IR-A3LH-01	TCGA	TCGA-IR-A3LH	Primary Tumor	HPV45	A7_clade	Stage IIA1	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	2394	NA
+TCGA-IR-A3LI-01	TCGA	TCGA-IR-A3LI	Primary Tumor	HPV16	A9_clade	Stage IVB	Stage IV	Endocervical Type of Adenocarcinoma	Adenocarcinoma	Cervical	LIVING	2493	NA
+TCGA-IR-A3LK-01	TCGA	TCGA-IR-A3LK	Primary Tumor	HPV31	A9_clade	Stage IB2	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	808	908
+TCGA-IR-A3LL-01	TCGA	TCGA-IR-A3LL	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	1106	NA
+TCGA-JW-A5VG-01	TCGA	TCGA-JW-A5VG	Primary Tumor	HPV59	A7_clade	Stage IIA	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	834	NA
+TCGA-JW-A5VJ-01	TCGA	TCGA-JW-A5VJ	Primary Tumor	HPV18	A7_clade	Stage IIB	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	652	NA
+TCGA-JW-A5VL-01	TCGA	TCGA-JW-A5VL	Primary Tumor	HPV16	A9_clade	Stage IB2	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	474	NA
+TCGA-JW-A69B-01	TCGA	TCGA-JW-A69B	Primary Tumor	HPV16	A9_clade	Stage IB2	Stage I	Endocervical Type of Adenocarcinoma	Adenocarcinoma	Cervical	LIVING	863	NA
+TCGA-JW-A852-01	TCGA	TCGA-JW-A852	Primary Tumor	HPV16	A9_clade	Stage IIB	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	156	252
+TCGA-JW-AAVH-01	TCGA	TCGA-JW-AAVH	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	552	NA
+TCGA-JX-A3PZ-01	TCGA	TCGA-JX-A3PZ	Primary Tumor	HPV45	A7_clade	Stage IB	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	NA	642
+TCGA-JX-A3Q0-01	TCGA	TCGA-JX-A3Q0	Primary Tumor	HPV31	A9_clade	Stage III	Stage III	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	6375	NA
+TCGA-JX-A3Q8-01	TCGA	TCGA-JX-A3Q8	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Endocervical Type of Adenocarcinoma	Adenocarcinoma	Cervical	LIVING	1357	NA
+TCGA-JX-A5QV-01	TCGA	TCGA-JX-A5QV	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	636	NA
+TCGA-LP-A4AU-01	TCGA	TCGA-LP-A4AU	Primary Tumor	HPV18	A7_clade	Stage IIIB	Stage III	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	343	NA
+TCGA-LP-A4AW-01	TCGA	TCGA-LP-A4AW	Primary Tumor	HPV16	A9_clade	Stage IA	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	27	NA
+TCGA-LP-A4AX-01	TCGA	TCGA-LP-A4AX	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	380	NA
+TCGA-LP-A5U2-01	TCGA	TCGA-LP-A5U2	Primary Tumor	HPV16	A9_clade	Stage IIIB	Stage III	Endocervical Adenocarcinoma of the Usual Type	Adenocarcinoma	Cervical	LIVING	9	NA
+TCGA-LP-A5U3-01	TCGA	TCGA-LP-A5U3	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	25	NA
+TCGA-LP-A7HU-01	TCGA	TCGA-LP-A7HU	Primary Tumor	HPV16	A9_clade	Stage II	Stage II	Endocervical Type of Adenocarcinoma	Adenocarcinoma	Cervical	LIVING	406	NA
+TCGA-MA-AA3W-01	TCGA	TCGA-MA-AA3W	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	685	NA
+TCGA-MA-AA3X-01	TCGA	TCGA-MA-AA3X	Primary Tumor	HPV16	A9_clade	Stage IIIB	Stage III	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	595	NA
+TCGA-MA-AA3Y-01	TCGA	TCGA-MA-AA3Y	Primary Tumor	HPV39	A7_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	542	NA
+TCGA-MA-AA3Z-01	TCGA	TCGA-MA-AA3Z	Primary Tumor	HPV16	A9_clade	Stage IB2	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	595	NA
+TCGA-MA-AA41-01	TCGA	TCGA-MA-AA41	Primary Tumor	HPV16	A9_clade	Stage IIB	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	254	NA
+TCGA-MA-AA42-01	TCGA	TCGA-MA-AA42	Primary Tumor	HPV16	A9_clade	Stage IIB	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	259	NA
+TCGA-MA-AA43-01	TCGA	TCGA-MA-AA43	Primary Tumor	HPV18	A7_clade	Stage IIIB	Stage III	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	346	NA
+TCGA-MU-A51Y-01	TCGA	TCGA-MU-A51Y	Primary Tumor	HPV16	A9_clade	Stage IIA1	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	854	NA
+TCGA-MU-A5YI-01	TCGA	TCGA-MU-A5YI	Primary Tumor	HPV16	A9_clade	Stage IA1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	1053	NA
+TCGA-MU-A8JM-01	TCGA	TCGA-MU-A8JM	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	607	NA
+TCGA-MY-A5BD-01	TCGA	TCGA-MY-A5BD	Primary Tumor	HPV16	A9_clade	Stage IIB	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	1667	NA
+TCGA-MY-A5BE-01	TCGA	TCGA-MY-A5BE	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	1066	NA
+TCGA-MY-A5BF-01	TCGA	TCGA-MY-A5BF	Primary Tumor	HPV16	A9_clade	Stage IIA2	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	634	NA
+TCGA-MY-A5BF-11	TCGA	TCGA-MY-A5BF	Solid Tissue Normal	Solid Tissue Normal	Solid Tissue Normal	Stage IIA2	Stage II	Cervical Squamous Cell Carcinoma	Solid Tissue Normal	Cervical	LIVING	634	NA
+TCGA-MY-A913-01	TCGA	TCGA-MY-A913	Primary Tumor	HPV45	A7_clade	Stage IIA	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	524	NA
+TCGA-PN-A8MA-01	TCGA	TCGA-PN-A8MA	Primary Tumor	HPV16	A9_clade	Stage IIB	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	90	NA
+TCGA-Q1-A5R1-01	TCGA	TCGA-Q1-A5R1	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Mucinous Adenocarcinoma of Endocervical Type	Adenocarcinoma	Cervical	LIVING	474	NA
+TCGA-Q1-A5R2-01	TCGA	TCGA-Q1-A5R2	Primary Tumor	HPV16	A9_clade	NA	(NOT REPORTED)	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	499	NA
+TCGA-Q1-A5R3-01	TCGA	TCGA-Q1-A5R3	Primary Tumor	HPV18	A7_clade	NA	(NOT REPORTED)	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	485	NA
+TCGA-Q1-A6DT-01	TCGA	TCGA-Q1-A6DT	Primary Tumor	HPV16	A9_clade	Stage I	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	103	275
+TCGA-Q1-A6DV-01	TCGA	TCGA-Q1-A6DV	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Mucinous Adenocarcinoma of Endocervical Type	Adenocarcinoma	Cervical	LIVING	491	NA
+TCGA-Q1-A6DW-01	TCGA	TCGA-Q1-A6DW	Primary Tumor	HPV16	A9_clade	Stage I	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	534	NA
+TCGA-Q1-A73P-01	TCGA	TCGA-Q1-A73P	Primary Tumor	HPV18	A7_clade	Stage IB1	Stage I	Endocervical Type of Adenocarcinoma	Adenocarcinoma	Cervical	LIVING	483	NA
+TCGA-Q1-A73R-01	TCGA	TCGA-Q1-A73R	Primary Tumor	HPV16	A9_clade	Stage I	Stage I	Endocervical Type of Adenocarcinoma	Adenocarcinoma	Cervical	LIVING	567	NA
+TCGA-Q1-A73S-01	TCGA	TCGA-Q1-A73S	Primary Tumor	HPV18	A7_clade	Stage IB1	Stage I	Adenosquamous	Adenosquamous	Cervical	LIVING	688	NA
+TCGA-R2-A69V-01	TCGA	TCGA-R2-A69V	Primary Tumor	HPV39	A7_clade	Stage IB	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	596	NA
+TCGA-RA-A741-01	TCGA	TCGA-RA-A741	Primary Tumor	HPV16	A9_clade	Stage IIB	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	444	NA
+TCGA-UC-A7PD-01	TCGA	TCGA-UC-A7PD	Primary Tumor	HPV16	A9_clade	Stage IB	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	NA	355
+TCGA-UC-A7PF-01	TCGA	TCGA-UC-A7PF	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	NA	2859
+TCGA-UC-A7PG-01	TCGA	TCGA-UC-A7PG	Primary Tumor	HPV16	A9_clade	Stage IIIB	Stage III	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	NA	370
+TCGA-UC-A7PI-01	TCGA	TCGA-UC-A7PI	Primary Tumor	HPV18	A7_clade	Stage IB1	Stage I	Endometrioid Adenocarcinoma of Endocervix	Adenocarcinoma	Cervical	LIVING	2114	NA
+TCGA-VS-A8EB-01	TCGA	TCGA-VS-A8EB	Primary Tumor	HPV16	A9_clade	Stage IIIB	Stage III	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	NA	305
+TCGA-VS-A8EC-01	TCGA	TCGA-VS-A8EC	Primary Tumor	HPV16	A9_clade	Stage IIIB	Stage III	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	1415	NA
+TCGA-VS-A8EG-01	TCGA	TCGA-VS-A8EG	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	1386	NA
+TCGA-VS-A8EH-01	TCGA	TCGA-VS-A8EH	Primary Tumor	HPV16	A9_clade	Stage IIIB	Stage III	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	986	NA
+TCGA-VS-A8EI-01	TCGA	TCGA-VS-A8EI	Primary Tumor	HPV16	A9_clade	Stage IIB	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	729	NA
+TCGA-VS-A8EK-01	TCGA	TCGA-VS-A8EK	Primary Tumor	HPV35	A9_clade	Stage IVA	Stage IV	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	NA	829
+TCGA-VS-A8EL-01	TCGA	TCGA-VS-A8EL	Primary Tumor	HPV31	A9_clade	Stage IIB	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	1992	NA
+TCGA-VS-A8Q8-01	TCGA	TCGA-VS-A8Q8	Primary Tumor	HPV16	A9_clade	Stage IB	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	NA	978
+TCGA-VS-A8QA-01	TCGA	TCGA-VS-A8QA	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	1099	NA
+TCGA-VS-A8QC-01	TCGA	TCGA-VS-A8QC	Primary Tumor	HPV16	A9_clade	Stage IVA	Stage IV	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	NA	350
+TCGA-VS-A8QF-01	TCGA	TCGA-VS-A8QF	Primary Tumor	HPV16	A9_clade	Stage IIB	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	1800	NA
+TCGA-VS-A8QM-01	TCGA	TCGA-VS-A8QM	Primary Tumor	HPV16	A9_clade	Stage IVB	Stage IV	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	NA	951
+TCGA-VS-A94W-01	TCGA	TCGA-VS-A94W	Primary Tumor	HPV16	A9_clade	Stage IIB	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	1243	NA
+TCGA-VS-A94X-01	TCGA	TCGA-VS-A94X	Primary Tumor	HPV45	A7_clade	Stage IIB	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	NA	506
+TCGA-VS-A94Y-01	TCGA	TCGA-VS-A94Y	Primary Tumor	HPV45	A7_clade	Stage IIB	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	NA	144
+TCGA-VS-A94Z-01	TCGA	TCGA-VS-A94Z	Primary Tumor	HPV16	A9_clade	Stage IIB	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	1015	NA
+TCGA-VS-A950-01	TCGA	TCGA-VS-A950	Primary Tumor	HPV35	A9_clade	Stage IIIA	Stage III	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	1221	NA
+TCGA-VS-A952-01	TCGA	TCGA-VS-A952	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Mucinous Adenocarcinoma of Endocervical Type	Adenocarcinoma	Cervical	LIVING	1778	NA
+TCGA-VS-A953-01	TCGA	TCGA-VS-A953	Primary Tumor	HPV16	A9_clade	Stage IVA	Stage IV	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	NA	477
+TCGA-VS-A954-01	TCGA	TCGA-VS-A954	Primary Tumor	HPV35	A9_clade	Stage IIIB	Stage III	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	1714	NA
+TCGA-VS-A957-01	TCGA	TCGA-VS-A957	Primary Tumor	HPV33	A9_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	1688	NA
+TCGA-VS-A958-01	TCGA	TCGA-VS-A958	Primary Tumor	HPV39	A7_clade	Stage IIB	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	1525	NA
+TCGA-VS-A959-01	TCGA	TCGA-VS-A959	Primary Tumor	HPV31	A9_clade	Stage IIB	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	1561	NA
+TCGA-VS-A9U5-01	TCGA	TCGA-VS-A9U5	Primary Tumor	HPV16	A9_clade	Stage IIB	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	1535	NA
+TCGA-VS-A9U6-01	TCGA	TCGA-VS-A9U6	Primary Tumor	HPV33	A9_clade	Stage IVB	Stage IV	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	1320	NA
+TCGA-VS-A9U7-01	TCGA	TCGA-VS-A9U7	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	1472	NA
+TCGA-VS-A9UB-01	TCGA	TCGA-VS-A9UB	Primary Tumor	HPV45	A7_clade	Stage IIB	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	911	NA
+TCGA-VS-A9UC-01	TCGA	TCGA-VS-A9UC	Primary Tumor	HPV33	A9_clade	Stage IIB	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	825	NA
+TCGA-VS-A9UD-01	TCGA	TCGA-VS-A9UD	Primary Tumor	HPV16	A9_clade	Stage IIIA	Stage III	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	739	NA
+TCGA-VS-A9UH-01	TCGA	TCGA-VS-A9UH	Primary Tumor	HPV45	A7_clade	Stage IVA	Stage IV	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	1427	NA
+TCGA-VS-A9UI-01	TCGA	TCGA-VS-A9UI	Primary Tumor	HPV52	A9_clade	Stage IIB	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	953	1372
+TCGA-VS-A9UL-01	TCGA	TCGA-VS-A9UL	Primary Tumor	HPV18	A7_clade	Stage IIIB	Stage III	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	NA	442
+TCGA-VS-A9UM-01	TCGA	TCGA-VS-A9UM	Primary Tumor	HPV16	A9_clade	Stage IVB	Stage IV	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	NA	829
+TCGA-VS-A9UO-01	TCGA	TCGA-VS-A9UO	Primary Tumor	HPV18	A7_clade	Stage IIB	Stage II	Mucinous Adenocarcinoma of Endocervical Type	Adenocarcinoma	Cervical	LIVING	1456	NA
+TCGA-VS-A9UP-01	TCGA	TCGA-VS-A9UP	Primary Tumor	HPV18	A7_clade	Stage IIA	Stage II	Mucinous Adenocarcinoma of Endocervical Type	Adenocarcinoma	Cervical	LIVING	1444	NA
+TCGA-VS-A9UQ-01	TCGA	TCGA-VS-A9UQ	Primary Tumor	HPV16	A9_clade	Stage IB	Stage I	Mucinous Adenocarcinoma of Endocervical Type	Adenocarcinoma	Cervical	LIVING	1263	NA
+TCGA-VS-A9UR-01	TCGA	TCGA-VS-A9UR	Primary Tumor	HPV16	A9_clade	Stage IIA	Stage II	Mucinous Adenocarcinoma of Endocervical Type	Adenocarcinoma	Cervical	LIVING	793	NA
+TCGA-VS-A9UU-01	TCGA	TCGA-VS-A9UU	Primary Tumor	HPV16	A9_clade	Stage IIB	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	442	NA
+TCGA-VS-A9UV-01	TCGA	TCGA-VS-A9UV	Primary Tumor	HPV52	A9_clade	Stage IVA	Stage IV	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	NA	104
+TCGA-VS-A9UY-01	TCGA	TCGA-VS-A9UY	Primary Tumor	HPV16	A9_clade	Stage IVB	Stage IV	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	NA	555
+TCGA-VS-A9UZ-01	TCGA	TCGA-VS-A9UZ	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Mucinous Adenocarcinoma of Endocervical Type	Adenocarcinoma	Cervical	LIVING	2044	NA
+TCGA-VS-A9V1-01	TCGA	TCGA-VS-A9V1	Primary Tumor	HPV45	A7_clade	Stage IVB	Stage IV	Mucinous Adenocarcinoma of Endocervical Type	Adenocarcinoma	Cervical	DECEASED	NA	157
+TCGA-VS-A9V2-01	TCGA	TCGA-VS-A9V2	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	555	NA
+TCGA-VS-A9V3-01	TCGA	TCGA-VS-A9V3	Primary Tumor	HPV58	A9_clade	Stage IVB	Stage IV	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	540	NA
+TCGA-VS-A9V5-01	TCGA	TCGA-VS-A9V5	Primary Tumor	HPV16	A9_clade	Stage IIB	Stage II	Mucinous Adenocarcinoma of Endocervical Type	Adenocarcinoma	Cervical	DECEASED	NA	494
+TCGA-VS-AA62-01	TCGA	TCGA-VS-AA62	Primary Tumor	HPV45	A7_clade	Stage IIB	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	NA	469
+TCGA-WL-A834-01	TCGA	TCGA-WL-A834	Primary Tumor	HPV16	A9_clade	NA	(NOT REPORTED)	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	791	NA
+TCGA-XS-A8TJ-01	TCGA	TCGA-XS-A8TJ	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	890	NA
+TCGA-ZJ-A8QO-01	TCGA	TCGA-ZJ-A8QO	Primary Tumor	HPV33	A9_clade	NA	(NOT REPORTED)	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	0	NA
+TCGA-ZJ-A8QR-01	TCGA	TCGA-ZJ-A8QR	Primary Tumor	HPV16	A9_clade	Stage I	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	NA	582
+TCGA-ZJ-AAX4-01	TCGA	TCGA-ZJ-AAX4	Primary Tumor	HPV16	A9_clade	Stage II	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	21	NA
+TCGA-ZJ-AAXA-01	TCGA	TCGA-ZJ-AAXA	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	43	NA
+TCGA-ZJ-AAXB-01	TCGA	TCGA-ZJ-AAXB	Primary Tumor	HPV18	A7_clade	Stage IB2	Stage I	Endocervical Adenocarcinoma of the Usual Type	Adenocarcinoma	Cervical	LIVING	0	NA
+TCGA-ZJ-AAXD-01	TCGA	TCGA-ZJ-AAXD	Primary Tumor	HPV16	A9_clade	Stage IIIB	Stage III	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	0	NA
+TCGA-ZJ-AAXF-01	TCGA	TCGA-ZJ-AAXF	Primary Tumor	HPV16	A9_clade	Stage IIB	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	0	NA
+TCGA-ZJ-AAXI-01	TCGA	TCGA-ZJ-AAXI	Primary Tumor	HPV16	A9_clade	Stage IIB	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	0	NA
+TCGA-ZJ-AAXJ-01	TCGA	TCGA-ZJ-AAXJ	Primary Tumor	HPV16	A9_clade	Stage IIB	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	0	NA
+TCGA-ZJ-AAXT-01	TCGA	TCGA-ZJ-AAXT	Primary Tumor	HPV18	A7_clade	Stage IIIB	Stage III	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	0	NA
+TCGA-ZJ-AAXU-01	TCGA	TCGA-ZJ-AAXU	Primary Tumor	HPV16	A9_clade	Stage IIB	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	5	NA
+TCGA-ZJ-AB0H-01	TCGA	TCGA-ZJ-AB0H	Primary Tumor	HPV18	A7_clade	Stage IIIB	Stage III	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	0	NA
+TCGA-ZJ-AB0I-01	TCGA	TCGA-ZJ-AB0I	Primary Tumor	HPV16	A9_clade	Stage IIB	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	0	NA
+TCGA-ZX-AA5X-01	TCGA	TCGA-ZX-AA5X	Primary Tumor	HPV35	A9_clade	Stage IIIB	Stage III	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	119	NA
+GTEX-S32W-1526-SM-4AD6Z	GTEX	NA	Solid Tissue Normal	Solid Tissue Normal	Solid Tissue Normal	NA	(NOT REPORTED)	NA	Solid Tissue Normal	CERVIX - ECTOCERVIX	NA	NA	NA
+GTEX-S32W-1626-SM-4AD6G	GTEX	NA	Solid Tissue Normal	Solid Tissue Normal	Solid Tissue Normal	NA	(NOT REPORTED)	NA	Solid Tissue Normal	CERVIX - ENDOCERVIX	NA	NA	NA
+GTEX-S341-1126-SM-4AD6T	GTEX	NA	Solid Tissue Normal	Solid Tissue Normal	Solid Tissue Normal	NA	(NOT REPORTED)	NA	Solid Tissue Normal	CERVIX - ECTOCERVIX	NA	NA	NA
+GTEX-S341-1326-SM-4AD72	GTEX	NA	Solid Tissue Normal	Solid Tissue Normal	Solid Tissue Normal	NA	(NOT REPORTED)	NA	Solid Tissue Normal	CERVIX - ENDOCERVIX	NA	NA	NA
+GTEX-S4UY-1426-SM-4AD6Y	GTEX	NA	Solid Tissue Normal	Solid Tissue Normal	Solid Tissue Normal	NA	(NOT REPORTED)	NA	Solid Tissue Normal	CERVIX - ECTOCERVIX	NA	NA	NA
+GTEX-T5JW-0726-SM-4DM6D	GTEX	NA	Solid Tissue Normal	Solid Tissue Normal	Solid Tissue Normal	NA	(NOT REPORTED)	NA	Solid Tissue Normal	CERVIX - ECTOCERVIX	NA	NA	NA
+GTEX-T6MO-1426-SM-4DM73	GTEX	NA	Solid Tissue Normal	Solid Tissue Normal	Solid Tissue Normal	NA	(NOT REPORTED)	NA	Solid Tissue Normal	CERVIX - ENDOCERVIX	NA	NA	NA
+GTEX-TSE9-2726-SM-4DXSQ	GTEX	NA	Solid Tissue Normal	Solid Tissue Normal	Solid Tissue Normal	NA	(NOT REPORTED)	NA	Solid Tissue Normal	CERVIX - ENDOCERVIX	NA	NA	NA
+GTEX-TSE9-2826-SM-4DXTF	GTEX	NA	Solid Tissue Normal	Solid Tissue Normal	Solid Tissue Normal	NA	(NOT REPORTED)	NA	Solid Tissue Normal	CERVIX - ECTOCERVIX	NA	NA	NA
+GTEX-U3ZN-1626-SM-4DXTZ	GTEX	NA	Solid Tissue Normal	Solid Tissue Normal	Solid Tissue Normal	NA	(NOT REPORTED)	NA	Solid Tissue Normal	CERVIX - ECTOCERVIX	NA	NA	NA
