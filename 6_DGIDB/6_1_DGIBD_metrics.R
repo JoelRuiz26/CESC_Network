@@ -109,15 +109,16 @@ length(unique(dgidb_interactions_fda$drug_name)) #[1] 3146
 
 graph_A7 <- readRDS("~/CESC_Network/5_Modularity/5_1_Modules/5_2_1_Louvain_A7_graph_max.rds")
 A7_genes <- V(graph_A7)$name
-length(A7_genes) #[1] 19502
+length(A7_genes) #[1] 17481
+
 
 graph_A9 <- readRDS("~/CESC_Network/5_Modularity/5_1_Modules/5_2_1_Louvain_A9_graph_max.rds")
 A9_genes <- V(graph_A9)$name
-length(A9_genes) #[1] 19502
+length(A9_genes) #[1] 17481
 
 # Gene universe
 genes_universe <- unique(c(A7_genes, A9_genes))
-length(genes_universe) #[1] 19502
+length(genes_universe) #[1] 174812
 # Gene universe (you already have this)
 
 #Compute, per drug, how many interactions it has overall
@@ -139,319 +140,444 @@ valid_drugs <- drug_stats %>%
 dgidb_filtered <- dgidb_interactions_fda %>%
   inner_join(valid_drugs, by = "drug_name")
 
+table(dgidb_filtered$interaction_type)
+#activator            agonist           antibody 
+#154               1590                 81 
+#binder            blocker           cleavage 
+#80               1053                 69 
+#immunotherapy          inhibitor    inverse agonist 
+#7               8709                 11 
+#modulator negative modulator               NULL 
+#301                 49              23822 
+#other/unknown positive modulator        potentiator 
+#157                939                 42 
 
 
-#############plot#############}
-# Cargar librerías
-library(tidyverse)
-library(ggrepel)
-library(patchwork)
+# ----------------------------
+# Group interaction types into broader classes
+# ----------------------------
 
-# CORREGIR: Usar gene_claim_name en lugar de gene_name y mantener todos los registros
-dgidb_filtered_corrected <- dgidb_filtered %>%
-  mutate(gene_display = ifelse(gene_claim_name == "NULL" | is.na(gene_claim_name), 
-                               gene_name, 
-                               gene_claim_name))
-
-# Preparar datos para los tres paneles
-# Panel 1: Distribución de genes por fármaco (usando gene_claim_name)
-farmacos_genes <- dgidb_filtered_corrected %>%
-  dplyr::select(drug_name, gene_display) %>%
-  distinct() %>%
-  group_by(drug_name) %>%
-  summarise(n_genes = n()) %>%
-  ungroup() %>%
-  arrange(desc(n_genes))
-
-# Panel 2: Distribución de fármacos por gen (usando gene_claim_name)
-genes_farmacos <- dgidb_filtered_corrected %>%
-  dplyr::select(gene_display, drug_name) %>%
-  distinct() %>%
-  group_by(gene_display) %>%
-  summarise(n_drugs = n()) %>%
-  ungroup() %>%
-  arrange(desc(n_drugs))
-
-# Panel 3: Distribución del interaction score promedio por fármaco
-farmacos_score <- dgidb_filtered_corrected %>%
-  group_by(drug_name) %>%
-  summarise(
-    mean_score = mean(interaction_score, na.rm = TRUE),
-    median_score = median(interaction_score, na.rm = TRUE)
-  ) %>%
-  ungroup() %>%
-  arrange(desc(mean_score))
-
-# Identificar los top para etiquetar (reducido para evitar solapamiento)
-top_farmacos <- farmacos_genes %>% head(6)
-top_genes <- genes_farmacos %>% head(6)
-top_scores <- farmacos_score %>% 
-  filter(mean_score > quantile(farmacos_score$mean_score, 0.95, na.rm = TRUE)) %>%
-  head(6)
-
-# Estadísticas
-stats_farmacos <- farmacos_genes %>%
-  summarise(
-    total = n(),
-    media = mean(n_genes),
-    mediana = median(n_genes),
-    maximo = max(n_genes)
-  )
-
-stats_genes <- genes_farmacos %>%
-  summarise(
-    total = n(),
-    media = mean(n_drugs),
-    mediana = median(n_drugs),
-    maximo = max(n_drugs)
-  )
-
-stats_score <- farmacos_score %>%
-  summarise(
-    total = n(),
-    media_mean = mean(mean_score, na.rm = TRUE),
-    mediana_mean = median(mean_score, na.rm = TRUE),
-    maximo_mean = max(mean_score, na.rm = TRUE)
-  )
-
-# FUNCIÓN MEJORADA para calcular posiciones de etiquetas
-calcular_posiciones_inteligentes <- function(data, n_labels, type = "histogram") {
-  if (type == "histogram") {
-    hist_info <- hist(data, breaks = 50, plot = FALSE)
-    # Usar diferentes niveles de densidad para distribuir etiquetas
-    niveles <- seq(0.1, 0.9, length.out = n_labels)
-    posiciones <- quantile(hist_info$density, niveles, na.rm = TRUE)
-  } else {
-    # Para densidad simple
-    dens <- density(data, na.rm = TRUE)
-    niveles <- seq(0.1, 0.9, length.out = n_labels)
-    posiciones <- quantile(dens$y, niveles, na.rm = TRUE)
-  }
-  return(posiciones)
-}
-
-# PANEL 1: Distribución de genes por fármaco (MEJORADO)
-y_positions1 <- calcular_posiciones_inteligentes(farmacos_genes$n_genes, nrow(top_farmacos))
-top_farmacos_labeled <- top_farmacos %>%
+# Recode NULL / empty / NA as "other/unknown" for clarity
+dgidb_filtered <- dgidb_filtered %>%
   mutate(
-    y_position = y_positions1[1:n()],
-    label = paste0(drug_name, "\n(", n_genes, " genes)")
-  )
-
-panel1 <- ggplot(farmacos_genes, aes(x = n_genes)) +
-  geom_histogram(
-    aes(y = after_stat(density)),
-    bins = 50,
-    fill = "#1f77b4",
-    alpha = 0.7,
-    color = "white",
-    size = 0.2
-  ) +
-  geom_density(
-    color = "#ff7f0e",
-    size = 1.2,
-    alpha = 0.8
-  ) +
-  geom_point(
-    data = top_farmacos_labeled,
-    aes(y = y_position),
-    color = "#d62728",
-    size = 3,
-    alpha = 0.8
-  ) +
-  geom_text_repel(
-    data = top_farmacos_labeled,
-    aes(y = y_position, label = label),
-    size = 3.0,
-    color = "black",
-    fontface = "bold",
-    segment.color = "gray40",
-    segment.size = 0.4,
-    box.padding = 0.8,
-    point.padding = 0.5,
-    max.overlaps = 15,
-    min.segment.length = 0.1,
-    force = 1,
-    nudge_x = 10,
-    nudge_y = 0.01,
-    direction = "y"
-  ) +
-  scale_x_continuous(
-    breaks = scales::pretty_breaks(n = 8),
-    expand = expansion(mult = c(0.02, 0.12))
-  ) +
-  scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
-  labs(
-    title = "Distribution of Unique Target Genes per Drug",
-    subtitle = "Top 6 multi-target drugs",
-    x = "Number of Unique Target Genes per Drug",
-    y = "Density"
-  ) +
-  theme_minimal(base_size = 11) +
-  theme(
-    plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
-    plot.subtitle = element_text(size = 10, hjust = 0.5, color = "gray40"),
-    axis.title = element_text(face = "bold", size = 10),
-    axis.text = element_text(color = "gray30", size = 9),
-    panel.grid.major = element_line(color = "gray90", size = 0.2),
-    panel.grid.minor = element_blank()
-  )
-
-# PANEL 2: Distribución de fármacos por gen (MEJORADO)
-y_positions2 <- calcular_posiciones_inteligentes(genes_farmacos$n_drugs, nrow(top_genes))
-top_genes_labeled <- top_genes %>%
-  mutate(
-    y_position = y_positions2[1:n()],
-    label = paste0(gene_display, "\n(", n_drugs, " drugs)")
-  )
-
-panel2 <- ggplot(genes_farmacos, aes(x = n_drugs)) +
-  geom_histogram(
-    aes(y = after_stat(density)),
-    bins = 50,
-    fill = "#2ca02c",
-    alpha = 0.7,
-    color = "white",
-    size = 0.2
-  ) +
-  geom_density(
-    color = "#9467bd",
-    size = 1.2,
-    alpha = 0.8
-  ) +
-  geom_point(
-    data = top_genes_labeled,
-    aes(y = y_position),
-    color = "#e377c2",
-    size = 3,
-    alpha = 0.8
-  ) +
-  geom_text_repel(
-    data = top_genes_labeled,
-    aes(y = y_position, label = label),
-    size = 3.0,
-    color = "black",
-    fontface = "bold",
-    segment.color = "gray40",
-    segment.size = 0.4,
-    box.padding = 0.8,
-    point.padding = 0.5,
-    max.overlaps = 15,
-    min.segment.length = 0.1,
-    force = 1,
-    nudge_x = 15,
-    nudge_y = 0.01,
-    direction = "y"
-  ) +
-  scale_x_continuous(
-    breaks = scales::pretty_breaks(n = 8),
-    expand = expansion(mult = c(0.02, 0.15))
-  ) +
-  scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
-  labs(
-    title = "Distribution of Unique Drugs per Target Gene",
-    subtitle = "Top 6 druggable genes",
-    x = "Number of Unique Drugs per Target Gene",
-    y = "Density"
-  ) +
-  theme_minimal(base_size = 11) +
-  theme(
-    plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
-    plot.subtitle = element_text(size = 10, hjust = 0.5, color = "gray40"),
-    axis.title = element_text(face = "bold", size = 10),
-    axis.text = element_text(color = "gray30", size = 9),
-    panel.grid.major = element_line(color = "gray90", size = 0.2),
-    panel.grid.minor = element_blank()
-  )
-
-# PANEL 3: Distribución del interaction score promedio por fármaco (NUEVO)
-y_positions3 <- calcular_posiciones_inteligentes(farmacos_score$mean_score, nrow(top_scores), "density")
-top_scores_labeled <- top_scores %>%
-  mutate(
-    y_position = y_positions3[1:n()],
-    label = paste0(drug_name, "\n(", round(mean_score, 2), ")")
-  )
-
-panel3 <- ggplot(farmacos_score, aes(x = mean_score)) +
-  geom_histogram(
-    aes(y = after_stat(density)),
-    bins = 50,
-    fill = "#ff7f0e",
-    alpha = 0.7,
-    color = "white",
-    size = 0.2
-  ) +
-  geom_density(
-    color = "#1f77b4",
-    size = 1.2,
-    alpha = 0.8
-  ) +
-  geom_point(
-    data = top_scores_labeled,
-    aes(y = y_position),
-    color = "#d62728",
-    size = 3,
-    alpha = 0.8
-  ) +
-  geom_text_repel(
-    data = top_scores_labeled,
-    aes(y = y_position, label = label),
-    size = 3.0,
-    color = "black",
-    fontface = "bold",
-    segment.color = "gray40",
-    segment.size = 0.4,
-    box.padding = 0.8,
-    point.padding = 0.5,
-    max.overlaps = 15,
-    min.segment.length = 0.1,
-    force = 1,
-    nudge_x = 2,
-    nudge_y = 0.01,
-    direction = "y"
-  ) +
-  scale_x_continuous(
-    breaks = scales::pretty_breaks(n = 8),
-    expand = expansion(mult = c(0.02, 0.1))
-  ) +
-  scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
-  labs(
-    title = "Distribution of Mean Interaction Score per Drug",
-    subtitle = "Top 6 drugs with highest mean interaction scores",
-    x = "Mean Interaction Score per Drug",
-    y = "Density"
-  ) +
-  theme_minimal(base_size = 11) +
-  theme(
-    plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
-    plot.subtitle = element_text(size = 10, hjust = 0.5, color = "gray40"),
-    axis.title = element_text(face = "bold", size = 10),
-    axis.text = element_text(color = "gray30", size = 9),
-    panel.grid.major = element_line(color = "gray90", size = 0.2),
-    panel.grid.minor = element_blank()
-  )
-
-# COMBINAR LOS TRES PANELES
-plot_combinado <- (panel1 + panel2) / panel3 +
-  plot_annotation(
-    title = "Comprehensive Drug-Target Interaction Analysis",
-    subtitle = paste(
-      "Based on", format(stats_farmacos$total, big.mark = ","), 
-      "FDA-approved drugs"
-    ),
-    theme = theme(
-      plot.title = element_text(face = "bold", size = 16, hjust = 0.5),
-      plot.subtitle = element_text(size = 12, hjust = 0.5, color = "gray40"),
-      plot.caption = element_text(size = 10, color = "gray50", hjust = 0.5)
+    interaction_type = ifelse(
+      interaction_type == "NULL" | interaction_type == "" | is.na(interaction_type),
+      "other/unknown",
+      interaction_type
     )
   )
 
-# Mostrar el gráfico combinado
-print(plot_combinado)
+# Map fine-grained interaction_type to 3 broad groups:
+#   - inhibits
+#   - activates
+#   - regulates (includes unknown / mixed / non-directional)
+interaction_to_group <- function(x) {
+  dplyr::case_when(
+    # INHIBITS group
+    x %in% c(
+      "antagonist", "antibody", "antisense oligonucleotide",
+      "blocker", "cleavage", "inhibitor",
+      "inhibitory allosteric modulator",
+      "inverse agonist", "negative modulator",
+      "partial antagonist", "suppressor"
+    ) ~ "inhibits",
+    
+    # ACTIVATES group
+    x %in% c(
+      "activator", "agonist", "chaperone", "cofactor",
+      "inducer", "partial agonist", "positive modulator",
+      "stimulator", "vaccine"
+    ) ~ "activates",
+    
+    # REGULATES / UNKNOWN group
+    x %in% c(
+      "other/unknown", "adduct", "allosteric modulator",
+      "binder", "ligand", "modulator",
+      "multitarget", "potentiator", "product of", "substrate",
+      "NA", "None", "n/a", "immunotherapy"
+    ) ~ "regulates",
+    
+    # Any other residual value is treated as regulates
+    TRUE ~ "regulates"
+  )
+}
 
-# Guardar en alta calidad
-ggsave("comprehensive_drug_gene_analysis.png", plot_combinado,
-       width = 16, height = 12, dpi = 300, bg = "white")
-ggsave("comprehensive_drug_gene_analysis.pdf", plot_combinado,
-       width = 16, height = 12)
+dgidb_filtered <- dgidb_filtered %>%
+  mutate(
+    interaction_group = interaction_to_group(interaction_type),
+    interaction_group = factor(
+      interaction_group,
+      levels = c("inhibits", "activates", "regulates")
+    )
+  )
 
+# Quick check
+table(dgidb_filtered$interaction_type)
+table(dgidb_filtered$interaction_group)
+
+#inhibits activates regulates 
+#9972      2683     24409 
+
+
+
+library(tidyverse)
+library(ggrepel)
+
+set.seed(123)
+
+# ----------------------------
+# 1) Unique edges restricted to gene universe
+# ----------------------------
+edges_all <- dgidb_filtered %>%
+  filter(gene_name %in% genes_universe) %>%
+  distinct(drug_name, gene_name, interaction_group)
+
+# ----------------------------
+# 2) Top 10 drugs (global) and top 10 genes
+# ----------------------------
+
+N_TOP_DRUGS <- 20
+N_TOP_GENES <- 20
+
+# nº de genes únicos por fármaco (todas las interacciones)
+drug_stats_global <- edges_all %>%
+  group_by(drug_name) %>%
+  summarise(n_genes = n_distinct(gene_name), .groups = "drop") %>%
+  arrange(desc(n_genes), drug_name)
+
+top_drugs <- drug_stats_global %>%
+  slice_head(n = N_TOP_DRUGS)
+
+# nº de fármacos únicos por gen (global)
+gene_stats <- edges_all %>%
+  group_by(gene_name) %>%
+  summarise(n_drugs = n_distinct(drug_name), .groups = "drop") %>%
+  arrange(desc(n_drugs), gene_name)
+
+top_genes <- gene_stats %>%
+  slice_head(n = N_TOP_GENES)
+
+# ----------------------------
+# 3) Subset of edges to plot
+#    (keep all edges touching top drugs OR top genes)
+# ----------------------------
+# ----------------------------
+# 3) Edges to plot
+#    (ALL edges; top lists are only for labels)
+# ----------------------------
+edges_plot <- edges_all %>%
+  mutate(
+    interaction_group = factor(
+      interaction_group,
+      levels = c("inhibits", "activates", "regulates")
+    )
+  )
+
+
+# ----------------------------
+# 4) Node layout (x-y coordinates)
+# ----------------------------
+
+# Make plot narrower by reducing X-distance between groups
+LEFT_X  <- 0
+RIGHT_X <- 0.35   # más delgado el “cuerpo” de líneas
+
+## 4a) Drug nodes (left side), ordered by n_genes desc
+## 4a) Drug nodes (left side) — clean ordered block for top 10
+## 4a) Drug nodes (left side) — clean ordered block for top 10
+drug_nodes <- edges_plot %>%
+  distinct(drug_name) %>%
+  left_join(drug_stats_global, by = "drug_name") %>%
+  mutate(
+    is_top = drug_name %in% top_drugs$drug_name
+  ) %>%
+  arrange(desc(is_top), desc(n_genes), drug_name) %>%
+  mutate(
+    y = if_else(is_top, row_number(), row_number() + 15),
+    x = LEFT_X,
+    # texto base
+    label_raw = paste0(drug_name, " (", n_genes, ")"),
+    # wrap solo si es top, con cortes en espacios
+    label = if_else(
+      is_top,
+      paste0(drug_name, " (", n_genes, ")"),
+      NA_character_
+    )
+  )
+
+
+
+## 4b) Gene nodes (right side)
+## 4a) Drug nodes (left side) — clean ordered block for top N
+drug_nodes <- edges_plot %>%
+  distinct(drug_name) %>%
+  left_join(drug_stats_global, by = "drug_name") %>%
+  mutate(
+    is_top = drug_name %in% top_drugs$drug_name
+  ) %>%
+  arrange(desc(is_top), desc(n_genes), drug_name) %>%
+  mutate(
+    y = if_else(is_top, row_number(), row_number() + 15),
+    x = LEFT_X,
+    
+    # Etiqueta final SIN wraps (una sola línea)
+    label = if_else(
+      is_top,
+      paste0(drug_name, " (", n_genes, ")"),
+      NA_character_
+    )
+  )
+
+## 4c) All nodes
+nodes_all <- bind_rows(
+  drug_nodes %>% mutate(node_type = "Drug"),
+  gene_nodes %>% mutate(node_type = "Gene")
+)
+
+# ----------------------------
+# 5) Edges with coordinates
+# ----------------------------
+edges_coord <- edges_plot %>%
+  left_join(
+    drug_nodes %>% select(drug_name, x_drug = x, y_drug = y),
+    by = "drug_name"
+  ) %>%
+  left_join(
+    gene_nodes %>% select(gene_name, x_gene = x, y_gene = y),
+    by = "gene_name"
+  )
+
+# ----------------------------
+# 6) Colors (only for edges = interaction_group)
+#    Use a highly contrasting ColorBrewer-like palette
+# ====================================================
+# CALCULAR ESTADÍSTICAS PARA EL SUBTÍTULO
+# ====================================================
+# Calcular estadísticas únicas del dataset filtrado
+total_drugs <- length(unique(dgidb_filtered$drug_name))  # Usar drug_name en lugar de drug_claim_name
+total_genes <- length(unique(dgidb_filtered$gene_name))  # Usar gene_name en lugar de gene_claim_name
+total_interactions <- nrow(edges_all)
+
+# Crear texto del subtítulo con estadísticas
+subtitle_text <- paste0(
+  "Total dataset: ", format(total_drugs, big.mark = ","), " drugs, ", 
+  format(total_genes, big.mark = ","), " genes, ", 
+  format(total_interactions, big.mark = ","), " interactions"
+)
+
+# ====================================================
+# 6) Colors (only for edges = interaction_group)
+#    Use high-contrast, colorblind-friendly palette
+# ====================================================
+group_colors <- c(
+  inhibits  = "#D73027",  # Strong red
+  activates = "#1A9850",  # Strong green
+  regulates = "#4575B4"   # Strong blue
+)
+
+# ====================================================
+# 7) FINAL PLOT con etiquetas superiores mejoradas
+# ====================================================
+p <- ggplot() +
+  
+  # 1. AÑADIR TEXTO EN LA PARTE SUPERIOR DE LAS BARRAS
+  # Texto para fármacos (lado izquierdo)
+  annotate(
+    "text",
+    x = LEFT_X,
+    y = max(nodes_all$y) + 20,  # Posicionado arriba
+    label = paste0("FDA approved drugs\n(n = ", format(total_drugs, big.mark = ","), ")"),
+    hjust = 0.5,
+    vjust = 0,
+    size = 3.5,
+    fontface = "bold",
+    color = "#2D3047",
+    lineheight = 0.9
+  ) +
+  
+  # Texto para genes (lado derecho)
+  annotate(
+    "text",
+    x = RIGHT_X,
+    y = max(nodes_all$y) + 20,  # Posicionado arriba
+    label = paste0("Genes in cervix cancer network\n(n = ", format(total_genes, big.mark = ","), ")"),
+    hjust = 0.5,
+    vjust = 0,
+    size = 3.5,
+    fontface = "bold",
+    color = "#2D3047",
+    lineheight = 0.9
+  ) +
+  
+  # 2. EDGES (conexiones)
+  geom_segment(
+    data = edges_coord,
+    aes(
+      x = x_drug, y = y_drug,
+      xend = x_gene, yend = y_gene,
+      colour = interaction_group
+    ),
+    alpha = 0.05,
+    linewidth = 0.3
+  ) +
+  
+  # 3. NODES
+  geom_point(
+    data = nodes_all,
+    aes(x = x, y = y, shape = node_type),
+    size = 2.5,
+    colour = "grey20",
+    fill = ifelse(nodes_all$node_type == "Drug", "#FF6B6B", "#4ECDC4"),
+    stroke = 0.4
+  ) +
+  
+  # 4. ETIQUETAS PARA FÁRMACOS TOP
+  # 4. ETIQUETAS PARA FÁRMACOS TOP
+  geom_text_repel(
+    data = filter(drug_nodes, !is.na(label)),
+    aes(x = x, y = y, label = label),
+    direction = "y",
+    hjust = 1,
+    nudge_x = -0.04,
+    nudge_y = ifelse(row_number(filter(drug_nodes, !is.na(label))) %% 2 == 0, 0.8, -0.8),
+    size = 3.2,
+    fontface = "bold",
+    color = "#2D3047",
+    segment.size = 0.2,
+    segment.color = "grey50",
+    segment.alpha = 2.5,
+    box.padding = 0.3,
+    point.padding = 0.25,
+    max.overlaps = 50,
+    min.segment.length = 0.1,
+    seed = 123
+  ) +
+  
+  # 5. ETIQUETAS PARA GENES TOP
+  # 5. ETIQUETAS PARA GENES TOP
+  geom_text_repel(
+    data = filter(gene_nodes, !is.na(label)),
+    aes(x = x, y = y, label = label),
+    direction = "y",
+    hjust = 0,
+    nudge_x = 0.04,
+    nudge_y = ifelse(row_number(filter(gene_nodes, !is.na(label))) %% 2 == 0, 1.0, -1.0),
+    size = 3.2,
+    fontface = "bold",
+    color = "#2D3047",
+    segment.size = 0.2,
+    segment.color = "grey50",
+    segment.alpha = 2.5,
+    box.padding = 0.3,
+    point.padding = 0.25,
+    max.overlaps = 50,
+    min.segment.length = 0.1,
+    seed = 456
+  ) +
+  
+  # 6. ESCALAS DE COLOR Y FORMA
+  scale_colour_manual(
+    name = "Interaction group (edges)",
+    values = group_colors,
+    guide = guide_legend(
+      override.aes = list(
+        linewidth = 2,
+        alpha = 0.8
+      ),
+      keywidth = unit(1.2, "cm"),
+      keyheight = unit(0.3, "cm")
+    )
+  ) +
+  
+  scale_shape_manual(
+    name = "Node type",
+    values = c(Drug = 21, Gene = 19),
+    guide = guide_legend(
+      override.aes = list(
+        size = 3,
+        fill = c("#FF6B6B", "#4ECDC4")
+      )
+    )
+  ) +
+  
+  # 7. ESCALA X (con títulos de grupo movidos más abajo)
+  scale_x_continuous(
+    breaks = NULL,   # <- sin marcas numéricas en el eje X
+    limits = c(LEFT_X - 0.15, RIGHT_X + 0.15),
+    expand = expansion(mult = c(0.1, 0.1))
+  ) +
+  
+  # 8. ESCALA Y (con más espacio en la parte superior para las nuevas etiquetas)
+  scale_y_continuous(
+    expand = expansion(mult = c(0.10, 0.25))   # más espacio arriba SIN hacer más alto el plot
+  ) +
+  
+  # 9. ETIQUETAS DEL GRÁFICO
+  labs(
+    title = "Bipartite map of drug-gene interactions (DGIdb)",
+    x = NULL,
+    y = NULL
+  ) +
+  
+  # 10. TEMA MEJORADO
+  theme_minimal(base_size = 13) +
+  theme(
+    legend.position = "top",
+    legend.box = "vertical",
+    legend.margin = margin(t = 10, b = 5),
+    legend.spacing.x = unit(0.4, "cm"),
+    legend.spacing.y = unit(0, "cm"),
+    panel.grid = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks = element_blank(),
+    axis.text.x = element_text(
+      face = "bold",
+      size = 11,
+      color = "#2D3047",
+      margin = margin(t = 25, b = 5)  # Más margen superior para los títulos
+    ),
+    plot.title = element_text(
+      face = "bold",
+      size = 16,
+      color = "#2D3047",
+      hjust = 0.5,
+      margin = margin(b = 5)
+    ),
+    plot.subtitle = element_text(
+      size = 10.5,
+      color = "#555555",
+      hjust = 0.5,
+      lineheight = 1.3,
+      margin = margin(b = 20, t = 5)
+    ),
+    legend.title = element_text(
+      face = "bold",
+      size = 10,
+      color = "#2D3047"
+    ),
+    legend.text = element_text(
+      size = 9,
+      color = "#555555"
+    ),
+    plot.background = element_rect(fill = "white", color = NA),
+    panel.background = element_rect(fill = "white", color = NA),
+    plot.margin = margin(15, 20, 15, 20)  # Márgenes ajustados
+  )
+
+# Mostrar el gráfico
+print(p)
+
+# Guardar con dimensiones óptimas
+ggsave("drug_gene_bipartite_top10_final.png", p,
+       width = 18,   # <-- más ancho
+       height = 10,
+       dpi = 400,
+       bg = "white")
+
+
+# Mensaje de confirmación
+cat("\n✓ Gráfico guardado como: drug_gene_bipartite_top10_final.png\n")
+cat("✓ Estadísticas incluidas:\n")
+cat("  - Total drugs (drug_name):", format(total_drugs, big.mark = ","), "\n")
+cat("  - Total genes (gene_name):", format(total_genes, big.mark = ","), "\n")
+cat("  - Total interactions:", format(total_interactions, big.mark = ","), "\n")
