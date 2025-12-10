@@ -175,7 +175,7 @@ df_modules_louv_A9 <- readRDS(
 Ora_A7_SIMP <- vroom(
   file.path(
     ora_dir,
-    "5_3_1_GSEA_A7_SIMPLIFIED.tsv"
+    "5_3_1_GSEA_KEGG_A7_SIMPLIFIED_KEGG.tsv"
   )
 ) %>%
   dplyr::rename(
@@ -186,7 +186,7 @@ Ora_A7_SIMP <- vroom(
 Ora_A9_SIMP <- vroom(
   file.path(
     ora_dir,
-    "5_3_1_GSEA_A9_SIMPLIFIED.tsv"
+    "5_3_1_GSEA_KEGG_A9_SIMPLIFIED_KEGG.tsv"
   )
 ) %>%
   dplyr::rename(

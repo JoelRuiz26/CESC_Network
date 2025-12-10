@@ -9,11 +9,11 @@ library(tidyverse)
 ### ========================
 graph_A7_louv <- readRDS("~/CESC_Network/5_Modularity/5_1_Modules/5_2_1_Louvain_A7_graph_max.rds")
 graph_A9_louv <- readRDS("~/CESC_Network/5_Modularity/5_1_Modules/5_2_1_Louvain_A9_graph_max.rds")
-graph_A7_info <- readRDS("~/CESC_Network/5_Modularity/5_1_Modules/5_1_1_Infomap_A7_graph_max.rds")
-graph_A9_info <- readRDS("~/CESC_Network/5_Modularity/5_1_Modules/5_1_1_Infomap_A9_graph_max.rds")
+#graph_A7_info <- readRDS("~/CESC_Network/5_Modularity/5_1_Modules/5_1_1_Infomap_A7_graph_max.rds")
+#graph_A9_info <- readRDS("~/CESC_Network/5_Modularity/5_1_Modules/5_1_1_Infomap_A9_graph_max.rds")
 
-out_rds_dir <- "~/CESC_Network/5_Modularity/5_3_Module_Graph"
-out_gml_dir <- "/STORAGE/csbig/jruiz/cesc_network"
+out_rds_dir <- "~/CESC_Network/5_Modularity/5_4_Module_Graph/"
+out_gml_dir <- "/STORAGE/csbig/jruiz/cesc_network/"
 
 ### ========================
 ### Single function: build community graph + edge table
@@ -180,7 +180,7 @@ process_graph <- function(graph, label) {
 ### ========================
 res_A7_louv <- process_graph(graph_A7_louv, "A7_louv")
 res_A9_louv <- process_graph(graph_A9_louv, "A9_louv")
-res_A7_info <- process_graph(graph_A7_info, "A7_info")
-res_A9_info <- process_graph(graph_A9_info, "A9_info")
+#res_A7_info <- process_graph(graph_A7_info, "A7_info")
+#res_A9_info <- process_graph(graph_A9_info, "A9_info")
 
 message("✅ All done!")

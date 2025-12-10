@@ -170,7 +170,7 @@ edges_plot <- edges_all %>%
 # 4) Node layout (x-y coordinates)
 # ----------------------------
 LEFT_X  <- 0
-RIGHT_X <- 0.35
+RIGHT_X <- 0.22
 
 ## 4a) Drug nodes (left side)
 drug_nodes <- edges_plot %>%
@@ -241,9 +241,9 @@ subtitle_text <- paste0(
 # 7) Colors
 # ----------------------------
 group_colors <- c(
-  inhibits  = "#D73027",
-  activates = "#1A9850",
-  regulates = "#4575B4"
+  inhibits  = "#E15759", 
+  activates = "#59A14F",  
+  regulates = "#4E79A7"   
 )
 
 # ----------------------------
@@ -288,8 +288,8 @@ p <- ggplot() +
     aes(x = x, y = y, shape = node_type),
     size = 2.5,
     colour = "grey20",
-    fill = ifelse(nodes_all$node_type == "Drug", "#FF6B6B", "#4ECDC4"),
-    stroke = 0.4
+    fill = ifelse(nodes_all$node_type == "Drug", "#FF9D9A", "#76B7B2"),
+    stroke = 0
   ) +
   
   # Etiquetas fármacos top
@@ -298,7 +298,7 @@ p <- ggplot() +
     aes(x = x, y = y, label = label),
     direction = "y",
     hjust = 1,
-    nudge_x = -0.04,
+    nudge_x = -0.03,
     nudge_y = 0.6,          # constante, sin idx
     size = 3.2,
     fontface = "bold",
@@ -319,7 +319,7 @@ p <- ggplot() +
     aes(x = x, y = y, label = label),
     direction = "y",
     hjust = 0,
-    nudge_x = 0.04,
+    nudge_x = 0.03,
     nudge_y = 0.8,          # constante
     size = 3.2,
     fontface = "bold",
@@ -359,7 +359,7 @@ p <- ggplot() +
   scale_x_continuous(
     breaks = NULL,
     limits = c(LEFT_X - 0.15, RIGHT_X + 0.15),
-    expand = expansion(mult = c(0.1, 0.1))
+    expand = expansion(mult = c(0.05, 0.05))
   ) +
   scale_y_continuous(
     expand = expansion(mult = c(0.10, 0.25))
@@ -413,9 +413,6 @@ p <- ggplot() +
     plot.margin       = margin(15, 20, 15, 20)
   )
 
-# Mostrar el gráfico
-print(p)
-
 # Guardar con dimensiones óptimas
 ggsave(
   "drug_gene_bipartite_top20_final.png",
@@ -426,8 +423,22 @@ ggsave(
   bg     = "white"
 )
 
+
+
+# Guardar con dimensiones óptimas
+ggsave(
+  "drug_gene_bipartite_top20_final.pdf",
+  p,
+  width  = 18,
+  height = 10,
+  dpi    = 800,
+  bg     = "white"
+)
+
+
 cat("\n✓ Gráfico guardado como: drug_gene_bipartite_top20_final.png\n")
 cat("✓ Estadísticas incluidas:\n")
 cat("  - Total drugs (drug_name):", format(total_drugs, big.mark = ","), "\n")
 cat("  - Total genes (gene_name):", format(total_genes, big.mark = ","), "\n")
 cat("  - Total interactions:", format(total_interactions, big.mark = ","), "\n")
+

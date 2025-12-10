@@ -130,8 +130,8 @@ interactions_A9 <- dgidb_interactions %>%
 # ----------------------------
 # LOAD NETWORK GENES
 # ----------------------------
-graph_A7 <- readRDS("~/CESC_Network/5_Modularity/7_1_Louvain/7_1_1_Louvain_A7_graph.rds")
-graph_A9 <- readRDS("~/CESC_Network/5_Modularity/7_1_Louvain/7_1_1_Louvain_A9_graph.rds")
+graph_A7 <- readRDS("~/CESC_Network/5_Modularity/5_1_Modules/5_2_1_Louvain_A7_graph_max.rds")
+graph_A9 <- readRDS("~/CESC_Network/5_Modularity/5_1_Modules/5_2_1_Louvain_A9_graph_max.rds")
 
 network_genes_A7 <- V(graph_A7)$name
 network_genes_A9 <- V(graph_A9)$name
@@ -151,9 +151,14 @@ interactions_A9 <- interactions_A9 %>%
 # ----------------------------
 # LOAD DGE (key genes)
 # ----------------------------
-DGE_A7 <- readRDS("~/OCTAD_Cervical_Cancer/1_DGE_signature/1_0_Output_rds/1_5_CoreGenes_min/core_genes_A7.rds")
-DGE_A9 <- readRDS("~/OCTAD_Cervical_Cancer/1_DGE_signature/1_0_Output_rds/1_5_CoreGenes_min/core_genes_A9.rds")
-
+DGE_A7 <- readr::read_tsv(
+  "~/CESC_Network/4_Network_analisis/4_3_limma_A7_vs_SNT_allGenes_annot_PR_DEG.tsv",
+  col_types = cols()
+)
+DE_A9 <- readr::read_tsv(
+  "~/CESC_Network/4_Network_analisis/4_3_limma_A9_vs_SNT_allGenes_annot_PR_DEG.tsv",
+  col_types = cols()
+)
 dge_genes_A7 <- unique(DGE_A7)
 dge_genes_A9 <- unique(DGE_A9)
 

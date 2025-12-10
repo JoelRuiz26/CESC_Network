@@ -27,6 +27,7 @@
 
 start_time <- Sys.time()
 
+BiocManager::install("clusterProfiler")
 suppressPackageStartupMessages({
   library(igraph)
   library(dplyr)
@@ -51,12 +52,12 @@ graph_A9 <- readRDS("~/CESC_Network/5_Modularity/5_1_Modules/5_2_1_Louvain_A9_gr
 
 # limma DE tables (must contain 'Gene' and 'logFC' columns)
 DE_A7 <- readr::read_tsv(
-  "~/CESC_Network/2_DGE/2_1_limma_A7_vs_SNT_allGenes.tsv",
+  "~/CESC_Network/4_Network_analisis/4_3_limma_A7_vs_SNT_allGenes_annot_PR_DEG.tsv",
   col_types = cols()
 )
 
 DE_A9 <- readr::read_tsv(
-  "~/CESC_Network/2_DGE/2_1_limma_A9_vs_SNT_allGenes.tsv",
+  "~/CESC_Network/4_Network_analisis/4_3_limma_A9_vs_SNT_allGenes_annot_PR_DEG.tsv",
   col_types = cols()
 )
 
