@@ -13,13 +13,6 @@ library(tidyverse)
 # ===================== SEED FOR REPRODUCIBILITY ===================== #
 set.seed(123)
 
-setwd("~/CESC_Network/2_Prepro_TCGA_GTEx/")
-
-suppressPackageStartupMessages({
-  library(tidyverse)
-  library(NOISeq)
-})
-
 # ----------------- Load input data ----------------- #
 factors <- readRDS("~/CESC_Network/1_Get_Data/1_Output_rds/2_2_CESC_TCGA_GTEx_metadata_clade.rds")
 
