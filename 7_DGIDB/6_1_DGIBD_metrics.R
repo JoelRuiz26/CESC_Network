@@ -7,7 +7,7 @@
 # ----------------------------
 # SETUP
 # ----------------------------
-setwd("~/CESC_Network/6_DGIDB/")
+setwd("~/CESC_Network/7_DGIDB/")
 library(tidyverse)
 library(vroom)
 library(igraph)
@@ -48,10 +48,10 @@ length(unique(dgidb_interactions_fda$drug_name))  # ~ 3146
 # ----------------------------
 # LOAD CERVIX NETWORK GENES
 # ----------------------------
-graph_A7 <- readRDS("~/CESC_Network/5_Modularity/5_1_Modules/5_2_1_Louvain_A7_graph_max.rds")
+graph_A7 <- readRDS("~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A7_max.rds")
 A7_genes <- V(graph_A7)$name
 
-graph_A9 <- readRDS("~/CESC_Network/5_Modularity/5_1_Modules/5_2_1_Louvain_A9_graph_max.rds")
+graph_A9 <- readRDS("~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A9_max.rds")
 A9_genes <- V(graph_A9)$name
 
 genes_universe <- unique(c(A7_genes, A9_genes))
@@ -132,6 +132,21 @@ table(dgidb_filtered$interaction_group)
 edges_all <- dgidb_filtered %>%
   filter(gene_name %in% genes_universe) %>%
   distinct(drug_name, gene_name, interaction_group)
+
+# ----------------------------
+# Save drug table + bipartite graphs per network
+# ----------------------------
+saveRDS(dgidb_interactions_fda, "6_1_dgidb_fda_interactions.rds")
+write_tsv(edges_all, "6_1_edges_bipartite.tsv")
+
+make_bip <- function(genes_sub, edges) {
+  e <- edges %>% filter(gene_name %in% genes_sub)
+  g <- graph_from_data_frame(e, directed = FALSE)
+  V(g)$type <- V(g)$name %in% unique(e$gene_name)
+  g
+}
+saveRDS(make_bip(A7_genes, edges_all), "6_1_bipartite_A7.rds")
+saveRDS(make_bip(A9_genes, edges_all), "6_1_bipartite_A9.rds")
 
 # ----------------------------
 # 2) Top N drugs and genes
@@ -412,10 +427,10 @@ p <- ggplot() +
     panel.background  = element_rect(fill = "white", color = NA),
     plot.margin       = margin(15, 20, 15, 20)
   )
-
+p
 # Guardar con dimensiones óptimas
 ggsave(
-  "drug_gene_bipartite_top20_final.png",
+  "6_1_drug_gene_bipartite.png",
   p,
   width  = 18,
   height = 10,
@@ -427,7 +442,7 @@ ggsave(
 
 # Guardar con dimensiones óptimas
 ggsave(
-  "drug_gene_bipartite_top20_final.pdf",
+  "6_1_drug_gene_bipartite.png",
   p,
   width  = 18,
   height = 10,
