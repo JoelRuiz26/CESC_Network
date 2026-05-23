@@ -9,8 +9,8 @@
 !README*
 !*.R
 !*.sh
-!*.png
-!*.pdf
+*.png
+*.pdf
 
 # Ignore bioinformatics and data files
 *.RData
