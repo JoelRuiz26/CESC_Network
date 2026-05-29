@@ -150,7 +150,9 @@ make_panel <- function(grp, accent_col, df_grp, col_lo, col_hi) {
       low  = col_lo, high = col_hi,
       name = expression(bold(-log[10](p[adj])))
     ) +
-    scale_x_continuous(expand = expansion(mult = c(0, 0.06))) +
+    scale_x_continuous(expand = expansion(mult = c(0, 0.06)),
+                       n.breaks = 4,
+                       guide = guide_axis(check.overlap = TRUE)) +
     labs(title = grp, x = "Gene Ratio", y = NULL) +
     theme_classic(base_size = 16) +
     theme(
@@ -226,13 +228,14 @@ for (col_id in names(COLLECTIONS)) {
     )
 
   n_grp  <- plot_df %>% count(group) %>% pull(n) %>% max(na.rm = TRUE)
-  plot_h <- n_grp * 0.33 * 2 + 3
-  plot_w <- 9
+  plot_w <- if (col_id == "REACTOME") 8   else 9
+  plot_h <- if (col_id == "REACTOME") n_grp * 0.42 * 2 + 3 else n_grp * 0.33 * 2 + 3
 
+  dpi_out <- if (col_id == "REACTOME") 600 else 1200
   ggsave(file.path(out_dir, paste0(meta$file, ".pdf")),
          plot = combined, width = plot_w, height = plot_h, device = cairo_pdf)
   ggsave(file.path(out_dir, paste0(meta$file, ".png")),
-         plot = combined, width = plot_w, height = plot_h, dpi = 1200)
+         plot = combined, width = plot_w, height = plot_h, dpi = dpi_out)
 
   cat(sprintf("  Guardado: %s.pdf/png\n", meta$file))
 }

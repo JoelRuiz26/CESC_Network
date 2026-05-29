@@ -47,10 +47,13 @@ load_module_interest <- function(graph_rds, gene_tsv, label) {
 
   tbl <- read_tsv(gene_tsv, show_col_types = FALSE)
 
+  dep_genes <- tbl %>%
+    filter(is_interest, !is.na(mean_dep), mean_dep <= -0.5) %>%
+    pull(Gene)
+
   vdf %>%
-    left_join(tbl %>% select(Gene, is_interest), by = "Gene") %>%
     mutate(
-      is_interest = ifelse(is.na(is_interest), FALSE, is_interest),
+      is_interest = Gene %in% dep_genes,
       group       = label
     )
 }
@@ -279,7 +282,7 @@ save_plot <- function(p, fname, w, h) {
 p_count <- (plot_count(stats_A7, "HPV-A7", PAL["HPV-A7"]) /
             plot_count(stats_A9, "HPV-A9", PAL["HPV-A9"])) +
   plot_annotation(
-    title   = "Interest Genes (Hub ∩ DEG) per Louvain Module",
+    title   = "Interest Genes (Hub ∩ DEG, DepMap dep ≤ -0.5) per Louvain Module",
     caption = "Colored bars = enriched modules (hypergeometric, BH p < 0.05)  ·  * p<0.05  ** p<0.01  *** p<0.001",
     theme   = theme(
       plot.title   = element_text(face = "bold", hjust = 0.5, size = 15),
@@ -295,7 +298,7 @@ save_plot(p_count, "5_5_barplot_count",
 p_prop <- (plot_prop(stats_A7, "HPV-A7", PAL["HPV-A7"]) /
            plot_prop(stats_A9, "HPV-A9", PAL["HPV-A9"])) +
   plot_annotation(
-    title   = "Proportion of Interest Genes per Louvain Module",
+    title   = "Proportion of Interest Genes (dep ≤ -0.5) per Louvain Module",
     caption = "Dashed line = network-wide %  ·  Colored bars = enriched modules (BH p < 0.05)",
     theme   = theme(
       plot.title   = element_text(face = "bold", hjust = 0.5, size = 15),
@@ -310,7 +313,7 @@ save_plot(p_prop, "5_5_barplot_proportion",
 p_hyper <- (plot_hyper(stats_A7, "HPV-A7", PAL["HPV-A7"]) /
             plot_hyper(stats_A9, "HPV-A9", PAL["HPV-A9"])) +
   plot_annotation(
-    title   = "Module Enrichment of Interest Genes | Louvain Communities",
+    title   = "Module Enrichment of Interest Genes (dep ≤ -0.5) | Louvain Communities",
     caption = "Hypergeometric test · Benjamini-Hochberg correction · Numbers indicate interest gene count per module",
     theme   = theme(
       plot.title   = element_text(face = "bold", hjust = 0.5, size = 16),

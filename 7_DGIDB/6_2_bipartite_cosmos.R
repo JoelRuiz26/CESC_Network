@@ -212,7 +212,7 @@ p <- ggplot() +
   scale_alpha_identity(guide = "none") +
 
   coord_fixed(
-    xlim = c(LABEL_X_DRUG - 2.8, LABEL_X_GENE + 2.0),
+    xlim = c(LABEL_X_DRUG - 6.0, LABEL_X_GENE + 2.0),
     ylim = c(-R_ARC - 2.5, R_ARC + 5.0)
   ) +
 
@@ -235,13 +235,130 @@ p <- ggplot() +
     plot.margin       = margin(10, 15, 40, 15)
   )
 
-# ── 10. Save ──────────────────────────────────────────────────────────────────
+# ── 10. Save (dark) ───────────────────────────────────────────────────────────
 ggsave("6_2_bipartite_cosmos.pdf", p,
-       width = 20, height = 13, bg = BG_COL)
+       width = 22, height = 14, bg = BG_COL)
 ggsave("6_2_bipartite_cosmos.png", p,
-       width = 20, height = 13, dpi = 300, bg = BG_COL)
+       width = 22, height = 14, dpi = 300, bg = BG_COL)
 
 cat(sprintf(
   "\n✓ Saved: 6_2_bipartite_cosmos.pdf / .png  (%d drugs · %d genes · %s interactions)\n",
+  n_drugs, n_genes, format(total_ints, big.mark = ",")
+))
+
+# ── 11. White version ─────────────────────────────────────────────────────────
+BG_W    <- "#FFFFFF"
+DRUG_W  <- "#B58A00"   # dark gold  (legible on white)
+GENE_W  <- "#007B8F"   # deep teal  (legible on white)
+
+group_colors_w <- c(
+  inhibits  = "#D63355",   # crimson
+  activates = "#1A9E52",   # forest green
+  regulates = "#2A6FD4"    # cobalt blue
+)
+
+p_w <- ggplot() +
+
+  geom_path(data = arc_drug_path, aes(x = x, y = y),
+            colour = DRUG_W, alpha = 0.90, linewidth = 1.3) +
+  geom_path(data = arc_gene_path, aes(x = x, y = y),
+            colour = GENE_W, alpha = 0.90, linewidth = 1.3) +
+
+  geom_segment(data = edges_coord,
+               aes(x = x_drug, y = y_drug,
+                   xend = x_gene, yend = y_gene,
+                   colour = interaction_group),
+               alpha = 0.055, linewidth = 0.20) +
+
+  geom_point(data = drug_nodes, aes(x = x, y = y, size = sz_core),
+             colour = DRUG_W, alpha = 1.0, shape = 16) +
+
+  geom_point(data = gene_nodes, aes(x = x, y = y, size = sz_core),
+             colour = GENE_W, alpha = 1.0, shape = 16) +
+
+  geom_text_repel(
+    data      = top_drug_nodes,
+    aes(x = x, y = y, label = label),
+    nudge_x   = top_drug_nodes$nudge_x,
+    colour    = "black",
+    size      = 4.2, fontface = "bold",
+    direction = "y", hjust = 1,
+    segment.colour = DRUG_W, segment.alpha = 0.55, segment.size = 0.28,
+    box.padding = 0.12, point.padding = 0.08,
+    max.overlaps = 40, seed = 42, min.segment.length = 0.05
+  ) +
+
+  geom_text_repel(
+    data      = top_gene_nodes,
+    aes(x = x, y = y, label = label),
+    nudge_x   = top_gene_nodes$nudge_x,
+    colour    = "black",
+    size      = 4.2, fontface = "bold",
+    direction = "y", hjust = 0,
+    segment.colour = GENE_W, segment.alpha = 0.55, segment.size = 0.28,
+    box.padding = 0.12, point.padding = 0.08,
+    max.overlaps = 35, seed = 123, min.segment.length = 0.05
+  ) +
+
+  annotate("text", x = LABEL_X_DRUG + 1.8, y = -1.0,
+           label = "FDA DRUGS", colour = DRUG_W,
+           size = 8.5, fontface = "bold", angle = 90, hjust = 0.5) +
+  annotate("text", x = LABEL_X_GENE - 1.8, y = -1.0,
+           label = "NETWORK GENES", colour = GENE_W,
+           size = 8.5, fontface = "bold", angle = -90, hjust = 0.5) +
+
+  annotate("text", x = 0, y = R_ARC + 3.8,
+           label = "FDA-Approved Drug · Gene Interaction Network",
+           colour = "black", size = 9.0, fontface = "bold", hjust = 0.5) +
+  annotate("text", x = 0, y = R_ARC + 2.9,
+           label = sprintf("%s drugs  ·  %s genes  ·  %s edges",
+                           format(n_drugs,    big.mark = ","),
+                           format(n_genes,    big.mark = ","),
+                           format(total_ints, big.mark = ",")),
+           colour = "#555555", size = 7.5, fontface = "bold", hjust = 0.5) +
+
+  scale_colour_manual(
+    name   = "Edge type",
+    values = group_colors_w,
+    guide  = guide_legend(
+      direction      = "horizontal",
+      title.position = "top",
+      override.aes   = list(linewidth = 2.5, alpha = 0.85)
+    )
+  ) +
+  scale_size_identity(guide  = "none") +
+  scale_alpha_identity(guide = "none") +
+
+  coord_fixed(
+    xlim = c(LABEL_X_DRUG - 6.0, LABEL_X_GENE + 2.0),
+    ylim = c(-R_ARC - 2.5, R_ARC + 5.0)
+  ) +
+
+  theme_void(base_size = 14) +
+  theme(
+    plot.background   = element_rect(fill = BG_W, colour = NA),
+    panel.background  = element_rect(fill = BG_W, colour = NA),
+    legend.position   = c(0.5, 0.03),
+    legend.direction  = "horizontal",
+    legend.background = element_rect(fill     = "#F0F0F0",
+                                     colour   = "#AAAAAA",
+                                     linewidth = 0.4),
+    legend.margin     = margin(6, 16, 6, 16),
+    legend.title      = element_text(colour = "black", face = "bold",
+                                     size = 17, hjust = 0.5,
+                                     margin = margin(b = 5)),
+    legend.text       = element_text(colour = "#333333", size = 16),
+    legend.key.width  = unit(2.0, "cm"),
+    legend.key.height = unit(0.3, "cm"),
+    plot.margin       = margin(10, 15, 40, 15)
+  )
+
+ggsave("6_2_bipartite_cosmos_white.pdf", p_w,
+       width = 22, height = 14, bg = BG_W)
+ggsave("6_2_bipartite_cosmos_white.png", p_w,
+       width = 22, height = 14, dpi = 300, bg = BG_W)
+
+cat(sprintf(
+  "\n✓ Saved: 6_2_bipartite_cosmos_white.pdf / .png  (%d drugs · %d genes · %s interactions)\n",
   n_drugs, n_genes, format(total_ints, big.mark = ",")
 ))

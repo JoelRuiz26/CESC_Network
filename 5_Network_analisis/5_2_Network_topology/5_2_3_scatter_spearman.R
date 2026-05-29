@@ -96,22 +96,6 @@ p_scatter <- ggplot(degree_df,
   geom_point(alpha = 0.25, size = 1.5,
              key_glyph = draw_key_point) +
   
-  # etiquetas solo de los top hubs extremos
-  geom_text_repel(
-    data               = label_df,
-    aes(label          = Gene),
-    color              = "black",
-    size               = 4.8,
-    family             = "Times New Roman",
-    fontface           = "italic",
-    max.overlaps       = 40,
-    min.segment.length = 0.2,
-    segment.size       = 0.3,
-    segment.color      = "grey40",
-    box.padding        = 0.45,
-    show.legend        = FALSE
-  ) +
-  
   # caja de estadístico
   annotate(
     "label",
@@ -119,7 +103,6 @@ p_scatter <- ggplot(degree_df,
     y             = y_ann,
     hjust         = 0, vjust = 1,
     label         = ann_label,
-    family        = "Times New Roman",
     fontface      = "bold",
     size          = 5.2,
     fill          = alpha("white", 0.92),
@@ -157,7 +140,7 @@ p_scatter <- ggplot(degree_df,
     color = NULL
   ) +
   
-  theme_bw(base_family = "Times New Roman") +
+  theme_bw() +
   theme(
     plot.title       = element_text(size = 16, face = "bold",
                                     hjust = 0.5, margin = margin(b = 4)),
