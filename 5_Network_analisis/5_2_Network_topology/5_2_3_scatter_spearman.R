@@ -14,6 +14,9 @@ suppressPackageStartupMessages({
 
 # ── 1) Cargar grafos ──────────────────────────────────────────────────────────
 
+# A7_HPV <- readRDS("~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A7_max.rds")
+# A9_HPV <- readRDS("~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A9_max.rds")
+
 A7_HPV <- readRDS("~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A7_max.rds")
 A9_HPV <- readRDS("~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A9_max.rds")
 
@@ -104,11 +107,11 @@ p_scatter <- ggplot(degree_df,
     hjust         = 0, vjust = 1,
     label         = ann_label,
     fontface      = "bold",
-    size          = 5.2,
+    size          = 6.5,
     fill          = alpha("white", 0.92),
     color         = "grey15",
     label.size    = 0.45,
-    label.padding = unit(0.4, "lines")
+    label.padding = unit(0.5, "lines")
   ) +
   
   # escalas log-log
@@ -140,14 +143,14 @@ p_scatter <- ggplot(degree_df,
     color = NULL
   ) +
   
-  theme_bw() +
+  theme_bw(base_family = "Times New Roman") +
   theme(
-    plot.title       = element_text(size = 16, face = "bold",
+    plot.title       = element_text(size = 24, face = "bold",
                                     hjust = 0.5, margin = margin(b = 4)),
-    plot.subtitle    = element_text(size = 10, hjust = 0.5,
+    plot.subtitle    = element_text(size = 18, hjust = 0.5,
                                     color = "grey35", margin = margin(b = 8)),
-    axis.title       = element_text(size = 13, face = "bold"),
-    axis.text        = element_text(size = 11, color = "black"),
+    axis.title       = element_text(size = 20, face = "bold"),
+    axis.text        = element_text(size = 17, color = "black"),
     axis.line        = element_blank(),
     panel.border     = element_rect(color = "black", fill = NA, linewidth = 0.8),
     panel.grid.major = element_line(color = "grey92", linewidth = 0.3),
@@ -159,18 +162,16 @@ p_scatter <- ggplot(degree_df,
     legend.background    = element_rect(fill  = alpha("white", 0.88),
                                         color = "grey60", linewidth = 0.4),
     legend.key           = element_blank(),
-    legend.key.size      = unit(0.55, "cm"),
+    legend.key.size      = unit(0.8, "cm"),
     legend.text          = element_text(size = 17),
-    legend.spacing.y     = unit(0.25, "cm"),
+    legend.spacing.y     = unit(0.3, "cm"),
     plot.margin          = margin(12, 15, 10, 12)
   )
-
-p_scatter
 
 ggsave(
   "~/CESC_Network/5_Network_analisis/5_2_Network_topology/5_2_5_Degree_Scatter.png",
   p_scatter,
-  width = 9, height = 7.5, dpi = 600, bg = "white"
+  width = 12, height = 9, dpi = 600, bg = "white"
 )
 
 message("Saved: Degree conservation scatterplot (log-log)")

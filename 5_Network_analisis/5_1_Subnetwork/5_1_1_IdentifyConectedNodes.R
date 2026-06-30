@@ -37,11 +37,20 @@ library(tools)
 analyze_network <- function(file_path, max_rows = 5000000) {
   
   # Load the edge list (up to max_rows)
+  # Old format (3 cols, no header):
+  # edge_list <- vroom(
+  #   file_path,
+  #   col_names = c("GenA", "GenB", "MI"),
+  #   show_col_types = FALSE
+  # ) %>% na.omit()
+  # New format: 4 cols with header (Regulator, Target, MI, pvalue)
   edge_list <- vroom(
-    file_path, 
-    col_names = c("GenA", "GenB", "MI"),
+    file_path,
+    col_names = c("GenA", "GenB", "MI", "pvalue"),
+    skip = 1,
     show_col_types = FALSE
   ) %>%
+    select(GenA, GenB, MI) %>%
     na.omit()
   
   # ✅ Ajuste dinámico: usar el mínimo entre nrow(edge_list) y max_rows
@@ -80,12 +89,30 @@ analyze_network <- function(file_path, max_rows = 5000000) {
 # --------------------------------------------------------
 # Analyze both networks
 # --------------------------------------------------------
+# results_A7 <- analyze_network(
+#   "/STORAGE/csbig/jruiz/cesc_network/2_7_Full_counts_A7_annot_pvalue.sort"
+# )
+# results_A7 <- analyze_network(
+#   "/STORAGE/csbig/jruiz/cesc_network/cervix_ARACNE/A7_network_sort.txt"
+# )
+# results_A7 <- analyze_network(
+#   "/STORAGE/csbig/jruiz/cesc_network/cervix_ARACNE/A7_network_sort_unique.txt"
+# )
 results_A7 <- analyze_network(
-  "/STORAGE/csbig/jruiz/cesc_network/2_7_Full_counts_A7_annot_pvalue.sort"
+  "/STORAGE/csbig/jruiz/cesc_network/cervix_ARACNE/A7_network_sort.txt"
 )
 
+# results_A9 <- analyze_network(
+#   "/STORAGE/csbig/jruiz/cesc_network/2_8_Full_counts_A9_annot_pvalue.sort"
+# )
+# results_A9 <- analyze_network(
+#   "/STORAGE/csbig/jruiz/cesc_network/cervix_ARACNE/A9_network_sort.txt"
+# )
+# results_A9 <- analyze_network(
+#   "/STORAGE/csbig/jruiz/cesc_network/cervix_ARACNE/A9_network_sort_unique.txt"
+# )
 results_A9 <- analyze_network(
-  "/STORAGE/csbig/jruiz/cesc_network/2_8_Full_counts_A9_annot_pvalue.sort"
+  "/STORAGE/csbig/jruiz/cesc_network/cervix_ARACNE/A9_network_sort.txt"
 )
 
 # --------------------------------------------------------
@@ -140,41 +167,109 @@ cat("═════════════════════════
 # --------------------------------------------------------
 # Save BOTH edgelists sliced at THEIR OWN cutoff
 # --------------------------------------------------------
+# A7_individual <- vroom(
+#   "/STORAGE/csbig/jruiz/cesc_network/2_7_Full_counts_A7_annot_pvalue.sort",
+#   col_names = c("GenA", "GenB", "MI"),
+#   show_col_types = FALSE
+# ) %>% na.omit() %>% dplyr::slice(1:cutoff_A7)
+# A7_individual <- vroom(
+#   "/STORAGE/csbig/jruiz/cesc_network/cervix_ARACNE/A7_network_sort.txt",
+#   col_names = c("GenA", "GenB", "MI", "pvalue"), skip = 1,
+#   show_col_types = FALSE
+# ) %>% select(GenA, GenB, MI) %>% na.omit() %>% dplyr::slice(1:cutoff_A7)
+# A7_individual <- vroom(
+#   "/STORAGE/csbig/jruiz/cesc_network/cervix_ARACNE/A7_network_sort_unique.txt",
+#   col_names = c("GenA", "GenB", "MI", "pvalue"), skip = 1,
+#   show_col_types = FALSE
+# ) %>% select(GenA, GenB, MI) %>% na.omit() %>% dplyr::slice(1:cutoff_A7)
 A7_individual <- vroom(
-  "/STORAGE/csbig/jruiz/cesc_network/2_7_Full_counts_A7_annot_pvalue.sort",
-  col_names = c("GenA", "GenB", "MI"),
+  "/STORAGE/csbig/jruiz/cesc_network/cervix_ARACNE/A7_network_sort.txt",
+  col_names = c("GenA", "GenB", "MI", "pvalue"), skip = 1,
   show_col_types = FALSE
-) %>% na.omit() %>% dplyr::slice(1:cutoff_A7)
+) %>% select(GenA, GenB, MI) %>% na.omit() %>% dplyr::slice(1:cutoff_A7)
 
+# A9_individual <- vroom(
+#   "/STORAGE/csbig/jruiz/cesc_network/2_8_Full_counts_A9_annot_pvalue.sort",
+#   col_names = c("GenA", "GenB", "MI"),
+#   show_col_types = FALSE
+# ) %>% na.omit() %>% dplyr::slice(1:cutoff_A9)
+# A9_individual <- vroom(
+#   "/STORAGE/csbig/jruiz/cesc_network/cervix_ARACNE/A9_network_sort.txt",
+#   col_names = c("GenA", "GenB", "MI", "pvalue"), skip = 1,
+#   show_col_types = FALSE
+# ) %>% na.omit() %>% dplyr::slice(1:cutoff_A9)
+# A9_individual <- vroom(
+#   "/STORAGE/csbig/jruiz/cesc_network/cervix_ARACNE/A9_network_sort_unique.txt",
+#   col_names = c("GenA", "GenB", "MI", "pvalue"), skip = 1,
+#   show_col_types = FALSE
+# ) %>% select(GenA, GenB, MI) %>% na.omit() %>% dplyr::slice(1:cutoff_A9)
 A9_individual <- vroom(
-  "/STORAGE/csbig/jruiz/cesc_network/2_8_Full_counts_A9_annot_pvalue.sort",
-  col_names = c("GenA", "GenB", "MI"),
+  "/STORAGE/csbig/jruiz/cesc_network/cervix_ARACNE/A9_network_sort.txt",
+  col_names = c("GenA", "GenB", "MI", "pvalue"), skip = 1,
   show_col_types = FALSE
-) %>% na.omit() %>% dplyr::slice(1:cutoff_A9)
+) %>% select(GenA, GenB, MI) %>% na.omit() %>% dplyr::slice(1:cutoff_A9)
 
-saveRDS(A7_individual, 
-        "~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_1_2_A7_edgelist_individual_allnodes.rds")
-saveRDS(A9_individual, 
-        "~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_1_2_A9_edgelist_individual_allnodes.rds")
+# Typo en ruta original (4_ en lugar de 5_):
+# saveRDS(A7_individual,
+#         "~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_1_2_A7_edgelist_individual_allnodes.rds")
+# saveRDS(A9_individual,
+#         "~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_1_2_A9_edgelist_individual_allnodes.rds")
+saveRDS(A7_individual,
+        "~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_1_2_A7_edgelist_individual_allnodes.rds")
+saveRDS(A9_individual,
+        "~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_1_2_A9_edgelist_individual_allnodes.rds")
 
 cat("[INFO] Saved A7 edgelist at its cutoff: ", cutoff_A7, " edges\n")
 cat("[INFO] Saved A9 edgelist at its cutoff: ", cutoff_A9, " edges\n")
 
 ####ALL####
 
-cutoff_max <- max(cutoff_A7,cutoff_A9)
+# cutoff_max <- max(cutoff_A7, cutoff_A9)
+# Fijado en 117184: corte donde ambas redes comparten el maximo de nodos
+# en identidad (17436) dentro del rango permitido por A7 (115784-117407)
+cutoff_max <- 117184
 
+# A7_max <- vroom(
+#   "/STORAGE/csbig/jruiz/cesc_network/2_7_Full_counts_A7_annot_pvalue.sort",
+#   col_names = c("GenA", "GenB", "MI"),
+#   show_col_types = FALSE
+# ) %>% na.omit() %>% dplyr::slice(1:cutoff_max)
+# A7_max <- vroom(
+#   "/STORAGE/csbig/jruiz/cesc_network/cervix_ARACNE/A7_network_sort.txt",
+#   col_names = c("GenA", "GenB", "MI", "pvalue"), skip = 1,
+#   show_col_types = FALSE
+# ) %>% select(GenA, GenB, MI) %>% na.omit() %>% dplyr::slice(1:cutoff_max)
+# A7_max <- vroom(
+#   "/STORAGE/csbig/jruiz/cesc_network/cervix_ARACNE/A7_network_sort_unique.txt",
+#   col_names = c("GenA", "GenB", "MI", "pvalue"), skip = 1,
+#   show_col_types = FALSE
+# ) %>% select(GenA, GenB, MI) %>% na.omit() %>% dplyr::slice(1:cutoff_max)
 A7_max <- vroom(
-  "/STORAGE/csbig/jruiz/cesc_network/2_7_Full_counts_A7_annot_pvalue.sort",
-  col_names = c("GenA", "GenB", "MI"),
+  "/STORAGE/csbig/jruiz/cesc_network/cervix_ARACNE/A7_network_sort.txt",
+  col_names = c("GenA", "GenB", "MI", "pvalue"), skip = 1,
   show_col_types = FALSE
-) %>% na.omit() %>% dplyr::slice(1:cutoff_max)
+) %>% select(GenA, GenB, MI) %>% na.omit() %>% dplyr::slice(1:cutoff_max)
 
+# A9_max <- vroom(
+#   "/STORAGE/csbig/jruiz/cesc_network/2_8_Full_counts_A9_annot_pvalue.sort",
+#   col_names = c("GenA", "GenB", "MI"),
+#   show_col_types = FALSE
+# ) %>% na.omit() %>% dplyr::slice(1:cutoff_max)
+# A9_max <- vroom(
+#   "/STORAGE/csbig/jruiz/cesc_network/cervix_ARACNE/A9_network_sort.txt",
+#   col_names = c("GenA", "GenB", "MI", "pvalue"), skip = 1,
+#   show_col_types = FALSE
+# ) %>% na.omit() %>% dplyr::slice(1:cutoff_max)
+# A9_max <- vroom(
+#   "/STORAGE/csbig/jruiz/cesc_network/cervix_ARACNE/A9_network_sort_unique.txt",
+#   col_names = c("GenA", "GenB", "MI", "pvalue"), skip = 1,
+#   show_col_types = FALSE
+# ) %>% select(GenA, GenB, MI) %>% na.omit() %>% dplyr::slice(1:cutoff_max)
 A9_max <- vroom(
-  "/STORAGE/csbig/jruiz/cesc_network/2_8_Full_counts_A9_annot_pvalue.sort",
-  col_names = c("GenA", "GenB", "MI"),
+  "/STORAGE/csbig/jruiz/cesc_network/cervix_ARACNE/A9_network_sort.txt",
+  col_names = c("GenA", "GenB", "MI", "pvalue"), skip = 1,
   show_col_types = FALSE
-) %>% na.omit() %>% dplyr::slice(1:cutoff_max)
+) %>% select(GenA, GenB, MI) %>% na.omit() %>% dplyr::slice(1:cutoff_max)
 
 
 saveRDS(A7_max, 

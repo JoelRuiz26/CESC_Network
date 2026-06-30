@@ -1,6 +1,6 @@
-#Script for Louvain cluster 
-#Input: Networks (.graphml) 
-#Output: Networks (graphml) with community named by PageRank algorithm and filterred for enrichment.
+#Script for Louvain cluster
+#Input: Networks (.graphml)
+#Output: Networks (graphml) with community named by gene with highest normalized degree, filtered for enrichment.
 #By Joel Ruiz
 
 ### Load packages ###
@@ -10,23 +10,27 @@ library(ggplot2)
 set.seed(123)
 
 ### Load networks ###
-graph_A7 <- readRDS('~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A7_max.rds')
-graph_A9 <- readRDS('~/CESC_Network/4_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A9_max.rds')
+graph_A7 <- readRDS('~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A7_max.rds')
+graph_A9 <- readRDS('~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A9_max.rds')
 
 ###### For A7 network ######
 ### Louvain ###
 Louvain_A7 <- cluster_louvain(graph_A7)        #125 communities
 V(graph_A7)$Community <- Louvain_A7$membership 
 
-### PageRank ###
-page_ranks_A7 <- page_rank(graph_A7)$vector
-V(graph_A7)$PageRank <- page_ranks_A7
-#Highest PageRank in community
-community_PR_names_A7 <- tapply(V(graph_A7)$name, V(graph_A7)$Community, function(names) {
-  ranks <- page_ranks_A7[V(graph_A7)$name %in% names]
-  names[which.max(ranks)]
+### Normalized degree (degree / max_degree_in_network) ###
+deg_A7     <- degree(graph_A7)
+norm_deg_A7 <- deg_A7 / max(deg_A7)
+V(graph_A7)$NormDegree <- norm_deg_A7
+# Name each community by the gene with the highest normalized degree
+community_deg_names_A7 <- tapply(V(graph_A7)$name, V(graph_A7)$Community, function(nms) {
+  nd <- norm_deg_A7[V(graph_A7)$name %in% nms]
+  nms[which.max(nd)]
 })
-V(graph_A7)$Community_name <- community_PR_names_A7[as.character(V(graph_A7)$Community)] #Add to graph
+V(graph_A7)$Community_name <- community_deg_names_A7[as.character(V(graph_A7)$Community)] #Add to graph
+
+### PageRank (kept as node attribute, not used for naming) ###
+V(graph_A7)$PageRank <- page_rank(graph_A7)$vector
 
 ### Filter nodes for enrichment ###
 V(graph_A7)$Community_size <- table(V(graph_A7)$Community)[as.character(V(graph_A7)$Community)] #community size
@@ -39,15 +43,19 @@ filtered_graph_A7 <- induced_subgraph(graph_A7, vids = nodes_to_keep_A7)
 Louvain_A9 <- cluster_louvain(graph_A9) #235
 V(graph_A9)$Community <- Louvain_A9$membership
 
-### PageRank ###
-page_ranks_A9 <- page_rank(graph_A9)$vector
-V(graph_A9)$PageRank <- page_ranks_A9
-#Highest PageRank in community
-community_PR_names_A9 <- tapply(V(graph_A9)$name, V(graph_A9)$Community, function(names) {
-  ranks <- page_ranks_A9[V(graph_A9)$name %in% names]
-  names[which.max(ranks)]
+### Normalized degree ###
+deg_A9      <- degree(graph_A9)
+norm_deg_A9 <- deg_A9 / max(deg_A9)
+V(graph_A9)$NormDegree <- norm_deg_A9
+# Name each community by the gene with the highest normalized degree
+community_deg_names_A9 <- tapply(V(graph_A9)$name, V(graph_A9)$Community, function(nms) {
+  nd <- norm_deg_A9[V(graph_A9)$name %in% nms]
+  nms[which.max(nd)]
 })
-V(graph_A9)$Community_name <- community_PR_names_A9[as.character(V(graph_A9)$Community)]
+V(graph_A9)$Community_name <- community_deg_names_A9[as.character(V(graph_A9)$Community)]
+
+### PageRank (kept as node attribute) ###
+V(graph_A9)$PageRank <- page_rank(graph_A9)$vector
 
 ### Filter nodes for enrichment ###
 V(graph_A9)$Community_size <- table(V(graph_A9)$Community)[as.character(V(graph_A9)$Community)]
@@ -56,8 +64,8 @@ filtered_graph_A9 <- induced_subgraph(graph_A9, vids = nodes_to_keep_A9)
 
 
 ### Save filtered graphs ###
-saveRDS(filtered_graph_A9, file = "~/CESC_Network/5_Modularity/5_1_Modules/5_2_1_Louvain_A9_graph_max.rds")
-saveRDS(filtered_graph_A7, file = "~/CESC_Network/5_Modularity/5_1_Modules/5_2_1_Louvain_A7_graph_max.rds")
+saveRDS(filtered_graph_A9, file = "~/CESC_Network/7_Modularity/5_1_Modules/5_1_1_Louvain_A9_graph_max.rds")
+saveRDS(filtered_graph_A7, file = "~/CESC_Network/7_Modularity/5_1_Modules/5_1_1_Louvain_A7_graph_max.rds")
 
 
 ### Verify ###
@@ -84,32 +92,47 @@ A9_sizes <- A9_Louvain_genes %>%
   summarise(size = n(), .groups = "drop")
 
 
-# === Plots como objetos ===
-pA7 <- ggplot(A7_sizes, aes(x = reorder(Community_name, -size), y = size)) +
-  geom_bar(stat = "identity", fill = "steelblue") +
-  labs(title = "Tamaño de Nodos por Comunidad (A7) - Louvain",
-       x = "Comunidad", y = "Tamaño de Nodos") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-pA9 <- ggplot(A9_sizes, aes(x = reorder(Community_name, -size), y = size)) +
-  geom_bar(stat = "identity", fill = "coral") +
-  labs(title = "Tamaño de Nodos por Comunidad (A9) - Louvain",
-       x = "Comunidad", y = "Tamaño de Nodos") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-# === Combinar en una sola grilla y guardar en PNG ===
-if (!requireNamespace("patchwork", quietly = TRUE)) install.packages("patchwork")
 library(patchwork)
 
-combined <- pA7 + pA9 + patchwork::plot_layout(ncol = 2)
+A7_sizes <- A7_sizes %>% arrange(desc(size)) %>%
+  mutate(Community_name = factor(Community_name, levels = Community_name))
+A9_sizes <- A9_sizes %>% arrange(desc(size)) %>%
+  mutate(Community_name = factor(Community_name, levels = Community_name))
 
-outdir <- "~/CESC_Network/5_Modularity/5_1_Modules/"
-if (!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
+base_theme <- theme_bw(base_family = "Times New Roman") +
+  theme(
+    axis.text.x        = element_text(size = 17, face = "bold", angle = 45, hjust = 1),
+    axis.text.y        = element_text(size = 20, face = "bold"),
+    axis.title.x       = element_text(size = 22, face = "bold", margin = margin(t = 8)),
+    axis.title.y       = element_text(size = 22, face = "bold", margin = margin(r = 8)),
+    plot.title         = element_text(size = 26, face = "bold", hjust = 0.5,
+                                      margin = margin(b = 8)),
+    panel.grid.minor   = element_blank(),
+    panel.grid.major.x = element_blank(),
+    panel.border       = element_rect(color = "black", linewidth = 0.8)
+  )
 
-outfile <- file.path(outdir, "5_2_2_Louvain_community_sizes_A7_A9_max.png")
-ggsave(filename = outfile, plot = combined, width = 18, height = 9, dpi = 300, bg = "white")
+pA7 <- ggplot(A7_sizes, aes(x = Community_name, y = size)) +
+  geom_bar(stat = "identity", fill = "#003366", alpha = 0.88, width = 0.8) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.05)), labels = scales::comma) +
+  labs(title = "HPV-A7  (32 modules)", x = NULL, y = "Number of genes") +
+  base_theme
 
-message("[OK] PNG guardado en: ", outfile)
+pA9 <- ggplot(A9_sizes, aes(x = Community_name, y = size)) +
+  geom_bar(stat = "identity", fill = "#CC2200", alpha = 0.88, width = 0.8) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.05)), labels = scales::comma) +
+  labs(title = "HPV-A9  (41 modules)", x = NULL, y = "Number of genes") +
+  base_theme
+
+combined <- pA7 + pA9 + plot_layout(ncol = 2) +
+  plot_annotation(
+    title = "Louvain Module Size Distribution — HPV Co-expression Networks",
+    theme = theme(plot.title = element_text(size = 30, face = "bold", hjust = 0.5,
+                                             family = "Times New Roman",
+                                             margin = margin(b = 12)))
+  )
+
+outfile <- "~/CESC_Network/7_Modularity/5_1_Modules/5_1_2_Louvain_community_sizes_A7_A9_max.png"
+ggsave(filename = outfile, plot = combined, width = 28, height = 12, dpi = 300, bg = "white")
+message("[OK] Saved: ", outfile)
 

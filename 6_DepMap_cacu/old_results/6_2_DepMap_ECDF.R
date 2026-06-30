@@ -4,7 +4,7 @@
 ## Contraste de distribuciones de CRISPR dependency score
 ## en líneas de cáncer cervicouterino (DepMap):
 ##
-##   Grupo 1 — DEGs significativos (p < 0.01, |LFC| > 1)
+##   Grupo 1 — DEGs significativos (p < 0.01, |LFC| > 1.5)
 ##             → N_mapped genes tras unir con DepMap
 ##
 ##   Grupo 2 — Top connected genes
@@ -57,7 +57,7 @@ DE_A9 <- read_tsv(
 build_groups <- function(annot_tbl, label) {
 
   degs <- annot_tbl %>%
-    filter(P.Value < 0.01, abs(logFC) > 1) %>%
+    filter(P.Value < 0.01, abs(logFC) > 1.5) %>%
     mutate(gene_u = toupper(Gene))
 
   g1 <- dep_mean %>%

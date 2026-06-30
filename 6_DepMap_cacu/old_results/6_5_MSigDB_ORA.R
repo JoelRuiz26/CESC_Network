@@ -85,8 +85,12 @@ COLLECTIONS <- list(
     label    = "Reactome Pathways",
     col      = "C2",
     subcol   = "CP:REACTOME",
-    lo       = "#EDE0F5", hi = "#4A235A",   # morado
-    file     = "6_5_MSigDB_REACTOME_barplot"
+    lo       = "#E3E8DC", hi = "#33512E",   # verde sage / hunter green
+    file     = "6_5_MSigDB_REACTOME_barplot",
+    top_n    = 20,
+    font_mult = 2.0,
+    wrap_width = 32,
+    ncol     = 2
   )
 )
 
@@ -140,7 +144,7 @@ run_msigdb_ora <- function(genes, universe, label, term2gene) {
 TOP_N     <- 15
 GROUP_COL <- c("HPV-A7" = "#1A6FB5", "HPV-A9" = "#C0392B")
 
-make_panel <- function(grp, accent_col, df_grp, col_lo, col_hi) {
+make_panel <- function(grp, accent_col, df_grp, col_lo, col_hi, font_mult = 1) {
   if (nrow(df_grp) == 0) return(NULL)
 
   ggplot(df_grp, aes(x = GeneRatio_num, y = term_ord, fill = log_padj)) +
@@ -154,19 +158,19 @@ make_panel <- function(grp, accent_col, df_grp, col_lo, col_hi) {
                        n.breaks = 4,
                        guide = guide_axis(check.overlap = TRUE)) +
     labs(title = grp, x = "Gene Ratio", y = NULL) +
-    theme_classic(base_size = 16) +
+    theme_classic(base_size = 16 * font_mult) +
     theme(
-      plot.title         = element_text(face = "bold", size = 19,
+      plot.title         = element_text(face = "bold", size = 19 * font_mult,
                                         colour = accent_col),
-      axis.text.y        = element_text(size = 14, colour = "grey10",
+      axis.text.y        = element_text(size = 14 * font_mult, colour = "grey10",
                                         face = "bold"),
-      axis.text.x        = element_text(size = 13, face = "bold",
+      axis.text.x        = element_text(size = 13 * font_mult, face = "bold",
                                         colour = "grey20"),
-      axis.title.x       = element_text(size = 14, face = "bold",
+      axis.title.x       = element_text(size = 14 * font_mult, face = "bold",
                                         colour = "grey30"),
       axis.line          = element_line(colour = "grey70"),
-      legend.title       = element_text(size = 13, face = "bold"),
-      legend.text        = element_text(size = 12, face = "bold"),
+      legend.title       = element_text(size = 13 * font_mult, face = "bold"),
+      legend.text        = element_text(size = 12 * font_mult, face = "bold"),
       panel.grid.major.x = element_line(colour = "grey93", linewidth = 0.35)
     )
 }
@@ -188,48 +192,68 @@ for (col_id in names(COLLECTIONS)) {
 
   all_results[[col_id]] <- list(A7 = ora_A7, A9 = ora_A9)
 
-  ora_comb <- bind_rows(ora_A7, ora_A9) %>%
+  ora_comb_raw <- bind_rows(ora_A7, ora_A9) %>%
     filter(!is.na(p.adjust)) %>%
     mutate(
       group     = factor(group, levels = c("HPV-A7", "HPV-A9")),
-      log_padj  = -log10(p.adjust),
-      Desc_wrap = str_wrap(Description, width = 44)
+      log_padj  = -log10(p.adjust)
     )
+
+  # Cache de datos de ORA para poder re-generar el plot sin re-correr enrichGO
+  saveRDS(list(ora_comb = ora_comb_raw, meta = meta, universe_n = length(universe_sym)),
+          file.path(out_dir, sprintf("6_5_%s_oradata.rds", col_id)))
+
+  wrap_width <- if (!is.null(meta$wrap_width)) meta$wrap_width else 44
+
+  ora_comb <- ora_comb_raw %>%
+    mutate(Desc_wrap = str_wrap(Description, width = wrap_width))
 
   if (nrow(ora_comb) == 0) {
     cat(sprintf("  Sin términos significativos — omitido.\n")); next
   }
 
+  top_n     <- if (!is.null(meta$top_n))    meta$top_n    else TOP_N
+  font_mult <- if (!is.null(meta$font_mult)) meta$font_mult else 1
+
   plot_df <- ora_comb %>%
     group_by(group) %>%
-    slice_max(GeneRatio_num, n = TOP_N, with_ties = FALSE) %>%
+    slice_max(GeneRatio_num, n = top_n, with_ties = FALSE) %>%
     ungroup() %>%
     mutate(term_ord = reorder_within(Desc_wrap, GeneRatio_num, group))
 
   p_A7 <- make_panel("HPV-A7", GROUP_COL["HPV-A7"],
                      plot_df %>% filter(group == "HPV-A7"),
-                     meta$lo, meta$hi)
+                     meta$lo, meta$hi, font_mult)
   p_A9 <- make_panel("HPV-A9", GROUP_COL["HPV-A9"],
                      plot_df %>% filter(group == "HPV-A9"),
-                     meta$lo, meta$hi)
+                     meta$lo, meta$hi, font_mult)
   panels <- Filter(Negate(is.null), list(p_A7, p_A9))
 
-  combined <- wrap_plots(panels, ncol = 1) +
+  ncol_panels <- if (!is.null(meta$ncol)) meta$ncol else 1
+  title_mult  <- min(font_mult, 1.4)
+  title_width <- if (ncol_panels == 2) 70 else 42
+
+  combined <- wrap_plots(panels, ncol = ncol_panels) +
     plot_annotation(
-      title   = sprintf("%s — Hub ∩ DE genes | Cervical Cancer (CESC)", meta$label),
+      title   = str_wrap(sprintf("%s — Hub ∩ DE genes | Cervical Cancer (CESC)", meta$label), width = title_width),
       caption = sprintf(
         "MSigDB · Universe: %d genes · BH-adjusted p < 0.05 · Top %d terms by Gene Ratio",
-        length(universe_sym), TOP_N
+        length(universe_sym), top_n
       ),
       theme = theme(
-        plot.title   = element_text(face = "bold", hjust = 0.5, size = 17),
-        plot.caption = element_text(colour = "grey50", size = 11, hjust = 0.5)
+        plot.title   = element_text(face = "bold", hjust = 0.5, size = 17 * title_mult),
+        plot.caption = element_text(colour = "grey50", size = 11 * title_mult, hjust = 0.5)
       )
     )
 
-  n_grp  <- plot_df %>% count(group) %>% pull(n) %>% max(na.rm = TRUE)
-  plot_w <- if (col_id == "REACTOME") 8   else 9
-  plot_h <- if (col_id == "REACTOME") n_grp * 0.42 * 2 + 3 else n_grp * 0.33 * 2 + 3
+  n_grp <- plot_df %>% count(group) %>% pull(n) %>% max(na.rm = TRUE)
+  if (col_id == "REACTOME") {
+    plot_w <- 22
+    plot_h <- n_grp * 0.55 * font_mult + 4
+  } else {
+    plot_w <- 9
+    plot_h <- n_grp * 0.33 * 2 + 3
+  }
 
   dpi_out <- if (col_id == "REACTOME") 600 else 1200
   ggsave(file.path(out_dir, paste0(meta$file, ".pdf")),

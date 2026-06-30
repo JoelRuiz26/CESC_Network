@@ -5,8 +5,8 @@
 ## dentro de los módulos Louvain de cada red HPV.
 ##
 ## Inputs:
-##   7_Modularity/5_1_Modules/5_2_1_Louvain_A7_graph_max.rds
-##   7_Modularity/5_1_Modules/5_2_1_Louvain_A9_graph_max.rds
+##   7_Modularity/5_1_Modules/5_1_1_Louvain_A7_graph_max.rds
+##   7_Modularity/5_1_Modules/5_1_1_Louvain_A9_graph_max.rds
 ##   6_DepMap_cacu/6_3_gene_table_A7.tsv
 ##   6_DepMap_cacu/6_3_gene_table_A9.tsv
 ##
@@ -59,11 +59,11 @@ load_module_interest <- function(graph_rds, gene_tsv, label) {
 }
 
 df_A7 <- load_module_interest(
-  file.path(mod_dir, "5_2_1_Louvain_A7_graph_max.rds"),
+  file.path(mod_dir, "5_1_1_Louvain_A7_graph_max.rds"),
   file.path(dep_dir, "6_3_gene_table_A7.tsv"), "HPV-A7"
 )
 df_A9 <- load_module_interest(
-  file.path(mod_dir, "5_2_1_Louvain_A9_graph_max.rds"),
+  file.path(mod_dir, "5_1_1_Louvain_A9_graph_max.rds"),
   file.path(dep_dir, "6_3_gene_table_A9.tsv"), "HPV-A9"
 )
 

@@ -187,8 +187,8 @@ sig_int  <- sig_df %>% filter(category == "Interest (DEG x Hub)")
 hub_thr_A7 <- t7 %>% arrange(desc(degree)) %>% slice(ceiling(0.10 * nrow(t7))) %>% pull(degree)
 hub_thr_A9 <- t9 %>% arrange(desc(degree)) %>% slice(ceiling(0.10 * nrow(t9))) %>% pull(degree)
 
-# DEG logFC threshold labels (symmetric ±1 for visual guide, matches is_DEG criterion)
-fc_guide <- 1.0
+# DEG logFC threshold labels (symmetric ±1.5 for visual guide, matches is_DEG criterion)
+fc_guide <- 1.5
 
 # Top interest genes to label (most essential + most connected)
 top_int <- sig_int %>%

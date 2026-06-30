@@ -8,8 +8,12 @@
 pacman::p_load("igraph", "tidyverse", "ggraph", "tidygraph", "svglite", "ggvenn")
 
 ### Load graphs ###
-Subgraph_A7 <- readRDS('~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A7_max.rds')
-Subgraph_A9 <- readRDS('~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A9_max.rds')
+# Subgraph_A7 <- readRDS('~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A7_max.rds')
+# Subgraph_A9 <- readRDS('~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A9_max.rds')
+
+# Corte: 117407 aristas (total de A7_network_sort.txt, red limitante)
+Subgraph_A7 <- readRDS("~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A7_max.rds")
+Subgraph_A9 <- readRDS("~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A9_max.rds")
 
 
 ### Build graphs to be comparable ###
@@ -46,9 +50,12 @@ jaccard_nodes <- function(g1, g2) {
 topological_metrics <- lapply(graphLists, function(graph) { #Topological metrics
   list(
     Numero_de_nodos = vcount(graph),
-    Componentes_conectados = components(graph)$no, # Número de componentes conectados
+    Numero_de_enlaces = ecount(graph),
+    Densidad = edge_density(graph),
+    Componentes_conectados = components(graph)$no,
     Grado_promedio = mean(igraph::degree(graph)),
-    Coeficiente_de_agrupamiento = transitivity(graph, type = "average"),
+    Coeficiente_de_agrupamiento_local = transitivity(graph, type = "average"),
+    Transitividad_global = transitivity(graph, type = "global"),
     Asortatividad = assortativity_degree(graph),
     Tamano_del_componente_principal = max(components(graph)$csize),
     Porcentaje_componente_principal = max(components(graph)$csize) / vcount(graph) * 100,
@@ -68,7 +75,7 @@ topological_metrics_df <- bind_rows(topological_metrics, .id = "network") %>%
     jaccard_nodes = ifelse(network == "HPV-A7", NodesJaccard, NodesJaccard),
     jaccard_edges = ifelse(network == "HPV-A7", EdgesJaccard, EdgesJaccard)
   )
-t_topological_metrics <- topological_metrics_df %>% dplyr::select(1:6,jaccard_nodes,jaccard_edges,7:10) %>% t() %>% as.data.frame()
+t_topological_metrics <- topological_metrics_df %>% dplyr::select(1:6,jaccard_nodes,jaccard_edges,7:14) %>% t() %>% as.data.frame()
 colnames(t_topological_metrics) <- c("HPV-A7","HPV-A9")
 t_topological_metrics <- t_topological_metrics %>% dplyr::slice(-1)
           print(t_topological_metrics)
@@ -102,22 +109,22 @@ list_edges <- list("HPV-A7" = edges_A7, "HPV-A9" = edges_A9)
 
 VennPlot <- ggvenn(
   list_edges,
-  fill_color      = c("#003366", "#FF0000"),  
+  fill_color      = c("#003366", "#FF0000"),
   fill_alpha      = 0.5,
-  stroke_size     = 0.5,
-  set_name_size   = 8,
-  text_size       = 10,
+  stroke_size     = 0.7,
+  set_name_size   = 9,
+  text_size       = 8,
   show_percentage = TRUE,
   label_sep       = "\n",
   digits          = 1
 ) +
-  labs(title = "Jaccard edges") +
+  labs(title = "Shared edges between networks") +
   theme(
     text       = element_text(family = "Times New Roman"),
     plot.title = element_text(
       hjust  = 0.5,
       face   = "bold",
-      size   = 35,
+      size   = 24,
       family = "Times New Roman"
     )
   )

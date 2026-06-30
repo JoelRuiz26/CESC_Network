@@ -1,9 +1,12 @@
 ############################################################
 ## 6_4_ORA_interest_genes.R
 ##
-## Over-Representation Analysis (ORA) sobre los genes de
-## interés (hub ∩ DEG, is_interest = TRUE, mean_dep <= -0.5)
+## Over-Representation Analysis (ORA) sobre los genes clave
+## (key genes = hub ∩ DEG, is_interest = TRUE; sin filtro DepMap)
 ## de las redes HPV-A7 y HPV-A9.
+##
+## DEG: adj.P.Val <= 0.01, |logFC| >= 1.5
+## Hub: top 10% por degree_rank
 ##
 ## Ontologías : BP, MF, CC
 ## Universo   : 2_Prepro_TCGA_GTEx/2_1_Universe_annotation_table.rds

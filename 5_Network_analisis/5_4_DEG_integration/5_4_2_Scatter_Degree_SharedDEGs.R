@@ -12,7 +12,7 @@ suppressPackageStartupMessages({
 })
 
 PADJ_THR <- 0.01
-LFC_THR  <- 1
+LFC_THR  <- 1.5
 
 # ── Load DEG + degree tables ──────────────────────────────────
 deg_A7 <- read_tsv("5_4_1_DEG_A7_Degree.tsv", show_col_types = FALSE)

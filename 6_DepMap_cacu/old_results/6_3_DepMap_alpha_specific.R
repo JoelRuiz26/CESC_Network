@@ -12,7 +12,7 @@
 ##   HPV-A9 genes  ×  A7 cell lines
 ##
 ## Gene sets per comparison:
-##   - DE genes (p < 0.01, |LFC| > 1)
+##   - DE genes (p < 0.01, |LFC| > 1.5)
 ##   - Hub genes (top 10% most connected in the network)
 ##
 ## Requires outputs from 6_1_DepMap_download.R
@@ -101,7 +101,7 @@ fmt_lines <- function(cell_lines) {
 build_groups <- function(annot_tbl, dep_mean_tbl) {
 
   degs <- annot_tbl %>%
-    filter(P.Value < 0.01, abs(logFC) > 1) %>%
+    filter(P.Value < 0.01, abs(logFC) > 1.5) %>%
     mutate(gene_u = toupper(Gene))
 
   g1 <- dep_mean_tbl %>%
@@ -268,7 +268,7 @@ PAL3 <- c(
 build_inter_groups <- function(annot_tbl, dep_mean_tbl) {
 
   degs <- annot_tbl %>%
-    filter(P.Value < 0.01, abs(logFC) > 1) %>%
+    filter(P.Value < 0.01, abs(logFC) > 1.5) %>%
     mutate(gene_u = toupper(Gene))
 
   g_degs <- dep_mean_tbl %>%
@@ -450,7 +450,7 @@ cat("  6_3_violin_matched.pdf / .png saved.\n")
 ##
 ## Full network gene tables updated with DepMap mean dep score
 ## and three boolean flags:
-##   is_DEG      : P.Value < 0.01 & |logFC| > 1
+##   is_DEG      : P.Value < 0.01 & |logFC| > 1.5
 ##   is_hub      : top 10% most connected genes (degree_rank)
 ##   is_interest : is_DEG & is_hub  (DEGs ∩ Hub — intersection set)
 ##
@@ -466,7 +466,7 @@ build_annot_table <- function(annot_tbl, dep_mean_tbl) {
     pull(Gene) %>% toupper()
 
   deg_genes <- annot_tbl %>%
-    filter(P.Value < 0.01, abs(logFC) > 1) %>%
+    filter(P.Value < 0.01, abs(logFC) > 1.5) %>%
     pull(Gene) %>% toupper()
 
   annot_tbl %>%

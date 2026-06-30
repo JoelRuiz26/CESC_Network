@@ -12,7 +12,7 @@ suppressPackageStartupMessages({
 })
 
 PADJ_THR <- 0.01
-LFC_THR  <- 1
+LFC_THR  <- 1.5
 
 # ── Load & classify ───────────────────────────────────────────
 de_A7 <- read_tsv("3_1_limma_A7_vs_SNT_allGenes.tsv", show_col_types = FALSE)
@@ -81,10 +81,10 @@ p <- ggplot(counts, aes(y = set, x = n_plot, fill = fill_id)) +
   ) +
 
   # axis direction labels
-  annotate("text", x = -3600, y = 3.55,
+  annotate("text", x = -2600, y = 3.55,
            label = "<- Down-regulated", hjust = 0,
            size = 5, color = "grey50", fontface = "italic") +
-  annotate("text", x =  3600, y = 3.55,
+  annotate("text", x =  2600, y = 3.55,
            label = "Up-regulated ->", hjust = 1,
            size = 5, color = "grey50", fontface = "italic") +
 
@@ -100,7 +100,7 @@ p <- ggplot(counts, aes(y = set, x = n_plot, fill = fill_id)) +
   ) +
   scale_x_continuous(
     labels = function(x) comma(abs(x)),
-    limits = c(-4200, 4200),
+    limits = c(-3000, 3000),
     expand = c(0, 0)
   ) +
   guides(fill = guide_legend(nrow = 2, byrow = FALSE)) +
