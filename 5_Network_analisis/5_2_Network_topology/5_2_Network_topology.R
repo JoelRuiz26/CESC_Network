@@ -11,7 +11,7 @@ pacman::p_load("igraph", "tidyverse", "ggraph", "tidygraph", "svglite", "ggvenn"
 # Subgraph_A7 <- readRDS('~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A7_max.rds')
 # Subgraph_A9 <- readRDS('~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A9_max.rds')
 
-# Corte: 117407 aristas (total de A7_network_sort.txt, red limitante)
+# Corte: 160897 aristas (total de A7 dedup, red limitante); A9 recortada al mismo nº
 Subgraph_A7 <- readRDS("~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A7_max.rds")
 Subgraph_A9 <- readRDS("~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_2_4_Subnetwork_A9_max.rds")
 
@@ -112,8 +112,8 @@ VennPlot <- ggvenn(
   fill_color      = c("#003366", "#FF0000"),
   fill_alpha      = 0.5,
   stroke_size     = 0.7,
-  set_name_size   = 9,
-  text_size       = 8,
+  set_name_size   = 11,
+  text_size       = 9,
   show_percentage = TRUE,
   label_sep       = "\n",
   digits          = 1
@@ -124,7 +124,7 @@ VennPlot <- ggvenn(
     plot.title = element_text(
       hjust  = 0.5,
       face   = "bold",
-      size   = 24,
+      size   = 32,
       family = "Times New Roman"
     )
   )

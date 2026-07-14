@@ -137,7 +137,6 @@ TCGA-FU-A23K-01	TCGA	TCGA-FU-A23K	Primary Tumor	HPV18	A7_clade	Stage IIIB	Stage 
 TCGA-FU-A23L-01	TCGA	TCGA-FU-A23L	Primary Tumor	HPV45	A7_clade	Stage IIA1	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	725	NA
 TCGA-FU-A2QG-01	TCGA	TCGA-FU-A2QG	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	579	NA
 TCGA-FU-A3EO-01	TCGA	TCGA-FU-A3EO	Primary Tumor	HPV16	A9_clade	Stage IIB	Stage II	Endocervical Type of Adenocarcinoma	Adenocarcinoma	Cervical	LIVING	490	NA
-TCGA-FU-A3EO-11	TCGA	TCGA-FU-A3EO	Solid Tissue Normal	Solid Tissue Normal	Solid Tissue Normal	Stage IIB	Stage II	Endocervical Type of Adenocarcinoma	Solid Tissue Normal	Cervical	LIVING	490	NA
 TCGA-FU-A3HY-01	TCGA	TCGA-FU-A3HY	Primary Tumor	HPV16	A9_clade	Stage IB2	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	954	NA
 TCGA-FU-A3NI-01	TCGA	TCGA-FU-A3NI	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	44	638
 TCGA-FU-A3TQ-01	TCGA	TCGA-FU-A3TQ	Primary Tumor	HPV16	A9_clade	Stage IIIB	Stage III	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	795	NA
@@ -150,7 +149,6 @@ TCGA-FU-A770-01	TCGA	TCGA-FU-A770	Primary Tumor	HPV16	A9_clade	Stage IIIB	Stage 
 TCGA-GH-A9DA-01	TCGA	TCGA-GH-A9DA	Primary Tumor	HPV45	A7_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	540	NA
 TCGA-HG-A2PA-01	TCGA	TCGA-HG-A2PA	Primary Tumor	HPV16	A9_clade	Stage IB2	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	773	773
 TCGA-HM-A3JJ-01	TCGA	TCGA-HM-A3JJ	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	DECEASED	NA	659
-TCGA-HM-A3JJ-11	TCGA	TCGA-HM-A3JJ	Solid Tissue Normal	Solid Tissue Normal	Solid Tissue Normal	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Solid Tissue Normal	Cervical	DECEASED	NA	659
 TCGA-HM-A3JK-01	TCGA	TCGA-HM-A3JK	Primary Tumor	HPV35	A9_clade	Stage IIA2	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	632	NA
 TCGA-HM-A4S6-01	TCGA	TCGA-HM-A4S6	Primary Tumor	HPV16	A9_clade	Stage IIIB	Stage III	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	454	NA
 TCGA-IR-A3L7-01	TCGA	TCGA-IR-A3L7	Primary Tumor	HPV18	A7_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	4483	NA
@@ -189,7 +187,6 @@ TCGA-MU-A8JM-01	TCGA	TCGA-MU-A8JM	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I
 TCGA-MY-A5BD-01	TCGA	TCGA-MY-A5BD	Primary Tumor	HPV16	A9_clade	Stage IIB	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	1667	NA
 TCGA-MY-A5BE-01	TCGA	TCGA-MY-A5BE	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	1066	NA
 TCGA-MY-A5BF-01	TCGA	TCGA-MY-A5BF	Primary Tumor	HPV16	A9_clade	Stage IIA2	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	634	NA
-TCGA-MY-A5BF-11	TCGA	TCGA-MY-A5BF	Solid Tissue Normal	Solid Tissue Normal	Solid Tissue Normal	Stage IIA2	Stage II	Cervical Squamous Cell Carcinoma	Solid Tissue Normal	Cervical	LIVING	634	NA
 TCGA-MY-A913-01	TCGA	TCGA-MY-A913	Primary Tumor	HPV45	A7_clade	Stage IIA	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	524	NA
 TCGA-PN-A8MA-01	TCGA	TCGA-PN-A8MA	Primary Tumor	HPV16	A9_clade	Stage IIB	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	90	NA
 TCGA-Q1-A5R1-01	TCGA	TCGA-Q1-A5R1	Primary Tumor	HPV16	A9_clade	Stage IB1	Stage I	Mucinous Adenocarcinoma of Endocervical Type	Adenocarcinoma	Cervical	LIVING	474	NA
@@ -269,13 +266,3 @@ TCGA-ZJ-AAXU-01	TCGA	TCGA-ZJ-AAXU	Primary Tumor	HPV16	A9_clade	Stage IIB	Stage I
 TCGA-ZJ-AB0H-01	TCGA	TCGA-ZJ-AB0H	Primary Tumor	HPV18	A7_clade	Stage IIIB	Stage III	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	0	NA
 TCGA-ZJ-AB0I-01	TCGA	TCGA-ZJ-AB0I	Primary Tumor	HPV16	A9_clade	Stage IIB	Stage II	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	0	NA
 TCGA-ZX-AA5X-01	TCGA	TCGA-ZX-AA5X	Primary Tumor	HPV35	A9_clade	Stage IIIB	Stage III	Cervical Squamous Cell Carcinoma	Squamous	Cervical	LIVING	119	NA
-GTEX-S32W-1526-SM-4AD6Z	GTEX	NA	Solid Tissue Normal	Solid Tissue Normal	Solid Tissue Normal	NA	(NOT REPORTED)	NA	Solid Tissue Normal	CERVIX - ECTOCERVIX	NA	NA	NA
-GTEX-S32W-1626-SM-4AD6G	GTEX	NA	Solid Tissue Normal	Solid Tissue Normal	Solid Tissue Normal	NA	(NOT REPORTED)	NA	Solid Tissue Normal	CERVIX - ENDOCERVIX	NA	NA	NA
-GTEX-S341-1126-SM-4AD6T	GTEX	NA	Solid Tissue Normal	Solid Tissue Normal	Solid Tissue Normal	NA	(NOT REPORTED)	NA	Solid Tissue Normal	CERVIX - ECTOCERVIX	NA	NA	NA
-GTEX-S341-1326-SM-4AD72	GTEX	NA	Solid Tissue Normal	Solid Tissue Normal	Solid Tissue Normal	NA	(NOT REPORTED)	NA	Solid Tissue Normal	CERVIX - ENDOCERVIX	NA	NA	NA
-GTEX-S4UY-1426-SM-4AD6Y	GTEX	NA	Solid Tissue Normal	Solid Tissue Normal	Solid Tissue Normal	NA	(NOT REPORTED)	NA	Solid Tissue Normal	CERVIX - ECTOCERVIX	NA	NA	NA
-GTEX-T5JW-0726-SM-4DM6D	GTEX	NA	Solid Tissue Normal	Solid Tissue Normal	Solid Tissue Normal	NA	(NOT REPORTED)	NA	Solid Tissue Normal	CERVIX - ECTOCERVIX	NA	NA	NA
-GTEX-T6MO-1426-SM-4DM73	GTEX	NA	Solid Tissue Normal	Solid Tissue Normal	Solid Tissue Normal	NA	(NOT REPORTED)	NA	Solid Tissue Normal	CERVIX - ENDOCERVIX	NA	NA	NA
-GTEX-TSE9-2726-SM-4DXSQ	GTEX	NA	Solid Tissue Normal	Solid Tissue Normal	Solid Tissue Normal	NA	(NOT REPORTED)	NA	Solid Tissue Normal	CERVIX - ENDOCERVIX	NA	NA	NA
-GTEX-TSE9-2826-SM-4DXTF	GTEX	NA	Solid Tissue Normal	Solid Tissue Normal	Solid Tissue Normal	NA	(NOT REPORTED)	NA	Solid Tissue Normal	CERVIX - ECTOCERVIX	NA	NA	NA
-GTEX-U3ZN-1626-SM-4DXTZ	GTEX	NA	Solid Tissue Normal	Solid Tissue Normal	Solid Tissue Normal	NA	(NOT REPORTED)	NA	Solid Tissue Normal	CERVIX - ECTOCERVIX	NA	NA	NA

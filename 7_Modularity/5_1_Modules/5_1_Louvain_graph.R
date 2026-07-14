@@ -1,6 +1,7 @@
 #Script for Louvain cluster
 #Input: Networks (.graphml)
-#Output: Networks (graphml) with community named by gene with highest normalized degree, filtered for enrichment.
+#Output: Networks (graphml) with communities (size >= 10) named M1, M2, M3, ...
+#        by descending size (M1 = largest module), filtered for enrichment.
 #By Joel Ruiz
 
 ### Load packages ###
@@ -18,18 +19,12 @@ graph_A9 <- readRDS('~/CESC_Network/5_Network_analisis/5_1_Subnetwork/5_2_4_Subn
 Louvain_A7 <- cluster_louvain(graph_A7)        #125 communities
 V(graph_A7)$Community <- Louvain_A7$membership 
 
-### Normalized degree (degree / max_degree_in_network) ###
+### Normalized degree (degree / max_degree_in_network), kept as node attribute ###
 deg_A7     <- degree(graph_A7)
 norm_deg_A7 <- deg_A7 / max(deg_A7)
 V(graph_A7)$NormDegree <- norm_deg_A7
-# Name each community by the gene with the highest normalized degree
-community_deg_names_A7 <- tapply(V(graph_A7)$name, V(graph_A7)$Community, function(nms) {
-  nd <- norm_deg_A7[V(graph_A7)$name %in% nms]
-  nms[which.max(nd)]
-})
-V(graph_A7)$Community_name <- community_deg_names_A7[as.character(V(graph_A7)$Community)] #Add to graph
 
-### PageRank (kept as node attribute, not used for naming) ###
+### PageRank (kept as node attribute) ###
 V(graph_A7)$PageRank <- page_rank(graph_A7)$vector
 
 ### Filter nodes for enrichment ###
@@ -37,22 +32,21 @@ V(graph_A7)$Community_size <- table(V(graph_A7)$Community)[as.character(V(graph_
 nodes_to_keep_A7 <- V(graph_A7)[V(graph_A7)$Community_size >= 10]
 filtered_graph_A7 <- induced_subgraph(graph_A7, vids = nodes_to_keep_A7)
 
+### Name modules M1, M2, M3, ... by descending size (M1 = largest) ###
+mod_rank_A7 <- names(sort(table(V(filtered_graph_A7)$Community), decreasing = TRUE))
+mod_name_A7 <- setNames(paste0("M", seq_along(mod_rank_A7)), mod_rank_A7)
+V(filtered_graph_A7)$Community_name <- unname(mod_name_A7[as.character(V(filtered_graph_A7)$Community)])
+
 
 ###### For A9 network ######
 ### Louvain ###
 Louvain_A9 <- cluster_louvain(graph_A9) #235
 V(graph_A9)$Community <- Louvain_A9$membership
 
-### Normalized degree ###
+### Normalized degree, kept as node attribute ###
 deg_A9      <- degree(graph_A9)
 norm_deg_A9 <- deg_A9 / max(deg_A9)
 V(graph_A9)$NormDegree <- norm_deg_A9
-# Name each community by the gene with the highest normalized degree
-community_deg_names_A9 <- tapply(V(graph_A9)$name, V(graph_A9)$Community, function(nms) {
-  nd <- norm_deg_A9[V(graph_A9)$name %in% nms]
-  nms[which.max(nd)]
-})
-V(graph_A9)$Community_name <- community_deg_names_A9[as.character(V(graph_A9)$Community)]
 
 ### PageRank (kept as node attribute) ###
 V(graph_A9)$PageRank <- page_rank(graph_A9)$vector
@@ -61,6 +55,11 @@ V(graph_A9)$PageRank <- page_rank(graph_A9)$vector
 V(graph_A9)$Community_size <- table(V(graph_A9)$Community)[as.character(V(graph_A9)$Community)]
 nodes_to_keep_A9 <- V(graph_A9)[V(graph_A9)$Community_size >= 10]
 filtered_graph_A9 <- induced_subgraph(graph_A9, vids = nodes_to_keep_A9)
+
+### Name modules M1, M2, M3, ... by descending size (M1 = largest) ###
+mod_rank_A9 <- names(sort(table(V(filtered_graph_A9)$Community), decreasing = TRUE))
+mod_name_A9 <- setNames(paste0("M", seq_along(mod_rank_A9)), mod_rank_A9)
+V(filtered_graph_A9)$Community_name <- unname(mod_name_A9[as.character(V(filtered_graph_A9)$Community)])
 
 
 ### Save filtered graphs ###
@@ -115,13 +114,13 @@ base_theme <- theme_bw(base_family = "Times New Roman") +
 pA7 <- ggplot(A7_sizes, aes(x = Community_name, y = size)) +
   geom_bar(stat = "identity", fill = "#003366", alpha = 0.88, width = 0.8) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.05)), labels = scales::comma) +
-  labs(title = "HPV-A7  (32 modules)", x = NULL, y = "Number of genes") +
+  labs(title = sprintf("HPV-A7  (%d modules)", nrow(A7_sizes)), x = NULL, y = "Number of genes") +
   base_theme
 
 pA9 <- ggplot(A9_sizes, aes(x = Community_name, y = size)) +
   geom_bar(stat = "identity", fill = "#CC2200", alpha = 0.88, width = 0.8) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.05)), labels = scales::comma) +
-  labs(title = "HPV-A9  (41 modules)", x = NULL, y = "Number of genes") +
+  labs(title = sprintf("HPV-A9  (%d modules)", nrow(A9_sizes)), x = NULL, y = "Number of genes") +
   base_theme
 
 combined <- pA7 + pA9 + plot_layout(ncol = 2) +

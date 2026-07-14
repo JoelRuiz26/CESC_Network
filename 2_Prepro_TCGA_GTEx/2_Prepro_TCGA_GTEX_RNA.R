@@ -28,7 +28,8 @@ factors$sampleID <- trimws(factors$sampleID)
 valid_samples <- intersect(factors$sampleID, colnames(unstranded_counts))
 
 factors <- factors %>%
-  dplyr::filter(sampleID %in% valid_samples) %>%
+  dplyr::filter(sampleID %in% valid_samples,
+                sample_type == "Primary Tumor") %>%   # keep only primary tumor samples (A7/A9)
   as.data.frame()
 
 counts <- unstranded_counts[, factors$sampleID, drop = FALSE]
@@ -102,7 +103,7 @@ saveRDS(noiseqData_before, file = "~/CESC_Network/2_Prepro_TCGA_GTEx/2_2_Noiseq_
 ### 3) Quality control of count data--- ---
 # 3.2) Sequencing depth & Expression Quantification
 # 3.2.1) Count distribution per sample  
-pdf("plots_prepro_data/QC_boxplot_counts_before.pdf", width = 8, height = 6)
+pdf("plots_prepro_data/QC_boxplot_counts_before.pdf", width = 6, height = 6)
 mycountsbio_HPV = NOISeq::dat(noiseqData_before, type = "countsbio", factor = "HPV_clade")
 explo.plot(mycountsbio_HPV,
            plottype = "boxplot",
@@ -155,11 +156,6 @@ par(cex.axis=1.5, cex.lab=1.5, cex.main=2)
 explo.plot(mylengthbias_SampleType, samples = 2, toplot = "global")
 dev.off()
 
-pdf("plots_prepro_data/QC_length_bias_SNT.pdf", width = 8, height = 6)
-par(cex.axis=1.5, cex.lab=1.5, cex.main=2)
-explo.plot(mylengthbias_SampleType, samples = 3, toplot = "global")
-dev.off()
-
 # 3.3.2) GC content bias
 myGCbias_Sample = dat(noiseqData_before, factor = "HPV_clade", type = "GCbias")
 
@@ -178,33 +174,21 @@ par(cex.axis=1.5, cex.lab=1.5, cex.main=2)
 explo.plot(myGCbias_Sample, samples = 2, toplot = "global")
 dev.off()
 
-pdf("plots_prepro_data/QC_GC_bias_SNT_before.pdf", width = 8, height = 6)
-par(cex.axis=1.5, cex.lab=1.5, cex.main=2)
-explo.plot(myGCbias_Sample, samples = 3, toplot = "global")
+# 3.3.3) RNA composition (slow operation)
+mycd <- dat(noiseqData_before, type = "cd", norm = FALSE)
+# Verify diagnostic (PASSED/FAILED across all samples)
+print(table(mycd@dat$DiagnosticTest[, "Diagnostic Test"]))
+pdf("plots_prepro_data/QC_Mvalues_mycd_before.pdf", width = 7, height = 6)
+par(mar = c(5, 4, 4, 2) - 1)
+par(cex.axis = 1.5, cex.lab = 1.5, cex.main = 2, xaxs = "i")
+explo.plot(mycd, samples = 1:12)
 dev.off()
-
-# 3.3.3) RNA composition
-#mycd <- dat(noiseqData_before, type = "cd", norm = FALSE) # Slow operation
-#pdf("plots_prepro_data/QC_Mvalues_mycd_before.pdf", width = 10, height = 6)
-#par(mar = c(5, 4, 4, 2) - 1)
-#par(cex.axis = 1.5, cex.lab = 1.5, cex.main = 2, xaxs = "i")
-#explo.plot(mycd, samples = c(268:279))
-#dev.off()
-# Verify diagnostic
-#table(mycd@dat$DiagnosticTest[, "Diagnostic Test"])
-#[1] "Reference sample is: TCGA-4J-AA1J-01"
-#FAILED 
-#279
 
 
 # 3.4) PCA
 myPCA_sample = dat(noiseqData_before, type = "PCA", norm = F, logtransf = F)
 pdf("plots_prepro_data/QC_PCA_scores_HPVclade_before.pdf", width = 8, height = 6)
 explo.plot(myPCA_sample, plottype= "scores", factor = "HPV_clade")
-dev.off()
-
-pdf("plots_prepro_data/QC_PCA_scores_source_before.pdf", width = 8, height = 6)
-explo.plot(myPCA_sample, plottype= "scores", factor = "source")
 dev.off()
 
 # ===================== FILTER FOR EDASeq QC ===================== #
@@ -254,27 +238,17 @@ fullfullTMM <-NOISeq::tmm(normCounts(lFull), long = 1000, lc = 0, k = 0)
 
 dim(fullfullTMM) #[1] 19528   280
 
-noiseqData_filtered = NOISeq::readData(data = fullfullTMM, 
-                                       factors=factors)
-
-# ===================== SOLVE BATCH EFFECT ===================== #
-#factor = "something", batch = TRUE ⟶ "removes the effect of something (identified batch)."
-
-#factor = "something", batch = FALSE ⟶ "main model = something (biology), I look 
-#for a hidden batch in the waste and remove it without affecting that main effect."
-
-ffTMMARSyn_s=ARSyNseq(noiseqData_filtered, factor = "HPV_clade", batch = F,
-                      norm = "n",  logtransf = F)
-
-#ffTMMARSyn=ARSyNseq(noiseqData_filtered, factor = "source", batch = T,
-#                      norm = "n",  logtransf = F)
+# ===================== BATCH EFFECT (OMITTED) ===================== #
+# ARSyNseq batch-effect correction is intentionally NOT applied:
+# analysis uses only primary tumor samples (A7/A9 clades), so the
+# GC + length + TMM normalized matrix (fullfullTMM) is the final matrix.
 
 # ===================== FINAL QUALITY CHECK ===================== #
 mylength_n <- setNames(myannot_filtered_df$length, myannot_filtered_df$feature)
 mygcn_n <- setNames(myannot_filtered_df$gc_percent, myannot_filtered_df$feature)
 mybiotype_n <- setNames(myannot_filtered_df$gene_biotype, myannot_filtered_df$feature)
 
-noiseqData_norm_s = NOISeq::readData(data = ffTMMARSyn_s, 
+noiseqData_norm_s = NOISeq::readData(data = fullfullTMM,
                                      factors=factors,
                                      gc = mygcn_n,
                                      biotype = mybiotype_n,
@@ -291,7 +265,7 @@ noiseqData_norm_s = NOISeq::readData(data = ffTMMARSyn_s,
 ### 3) Quality control of count data--- ---
 # 3.2) Sequencing depth & Expression Quantification
 # 3.2.1) Count distribution per sample
-pdf("plots_prepro_data/QC_boxplot_counts_after.pdf", width = 8, height = 6)
+pdf("plots_prepro_data/QC_boxplot_counts_after.pdf", width = 6, height = 6)
 mycountsbio_HPV = NOISeq::dat(noiseqData_norm_s, type = "countsbio", factor = "HPV_clade", norm = TRUE)
 explo.plot(mycountsbio_HPV,
            plottype = "boxplot",
@@ -344,11 +318,6 @@ par(cex.axis=1.5, cex.lab=1.5, cex.main=2)
 explo.plot(mylengthbias_SampleType, samples = 2, toplot = "global")
 dev.off()
 
-pdf("plots_prepro_data/QC_length_bias_SNT_after.pdf", width = 8, height = 6)
-par(cex.axis=1.5, cex.lab=1.5, cex.main=2)
-explo.plot(mylengthbias_SampleType, samples = 3, toplot = "global")
-dev.off()
-
 # 3.3.2) GC content bias
 myGCbias_Sample = dat(noiseqData_norm_s, factor = "HPV_clade", type = "GCbias", norm = TRUE)
 
@@ -367,22 +336,15 @@ par(cex.axis=1.5, cex.lab=1.5, cex.main=2)
 explo.plot(myGCbias_Sample, samples = 2, toplot = "global")
 dev.off()
 
-pdf("plots_prepro_data/QC_GC_bias_SNT_after.pdf", width = 8, height = 6)
-par(cex.axis=1.5, cex.lab=1.5, cex.main=2)
-explo.plot(myGCbias_Sample, samples = 3, toplot = "global")
+# 3.3.3) RNA composition (slow operation)
+mycd_norm <- dat(noiseqData_norm_s, type = "cd", norm = TRUE)
+# Verify diagnostic (PASSED/FAILED across all samples)
+print(table(mycd_norm@dat$DiagnosticTest[, "Diagnostic Test"]))
+pdf("plots_prepro_data/QC_Mvalues_mycd_after.pdf", width = 7, height = 6)
+par(mar = c(5, 4, 4, 2) - 1)
+par(cex.axis = 1.5, cex.lab = 1.5, cex.main = 2, xaxs = "i")
+explo.plot(mycd_norm, samples = 1:12)
 dev.off()
-
-# 3.3.3) RNA composition
-#mycd_norm<- dat(noiseqData_norm_s, type = "cd", norm = TRUE)
-# Verify diagnostic
-#table(mycd_norm@dat$DiagnosticTest[, "Diagnostic Test"])
-#FAILED PASSED #b=F HPV_clade 
-#98    181 
-#pdf("plots_prepro_data/QC_Mvalues_mycd_after.pdf", width = 10, height = 6)
-#par(mar = c(5, 4, 4, 2) - 1)
-#par(cex.axis = 1.5, cex.lab = 1.5, cex.main = 2, xaxs = "i")
-#explo.plot(mycd_norm, samples = c(266:276))
-#dev.off()
 
 # 3.4) PCA
 myPCA_sample_after = dat(noiseqData_norm_s, type = "PCA", norm = TRUE, logtransf = FALSE)
@@ -390,12 +352,8 @@ pdf("plots_prepro_data/QC_PCA_scores_HPVclade_after.pdf", width = 8, height = 6)
 explo.plot(myPCA_sample_after, plottype= "scores", factor = "HPV_clade")
 dev.off()
 
-pdf("plots_prepro_data/QC_PCA_scores_source_after.pdf", width = 8, height = 6)
-explo.plot(myPCA_sample_after, plottype= "scores", factor = "source")
-dev.off()
-
 # ===================== SAVE FINAL  ===================== #
-Final_SNT_vs_PP <- exprs(ffTMMARSyn_s) %>% as.data.frame()
+Final_SNT_vs_PP <- fullfullTMM %>% as.data.frame()
 Final_SNT_vs_PP$Gene <- rownames(Final_SNT_vs_PP)  #Add column for input ARACNE
 Final_SNT_vs_PP <- Final_SNT_vs_PP[, c(ncol(Final_SNT_vs_PP), 1:(ncol(Final_SNT_vs_PP)-1))]  
 dim(Final_SNT_vs_PP) #[1] 19528   281
@@ -440,25 +398,74 @@ vroom::vroom_write(Final_SNT_vs_PP_annot,
 # Save A7 for network
 Factors_A7 <- factors %>% dplyr::filter(HPV_clade == "A7_clade") %>% dplyr::pull(sampleID)
 Final_A7_NW <- Final_SNT_vs_PP_annot %>%
-  dplyr::select(Gene, Factors_A7)
+  dplyr::select(Gene, dplyr::all_of(Factors_A7))
 
-vroom::vroom_write(Final_A7_NW, 
-                   file = "~/CESC_Network/2_Prepro_TCGA_GTEx/2_7_Full_counts_A7_annot.tsv", 
-                   delim = "\t")
-vroom::vroom_write(Final_A7_NW, 
-                   file = "~/CESC_Network/3_Network/ARACNE-multicore/launch/2_7_Full_counts_A7_annot_pvalue.tsv", 
+vroom::vroom_write(Final_A7_NW,
+                   file = "~/CESC_Network/2_Prepro_TCGA_GTEx/2_7_Full_counts_A7_annot.tsv",
                    delim = "\t")
 
 # Save A9 for network
 Factors_A9 <- factors %>% filter(HPV_clade == "A9_clade") %>% pull(sampleID)
-Final_A9_NW <- Final_SNT_vs_PP_annot %>% dplyr::select(Gene, Factors_A9)
-vroom::vroom_write(Final_A9_NW, 
-                   file = "~/CESC_Network/2_Prepro_TCGA_GTEx/2_8_Full_counts_A9_annot.tsv", 
-                   delim = "\t")
-vroom::vroom_write(Final_A9_NW, 
-                   file = "~/CESC_Network/3_Network/ARACNE-multicore/launch/2_8_Full_counts_A9_annot_pvalue.tsv", 
+Final_A9_NW <- Final_SNT_vs_PP_annot %>% dplyr::select(Gene, dplyr::all_of(Factors_A9))
+vroom::vroom_write(Final_A9_NW,
+                   file = "~/CESC_Network/2_Prepro_TCGA_GTEx/2_8_Full_counts_A9_annot.tsv",
                    delim = "\t")
 
 save.image("/STORAGE/csbig/jruiz/cesc_network/2_9_Image_Post_Prepro.RData")
 
 #load("/STORAGE/csbig/jruiz/cesc_network/2_9_Image_Post_Prepro.RData")
+
+
+# ============================================================================ #
+# ===== INDEPENDENT BLOCK: GC-bias "after" with INVERTED within-lane order ==== #
+# ============================================================================ #
+# Run this block ON ITS OWN in a fresh R session. It is self-contained: it
+# reloads the post-prepro image and only re-does the EDASeq within-lane
+# normalization with the order INVERTED (length FIRST, then GC), then produces
+# the "after" GC-bias plot for that alternative ordering.
+# All variables are renamed with the suffix "_inv" and the PDFs use distinct
+# names, so NOTHING here overwrites the objects or outputs of the main pipeline.
+if (FALSE) {   # guard: skipped when sourcing the full script; run manually
+
+  library(NOISeq)
+  library(EDASeq)
+  library(Biobase)
+
+  setwd("~/CESC_Network/2_Prepro_TCGA_GTEx/")
+  load("/STORAGE/csbig/jruiz/cesc_network/2_9_Image_Post_Prepro.RData")
+
+  # Invert within-lane normalization: length FIRST, then GC (main flow is GC->length)
+  lFull_inv       <- withinLaneNormalization(mydataEDA, "length",     which = "full") # length bias
+  gcFull_inv      <- withinLaneNormalization(lFull_inv, "gc_percent", which = "full") # GC bias
+  fullfullTMM_inv <- NOISeq::tmm(normCounts(gcFull_inv), long = 1000, lc = 0, k = 0)
+
+  # NOISeq object for QC (independent names)
+  mylength_inv  <- setNames(myannot_filtered_df$length,       myannot_filtered_df$feature)
+  mygc_inv      <- setNames(myannot_filtered_df$gc_percent,   myannot_filtered_df$feature)
+  mybiotype_inv <- setNames(myannot_filtered_df$gene_biotype, myannot_filtered_df$feature)
+
+  noiseqData_inv <- NOISeq::readData(data    = fullfullTMM_inv,
+                                     factors = factors,
+                                     gc      = mygc_inv,
+                                     biotype = mybiotype_inv,
+                                     length  = mylength_inv)
+
+  # GC-bias plot AFTER only, inverted order -> distinct filenames (no overwrite)
+  myGCbias_inv <- dat(noiseqData_inv, factor = "HPV_clade", type = "GCbias", norm = TRUE)
+
+  pdf("plots_prepro_data/QC_GC_bias_global_after_lengthFirst.pdf", width = 8, height = 6)
+  par(cex.axis=1.5, cex.lab=1.5, cex.main=2)
+  explo.plot(myGCbias_inv, samples = NULL, toplot = "global")
+  dev.off()
+
+  pdf("plots_prepro_data/QC_GC_bias_A7_after_lengthFirst.pdf", width = 8, height = 6)
+  par(cex.axis=1.5, cex.lab=1.5, cex.main=2)
+  explo.plot(myGCbias_inv, samples = 1, toplot = "global")
+  dev.off()
+
+  pdf("plots_prepro_data/QC_GC_bias_A9_after_lengthFirst.pdf", width = 8, height = 6)
+  par(cex.axis=1.5, cex.lab=1.5, cex.main=2)
+  explo.plot(myGCbias_inv, samples = 2, toplot = "global")
+  dev.off()
+
+}

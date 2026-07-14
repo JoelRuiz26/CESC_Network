@@ -56,8 +56,8 @@ rho_label <- dplyr::case_when(
 )
 
 ann_label <- sprintf(
-  "Spearman \u03c1 = %.3f  (%s)\np < 2.2 \u00d7 10\u207b\u00b9\u2076\nn = %d",
-  rho_val, rho_label, nrow(degree_df)
+  "Spearman \u03c1 = %.3f\n(%s)\np < 2.2 \u00d7 10\u207b\u00b9\u2076",
+  rho_val, rho_label
 )
 
 # ── 5) Top 5 hubs por red (solo extremos) ─────────────────────────────────────
@@ -107,7 +107,7 @@ p_scatter <- ggplot(degree_df,
     hjust         = 0, vjust = 1,
     label         = ann_label,
     fontface      = "bold",
-    size          = 6.5,
+    size          = 9,
     fill          = alpha("white", 0.92),
     color         = "grey15",
     label.size    = 0.45,
@@ -135,8 +135,8 @@ p_scatter <- ggplot(degree_df,
   labs(
     title    = "Degree Conservation Across HPV Clade Networks",
     subtitle = sprintf(
-      "Log-log scale \u2014 diagonal = perfect concordance  |  Spearman \u03c1 = %.3f (%s)",
-      rho_val, rho_label
+      "Log-log scale \u2014 diagonal = perfect concordance  |  Spearman \u03c1 = %.3f",
+      rho_val
     ),
     x     = "Degree in HPV-A7  (log scale)",
     y     = "Degree in HPV-A9  (log scale)",
@@ -145,12 +145,12 @@ p_scatter <- ggplot(degree_df,
   
   theme_bw(base_family = "Times New Roman") +
   theme(
-    plot.title       = element_text(size = 24, face = "bold",
+    plot.title       = element_text(size = 31, face = "bold",
                                     hjust = 0.5, margin = margin(b = 4)),
-    plot.subtitle    = element_text(size = 18, hjust = 0.5,
+    plot.subtitle    = element_text(size = 24, hjust = 0.5,
                                     color = "grey35", margin = margin(b = 8)),
-    axis.title       = element_text(size = 20, face = "bold"),
-    axis.text        = element_text(size = 17, color = "black"),
+    axis.title       = element_text(size = 27, face = "bold"),
+    axis.text        = element_text(size = 23, color = "black"),
     axis.line        = element_blank(),
     panel.border     = element_rect(color = "black", fill = NA, linewidth = 0.8),
     panel.grid.major = element_line(color = "grey92", linewidth = 0.3),
@@ -162,8 +162,8 @@ p_scatter <- ggplot(degree_df,
     legend.background    = element_rect(fill  = alpha("white", 0.88),
                                         color = "grey60", linewidth = 0.4),
     legend.key           = element_blank(),
-    legend.key.size      = unit(0.8, "cm"),
-    legend.text          = element_text(size = 17),
+    legend.key.size      = unit(1.0, "cm"),
+    legend.text          = element_text(size = 23),
     legend.spacing.y     = unit(0.3, "cm"),
     plot.margin          = margin(12, 15, 10, 12)
   )

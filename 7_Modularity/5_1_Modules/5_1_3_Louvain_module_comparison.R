@@ -35,7 +35,7 @@ top7 <- sizes7$mod7   # 32 módulos A7
 top9 <- sizes9$mod9   # 41 módulos A9
 
 # ── Jaccard matrix (32 × 41) ──────────────────────────────────────────────────
-cat("[1] Calculando matriz Jaccard 32 × 41...\n")
+cat(sprintf("[1] Calculando matriz Jaccard %d × %d...\n", length(top7), length(top9)))
 
 genes7 <- lapply(top7, function(m) tbl7 %>% filter(mod7 == m) %>% pull(gene))
 genes9 <- lapply(top9, function(m) tbl9 %>% filter(mod9 == m) %>% pull(gene))
@@ -78,16 +78,14 @@ p <- pheatmap(
   cluster_cols    = TRUE,
   annotation_row  = ann_row,
   annotation_col  = ann_col,
-  fontsize        = 22,
-  fontsize_row    = 22,
-  fontsize_col    = 22,
-  cellwidth       = 52,
-  cellheight      = 52,
+  fontsize        = 32,
+  fontsize_row    = 32,
+  fontsize_col    = 32,
   main            = "Jaccard Similarity between Louvain Modules",
   display_numbers = TRUE,
   number_format   = "%.2f",
   number_color    = "grey20",
-  fontsize_number = 16,
+  fontsize_number = 21,
   angle_col       = 45,
   margins         = c(14, 14),
   silent          = TRUE
@@ -96,9 +94,26 @@ p <- pheatmap(
 # Aplicar negritas a todos los elementos de texto
 gt <- make_bold(p$gtable)
 
+# Large canvas; with no fixed cell size the heatmap expands to fill the page.
+W_in <- 30; H_in <- 22
+
+# Draw inside a viewport with a small left margin so the rotated "Size_A7"
+# annotation label at the bottom-left is not clipped by the page edge.
+draw_padded <- function(gt) {
+  pushViewport(viewport(x = unit(0.012, "npc"), width = unit(0.988, "npc"),
+                        just = "left"))
+  grid.draw(gt)
+  popViewport()
+}
+
 png(file.path(DIR, "5_1_3B_jaccard_heatmap.png"),
-    width = 11000, height = 8000, res = 300)
-grid.draw(gt)
+    width = W_in, height = H_in, units = "in", res = 300)
+draw_padded(gt)
+dev.off()
+
+cairo_pdf(file.path(DIR, "5_1_3B_jaccard_heatmap.pdf"),
+          width = W_in, height = H_in)
+draw_padded(gt)
 dev.off()
 
 # ── Summary ────────────────────────────────────────────────────────────────────

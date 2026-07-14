@@ -13,6 +13,12 @@ fi
 
 cd "$pdf_dir"
 
+# Subcarpetas de salida: antes / después / (otros sin etiqueta)
+before_dir="$pdf_dir/png_before"
+after_dir="$pdf_dir/png_after"
+other_dir="$pdf_dir/png_otros"
+mkdir -p "$before_dir" "$after_dir"
+
 echo "Convirtiendo PDFs en $pdf_dir a PNGs (1200dpi)..."
 for pdf in *.pdf; do
     # Verifica que haya archivos PDF
@@ -21,11 +27,22 @@ for pdf in *.pdf; do
         exit 0
     fi
     base=$(basename "$pdf" .pdf)
-    pdftoppm -png -rx 1200 -ry 1200 "$pdf" "$base"
+
+    # Elige subcarpeta según el nombre del archivo (before/after)
+    case "$base" in
+        *_before|*before*) out_dir="$before_dir" ;;
+        *_after|*after*)   out_dir="$after_dir" ;;
+        *)                 out_dir="$other_dir"; mkdir -p "$other_dir" ;;
+    esac
+
+    pdftoppm -png -rx 1200 -ry 1200 "$pdf" "$out_dir/$base"
     # Renombra si solo hay una página
-    if [ -f "${base}-1.png" ] && [ ! -f "${base}.png" ]; then
-        mv "${base}-1.png" "${base}.png"
+    if [ -f "$out_dir/${base}-1.png" ] && [ ! -f "$out_dir/${base}.png" ]; then
+        mv "$out_dir/${base}-1.png" "$out_dir/${base}.png"
     fi
 done
 
-echo "¡Listo! PNGs a 1200dpi guardados en $pdf_dir"
+echo "¡Listo! PNGs a 1200dpi:"
+echo "  - antes:    $before_dir"
+echo "  - después:  $after_dir"
+[ -d "$other_dir" ] && echo "  - otros:    $other_dir"
