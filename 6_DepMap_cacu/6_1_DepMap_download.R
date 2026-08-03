@@ -20,6 +20,8 @@
 ##   6_1_cervix_dep_mean_A7.tsv   — score medio por gen, líneas A7
 ##   6_1_cervix_dep_mean_A9.tsv   — score medio por gen, líneas A9
 ##   6_1_crispr_lines.tsv         — líneas con datos CRISPR y su grupo
+##   6_1_common_essential_genes.tsv — set pan-esencial oficial DepMap
+##                                    (flag common_essential, Chronos_Combined)
 ############################################################
 
 suppressPackageStartupMessages({
@@ -30,6 +32,8 @@ suppressPackageStartupMessages({
 })
 
 out_dir <- "~/CESC_Network/6_DepMap_cacu"
+res_dir <- file.path(out_dir, "results")           # outputs kept apart from scripts
+dir.create(res_dir, showWarnings = FALSE, recursive = TRUE)
 
 # ── 1) Tabla de anotación HPV (verificada por Cellosaurus / literatura) ──
 # Fuentes: Cellosaurus, Skok et al. 2021 (PMC8051715),
@@ -122,12 +126,28 @@ cat("\nGenes únicos con score (global):", nrow(dep_mean), "\n")
 cat("Genes únicos con score (A7):", nrow(dep_mean_A7), "\n")
 cat("Genes únicos con score (A9):", nrow(dep_mean_A9), "\n")
 
+# ── 4b) Set pan-esencial oficial de DepMap ───────────────────
+# Flag "common_essential" del resumen por gen, dataset Chronos_Combined.
+# IMPORTANTE: depmap_crispr() carga el CRISPR gene effect INTEGRADO de
+# DepMap (CRISPR_gene_effect.csv, ~1086 lineas), que en gene_summary
+# corresponde a "Chronos_Combined", NO a "Chronos_Achilles" (~941 lineas).
+# Se toma el common_essential del MISMO dataset de los scores para que el
+# corte pan-esencial sea consistente con la dependencia usada arriba.
+# NO se re-deriva por nosotros. Requerido por 6_5 y 6_6.
+common_ess <- depmap_gene_summary() %>%
+  filter(dataset == "Chronos_Combined", common_essential) %>%
+  transmute(gene_u = toupper(gene_name)) %>%
+  distinct()
+
+cat("\nGenes pan-esenciales (Chronos_Combined):", nrow(common_ess), "\n")
+
 # ── 5) Guardar outputs ───────────────────────────────────────
-write_tsv(cervix_meta,  file.path(out_dir, "6_1_cervix_metadata.tsv"))
-write_tsv(dep_mean,     file.path(out_dir, "6_1_cervix_dep_mean.tsv"))
-write_tsv(dep_mean_A7,  file.path(out_dir, "6_1_cervix_dep_mean_A7.tsv"))
-write_tsv(dep_mean_A9,  file.path(out_dir, "6_1_cervix_dep_mean_A9.tsv"))
-write_tsv(crispr_lines, file.path(out_dir, "6_1_crispr_lines.tsv"))
+write_tsv(cervix_meta,  file.path(res_dir, "6_1_cervix_metadata.tsv"))
+write_tsv(dep_mean,     file.path(res_dir, "6_1_cervix_dep_mean.tsv"))
+write_tsv(dep_mean_A7,  file.path(res_dir, "6_1_cervix_dep_mean_A7.tsv"))
+write_tsv(dep_mean_A9,  file.path(res_dir, "6_1_cervix_dep_mean_A9.tsv"))
+write_tsv(crispr_lines, file.path(res_dir, "6_1_crispr_lines.tsv"))
+write_tsv(common_ess,   file.path(res_dir, "6_1_common_essential_genes.tsv"))
 
 cat("\nOutputs guardados en:", out_dir, "\n")
 cat("  6_1_cervix_metadata.tsv\n")
@@ -135,4 +155,5 @@ cat("  6_1_cervix_dep_mean.tsv\n")
 cat("  6_1_cervix_dep_mean_A7.tsv\n")
 cat("  6_1_cervix_dep_mean_A9.tsv\n")
 cat("  6_1_crispr_lines.tsv\n")
+cat("  6_1_common_essential_genes.tsv\n")
 cat("✓ Descarga completa.\n")

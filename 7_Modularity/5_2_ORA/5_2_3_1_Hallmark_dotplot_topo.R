@@ -52,8 +52,8 @@ p <- ggplot(d, aes(x = Community_Name, y = Hallmark)) +
   theme(
     plot.title      = element_text(size = 30, face = "bold", hjust = 0.5, margin = margin(b = 12)),
     axis.title.x    = element_text(size = 26, face = "bold", margin = margin(t = 10)),
-    axis.text.x     = element_text(size = 20, face = "bold", angle = 0, colour = "black"),
-    axis.text.y     = element_text(size = 19, colour = "black"),
+    axis.text.x     = element_text(size = 18, face = "bold", angle = 0, colour = "black"),
+    axis.text.y     = element_text(size = 23, face = "bold", colour = "black"),
     strip.text      = element_text(size = 26, face = "bold", colour = "white"),
     strip.background = element_rect(fill = "grey25"),
     panel.grid.major = element_line(colour = "grey88", linewidth = 0.4),

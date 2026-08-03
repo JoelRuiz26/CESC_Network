@@ -19,7 +19,7 @@
 # Candidate set = the three laws implemented exactly by poweRlaw:
 #   Power-law, Log-normal, Exponential.
 #
-# Output: 5_2_3_Distribution_benchmark.png   (CCDF + fitted models, per network)
+# Output: 5_2_3_Distribution_benchmark.png / .pdf   (CCDF + fitted models, per network)
 #         5_2_3_fit_table.tsv                (x_min, params, KS per model)
 #         5_2_3_LR_table.tsv                 (pairwise likelihood-ratio tests)
 ################################################################################
@@ -151,11 +151,11 @@ make_panel <- function(r) {
                  r$best, pfmt, log10(fb$xmin), fb$xmin)
 
   ggplot() +
-    geom_point(data = emp, aes(k, CCDF), color = "grey55", alpha = 0.55, size = 1.8) +
-    geom_line(data = curves, aes(k, CCDF, color = Model, linetype = Model), linewidth = 1.3) +
+    geom_point(data = emp, aes(k, CCDF), color = "grey55", alpha = 0.55, size = 2.4) +
+    geom_line(data = curves, aes(k, CCDF, color = Model, linetype = Model), linewidth = 1.6) +
     annotate("label", x = min(emp$k), y = min(emp$CCDF), label = ann,
              hjust = 0, vjust = 0, family = "Times New Roman", size = 8,
-             label.size = 0.4, label.padding = unit(0.5, "lines"),
+             label.size = 0.4, label.padding = unit(0.35, "lines"),
              fill = "white", color = "grey15", lineheight = 1.15) +
     scale_color_manual(values = mcolors) +
     scale_linetype_manual(values = mlines) +
@@ -170,16 +170,16 @@ make_panel <- function(r) {
     theme_bw(base_family = "Times New Roman") +
     theme(
       plot.title       = element_text(size = 33, face = "bold", hjust = 0.5),
-      plot.subtitle    = element_text(size = 24, color = "grey20", hjust = 0.5,
+      plot.subtitle    = element_text(size = 22, color = "grey20", hjust = 0.5,
                                       lineheight = 1.3, margin = margin(t = 6, b = 8)),
-      axis.title       = element_text(size = 29, face = "bold"),
-      axis.text        = element_text(size = 25),
+      axis.title       = element_text(size = 34, face = "bold"),
+      axis.text        = element_text(size = 30),
       panel.border     = element_rect(color = "black", fill = NA, linewidth = 1),
       panel.grid.major = element_line(color = "grey90"),
       panel.grid.minor = element_line(color = "grey95"),
       legend.position  = "top",
-      legend.title     = element_text(size = 33, face = "bold"),
-      legend.text      = element_text(size = 30),
+      legend.title     = element_text(size = 36, face = "bold"),
+      legend.text      = element_text(size = 34),
       legend.key.width = unit(2.6, "cm"),
       legend.key.size  = unit(1.4, "cm")
     )
@@ -189,5 +189,7 @@ p_bench <- make_panel(res[["HPV-A7"]]) + make_panel(res[["HPV-A9"]]) +
   plot_layout(ncol = 2, guides = "collect") & theme(legend.position = "bottom")
 
 ggsave(file.path(base_dir, "5_2_3_Distribution_benchmark.png"),
-       p_bench, width = 22, height = 11, dpi = 300, bg = "white")
-message("Saved: 5_2_3_Distribution_benchmark.png")
+       p_bench, width = 17, height = 8.8, dpi = 300, bg = "white")
+ggsave(file.path(base_dir, "5_2_3_Distribution_benchmark.pdf"),
+       p_bench, width = 17, height = 8.8, device = cairo_pdf, bg = "white")
+message("Saved: 5_2_3_Distribution_benchmark.png / .pdf")
