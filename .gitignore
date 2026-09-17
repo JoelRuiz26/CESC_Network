@@ -1,62 +1,29 @@
-# Ignore everything
+# Everything is ignored by default. What the repository publishes is listed below:
+# the analysis code, the README, and the figures and supplementary table of the paper.
+# Input data, intermediate results and the ARACNe output are not versioned; the
+# scripts regenerate them from the public sources listed in the README.
 *
-
-# Allow directories
 !**/
 
-# Allow specific tracked file types
+# code
 !.gitignore
-!README*
+!README.md
 !*.R
 !*.sh
-*.png
-*.pdf
 
-# Ignore bioinformatics and data files
-*.RData
-*.rds
-*.tsv
-*.csv
-*.xlsx
-*.xls
-*.txt
-*.zip
-*.gz
-*.tar
-*.h5
-*.hdf5
-*.bam
-*.fastq
-*.fq
-*.sam
-*.vcf
-*.jpg
-*.jpeg
-*.tiff
-*.bed
-*.bw
-*.bigwig
-*.gtf
-*.gff
-*.json
-*.log
-*.out
-*.err
-*.bak
-*.sif
-*.sort
-*.css
-*.map
-*.js
-*.scss
-*.txt
-.DS_Store
+# the figures of the paper and the supplementary table;
+# the vector PDFs are kept local, the PNGs are what the README shows
+!figures/*.png
+!tables/*.csv
+figures/*.sh
 
-# Ignore folders
+# the manuscript and its supplementary material stay local
+Article_writting/
+
+# editor, session and build scratch
+.claude/
 .Rproj.user/
 __pycache__/
-cache/
-tmp/
-temp/
-
-ARACNE-multicore/
+node_modules/
+*.swp
+.DS_Store
