@@ -105,13 +105,45 @@ dimnames(J) <- list(names(s7), names(s9))
 ## same axis order as 5_1_3B: pheatmap's defaults, euclidean + complete linkage.
 ## The tree is built on the complete matrix, so the order is the one of that
 ## figure; only afterwards are the modules that panel b never shows dropped.
-ord_r <- rownames(J)[hclust(dist(J),    method = "complete")$order]
-ord_c <- colnames(J)[hclust(dist(t(J)), method = "complete")$order]
+## ---- module order ----------------------------------------------------------
+## The panel now carries two overlaps, so the order is built from both. The
+## strongest pair by the mean of the two Jaccards takes the first diagonal slot,
+## its two modules are removed, and the rule repeats; what is left over is
+## appended by its own best remaining value. The matrix therefore reads from the
+## top-left corner down a diagonal of decreasing correspondence, and a cell off
+## that diagonal is a secondary similarity.
+## The same order is used by the process panel, so the two can be read together.
+order_pairs <- function(Jg, Jt) {
+  ## the key ranks a pair first by how many of its two halves are painted at all
+  ## and only then by their strength, so pairs that overlap in genes AND in
+  ## programme take the first diagonal slots, pairs that overlap in one of the
+  ## two follow, and pairs that overlap in neither close the matrix
+  Tz <- ifelse(is.na(Jt), 0, Jt)
+  S  <- (Jg > J_SHOW) + (Tz > J_SHOW) + (Jg + Tz) / 4   # 0..2 plus a tie-break < 0.5
+  dimnames(S) <- dimnames(Jg)
+  r <- rownames(S); c <- colnames(S); R <- character(); C <- character()
+  while (length(r) && length(c)) {
+    k <- which(S[r, c, drop = FALSE] == max(S[r, c, drop = FALSE]), arr.ind = TRUE)[1, ]
+    R <- c(R, r[k[1]]); C <- c(C, c[k[2]])
+    r <- r[-k[1]]; c <- c[-k[2]]
+  }
+  ## whatever is left over, ordered by its own best value against the whole axis
+  list(r = c(R, if (length(r)) r[order(apply(S[r, , drop = FALSE], 1, max), decreasing = TRUE)]),
+       c = c(C, if (length(c)) c[order(apply(S[, c, drop = FALSE], 2, max), decreasing = TRUE)]))
+}
+ord_r <- rownames(J); ord_c <- colnames(J)   # replaced below, once both overlaps exist
 
 ## a module with no enrichment underneath adds nothing here, so it is removed;
 ## the members of a marked pair are kept even so, because the text discusses them
-keep7 <- union(d$Community_Name[d$Network == "HPV-A7"], focus_pair$A7)
-keep9 <- union(d$Community_Name[d$Network == "HPV-A9"], focus_pair$A9)
+## The heatmap shows the modules the process panel shows. Setting this to TRUE
+## also keeps the modules the Results text names, which is what earlier versions
+## did: M10, M12 and M15 in HPV-A7 and M19, M23 in HPV-A9 carry no enrichment,
+## so with FALSE the pairs M10-M19, M12-M17 and M15-M23 leave the figure while
+## the text still cites them.
+KEEP_TEXT_PAIRS <- FALSE
+keep7 <- d$Community_Name[d$Network == "HPV-A7"]
+keep9 <- d$Community_Name[d$Network == "HPV-A9"]
+if (KEEP_TEXT_PAIRS) { keep7 <- union(keep7, focus_pair$A7); keep9 <- union(keep9, focus_pair$A9) }
 message("[check] panel a trimmed to the modules panel b shows: ",
         length(ord_r), " -> ", sum(ord_r %in% keep7), " HPV-A7 rows (dropped ",
         paste(setdiff(ord_r, keep7), collapse = ", "), "), ",
@@ -120,6 +152,21 @@ message("[check] panel a trimmed to the modules panel b shows: ",
 ord_r <- ord_r[ord_r %in% keep7]
 ord_c <- ord_c[ord_c %in% keep9]
 J     <- J[ord_r, ord_c]
+
+## the term overlap over the kept modules, needed before the order can be set
+tt7 <- with(filter(d, Network == "HPV-A7"), split(as.character(HM), Community_Name))
+tt9 <- with(filter(d, Network == "HPV-A9"), split(as.character(HM), Community_Name))
+gset <- function(L, k) if (is.null(L[[k]])) character(0) else L[[k]]
+jj   <- function(a, b) { u <- length(union(a, b)); if (!u) NA_real_ else length(intersect(a, b)) / u }
+JT <- outer(ord_r, ord_c, Vectorize(function(a, b) jj(gset(tt7, a), gset(tt9, b))))
+dimnames(JT) <- list(ord_r, ord_c)
+
+o     <- order_pairs(J, JT)
+ord_r <- o$r; ord_c <- o$c
+J     <- J[ord_r, ord_c]
+message("[check] module order, strongest pair first along the diagonal:\n",
+        "        HPV-A7  ", paste(ord_r, collapse = " "), "\n",
+        "        HPV-A9  ", paste(ord_c, collapse = " "))
 
 ## numeric positions, so the module-size bars of 5_1_3B can be drawn next to the
 ## matrix; the cells themselves keep a single uniform size
@@ -150,38 +197,110 @@ sz7 <- tibble(A7 = ord_r, y = pos7[ord_r], n = as.integer(lengths(s7)[ord_r]))
 sz9 <- tibble(A9 = ord_c, x = pos9[ord_c], n = as.integer(lengths(s9)[ord_c]))
 
 ## every spotlighted pair must exist, and its value comes from the matrix
-stopifnot(all(focus_pair$A7 %in% ord_r), all(focus_pair$A9 %in% ord_c))
-fp <- focus_pair |> left_join(jac, by = c("A7", "A9"))
+fp <- focus_pair |> filter(A7 %in% ord_r, A9 %in% ord_c) |> left_join(jac, by = c("A7", "A9"))
 message("[check] pairs the text discusses (values read from the matrix):\n",
         paste(sprintf("        %s-%s  J = %.2f", fp$A7, fp$A9, fp$J), collapse = "\n"))
 
 ## every overlap worth reading is printed, not only the ones the text names
+## the ramp the matrix is painted with, and the luminance a value receives on
+## it, used to decide whether the printed number goes white or dark
+## The matrix measures how much a module pair shares, and purple is already the
+## colour this paper gives to what the two clades share: the essential hubs of
+## both clades in Figure 4C and the shared nodes of Figure 5 carry #8C79B5 and
+## #5E3C99. It is also the mix of the HPV-A7 blue and the HPV-A9 red, so the
+## ramp says "shared" in the language the rest of the figures already use.
+## White still marks no overlap.
+## The size bars take the clade colours of the paper, blue for HPV-A7 and red
+## for HPV-A9. Two conventions coexist across the figures: #4E79A7 / #CB6A5C in
+## Figures 4 and 5 and in Supplementary Figure S3, and the darker #003366 /
+## #CC2200 in Figure 2 and Supplementary Figures S2 and S4. Each ramp runs from
+## white through the muted tone to its darker counterpart, so both conventions
+## appear in their own hue and every colour is one the paper already uses; the
+## intermediate tints are interpolated rather than chosen.
+A7_RAMP <- colorRampPalette(c("white", "#4E79A7", "#003366"))(64)
+A9_RAMP <- colorRampPalette(c("white", "#CB6A5C", "#CC2200"))(64)
+
+JAC_RAMP <- colorRampPalette(c("white", "#EDE8F4", "#C9BCDF", "#8C79B5",
+                               "#5E3C99", "#33215A"))(64)
+jac_lum  <- function(v) {
+  m <- grDevices::colorRamp(JAC_RAMP)(pmin(pmax(v / max(jac$J), 0), 1)) / 255
+  0.299 * m[, 1] + 0.587 * m[, 2] + 0.114 * m[, 3]
+}
+
 num <- jac |> filter(J > J_SHOW) |> arrange(desc(J))
-stopifnot(all(fp$J > J_SHOW))        # nothing the text names may go unlabelled
 message("[check] ", nrow(num), " cells with J > ", J_SHOW, " carry a printed value; ",
         nrow(num) - nrow(fp), " of them are not named in the text:\n",
         paste(sprintf("        %s-%s  J = %.2f", num$A7, num$A9, num$J), collapse = "\n"))
 
+## ---- the second overlap: the Hallmark terms each pair shares -----------------
+t7 <- with(filter(d, Network == "HPV-A7"), split(as.character(HM), Community_Name))
+t9 <- with(filter(d, Network == "HPV-A9"), split(as.character(HM), Community_Name))
+term_of <- function(L, k) if (is.null(L[[k]])) character(0) else L[[k]]
+jac_of  <- function(a, b) { u <- length(union(a, b)); if (!u) NA_real_ else length(intersect(a, b)) / u }
+
+both <- jac |>
+  rowwise() |>
+  mutate(J_term = { a <- term_of(t7, A7); b <- term_of(t9, A9)
+                    if (!length(a) || !length(b)) NA_real_ else jac_of(a, b) }) |>
+  ungroup() |>
+  rename(J_gene = J)
+message("[check] term Jaccard evaluable in ", sum(!is.na(both$J_term)), " of ", nrow(both),
+        " drawn pairs | Spearman with the gene Jaccard ",
+        round(cor(both$J_gene, both$J_term, method = "spearman", use = "complete.obs"), 3))
+
+## every cell split along its diagonal: gene overlap above, term overlap below
+tri <- function(dat, value, half) {
+  dx <- list(gene = c(-.5, .5, -.5), term = c(-.5, .5, .5))[[half]]
+  dy <- list(gene = c(-.5, .5,  .5), term = c(-.5, -.5, .5))[[half]]
+  dat |> mutate(id = paste(A7, A9, half)) |>
+    slice(rep(seq_len(n()), each = 3)) |>
+    mutate(vx = x + rep(dx, times = nrow(dat)),
+           vy = y + rep(dy, times = nrow(dat)),
+           V  = .data[[value]])
+}
+poly  <- bind_rows(tri(both, "J_gene", "gene"), tri(both, "J_term", "term"))
+lab_g <- both |> filter(J_gene > J_SHOW)
+lab_t <- both |> filter(!is.na(J_term), J_term > J_SHOW)
+jac_lum2 <- function(v) {
+  m <- grDevices::colorRamp(JAC_RAMP)(pmin(pmax(v, 0), 1)) / 255
+  0.299 * m[, 1] + 0.587 * m[, 2] + 0.114 * m[, 3]
+}
+message("[check] printed values: ", nrow(lab_g), " gene, ", nrow(lab_t), " term")
+
 pa <- ggplot() +
-  geom_tile(data = jac, aes(x, y, fill = J), colour = "grey92", linewidth = 0.15) +
-  geom_text(data = num, aes(x, y, label = sprintf("%.2f", J)),
-            family = FAM, fontface = "bold", size = 5.0,
-            colour = ifelse(num$J > 0.45, "white", "grey10")) +
-  scale_fill_gradientn(colours = c("white", "#FFF3CD", "#E8602D", "#8B0000"),
-                       limits = c(0, max(jac$J)), name = "Jaccard\nindex",
-                       guide = guide_colourbar(order = 1)) +
+  geom_polygon(data = poly, aes(vx, vy, group = id, fill = V),
+               colour = "grey92", linewidth = 0.15) +
+  geom_text(data = lab_g, aes(x - 0.19, y + 0.20, label = sprintf("%.2f", J_gene)),
+            family = FAM, fontface = "bold", size = 3.6,
+            colour = ifelse(jac_lum2(lab_g$J_gene) < 0.55, "white", "grey10")) +
+  geom_text(data = lab_t, aes(x + 0.19, y - 0.20, label = sprintf("%.2f", J_term)),
+            family = FAM, fontface = "bold", size = 3.6,
+            colour = ifelse(jac_lum2(lab_t$J_term) < 0.55, "white", "grey10")) +
+  scale_fill_gradientn(colours = JAC_RAMP, limits = c(0, 1), na.value = "grey85",
+                       name = "Jaccard index", guide = guide_colourbar(order = 1)) +
+  ## which half of a cell carries which overlap, as a key of its own: an
+  ## invisible layer whose only purpose is to put two triangles in the legend
+  ## column, where they line up with the three colour bars
+  geom_point(data = tibble(x = rep(mean(range(jac$x)), 2), y = rep(1, 2),
+                           half = factor(c("Gene membership", "Enriched gene sets"),
+                                         c("Gene membership", "Enriched gene sets"))),
+             aes(x, y, shape = half), alpha = 0, show.legend = TRUE,
+             fill = JAC_RAMP[34], colour = "grey35", stroke = 0.5) +
+  scale_shape_manual(values = c(24, 25), name = "Cell half",
+                     guide = guide_legend(order = 4,
+                       override.aes = list(alpha = 1, size = 6.5))) +
   annotate("rect", xmin = 0.5, xmax = XL + 0.5, ymin = 0.5, ymax = YL + 0.5,
            fill = NA, colour = "grey30", linewidth = 0.7) +
   ## the two module-size bars of 5_1_3B, each on the side its axis is not using
   new_scale_fill() +
   geom_tile(data = sz9, aes(x, bar_y, fill = n), height = BAR, width = 1,
             colour = "grey55", linewidth = 0.2) +
-  scale_fill_distiller(palette = "BuPu", direction = 1,
+  scale_fill_gradientn(colours = A9_RAMP,
                        name = "Module size\n(HPV-A9)", guide = guide_colourbar(order = 2)) +
   new_scale_fill() +
   geom_tile(data = sz7, aes(bar_x, y, fill = n), width = BAR * CELL_AR, height = 1,
             colour = "grey55", linewidth = 0.2) +
-  scale_fill_distiller(palette = "Greens", direction = 1,
+  scale_fill_gradientn(colours = A7_RAMP,
                        name = "Module size\n(HPV-A7)", guide = guide_colourbar(order = 3)) +
   scale_x_continuous(breaks = pos9[ord_c], labels = ord_c,
                      limits = c(bar_x - BAR * CELL_AR / 2 - 0.06, XL + 0.5), expand = c(0, 0)) +
@@ -199,8 +318,17 @@ pa <- ggplot() +
     panel.grid       = element_blank(),
     legend.title     = element_text(size = 17, face = "bold"),
     legend.text      = element_text(size = 16),
-    legend.key.height = unit(0.62, "cm"),
-    plot.margin      = margin(30, 48, 14, 48))
+    ## the legend column is kept within the height of the matrix beside it:
+    ## shorter colour bars and tighter spacing between the four keys
+    legend.key.height = unit(0.42, "cm"),
+    legend.spacing.y  = unit(0.18, "cm"),
+    legend.margin     = margin(2, 2, 2, 2),
+    legend.position   = "left",
+    ## panel A is composed with wrap_elements and keeps its own geometry, so
+    ## these margins put the matrix frame on the same verticals as panel B,
+    ## the right edge reaching past the dot plot to the end of the category
+    ## strips rather than stopping at the panel border
+    plot.margin      = margin(30, 42, 14, 198))
 
 
 ## =============================== panel b =====================================
@@ -251,14 +379,21 @@ message("[check] module order taken from the panel a clustering:\n",
         "[check] columns kept empty (no enrichment): ",
         paste(sub("^HPV-", "", empty), collapse = ", "))
 
+## the two panel headers take the clade colours instead of a neutral grey: the
+## muted blue and red of the paper, lightened halfway to white so black type
+## reads on them. Derived from #4E79A7 and #CB6A5C, not chosen by eye.
+tint <- function(h, k = 0.5) { m <- col2rgb(h) / 255
+  rgb(m[1] + (1 - m[1]) * k, m[2] + (1 - m[2]) * k, m[3] + (1 - m[3]) * k) }
+STRIP_X <- c(tint("#4E79A7"), tint("#CB6A5C"))   # HPV-A7, HPV-A9
+
 pb <- ggplot(d, aes(col, HM)) +
   geom_blank(data = pad, aes(x = col), inherit.aes = FALSE) +
   geom_point(aes(size = GeneRatio, colour = neglogp)) +
   facet_grid2(category ~ Network, scales = "free", space = "free",
               strip = strip_themed(
-                background_x = elem_list_rect(fill = "grey25"),
+                background_x = elem_list_rect(fill = STRIP_X),
                 background_y = elem_list_rect(fill = cat_col[cat_lv]),
-                text_x = elem_list_text(colour = "white", size = 20, face = "bold"),
+                text_x = elem_list_text(colour = "grey10", size = 20, face = "bold"),
                 text_y = elem_list_text(colour = "white", size = 18, face = "bold"))) +
   scale_colour_viridis(option = "magma", begin = 0.12, end = 0.95, direction = -1,
                        name = expression(-log[10]~italic(p)[adj])) +
@@ -287,8 +422,8 @@ pb <- ggplot(d, aes(col, HM)) +
 ## =============================== compose =====================================
 ## the heatmap is taken out of the alignment altogether so that it spans the
 ## whole page width instead of starting where the Hallmark names end
-fig <- wrap_elements(full = pa) / pb +
-  plot_layout(heights = c(7.4, 13.1)) +
+fig <- pb / wrap_elements(full = pa) +
+  plot_layout(heights = c(13.1, 7.4)) +
   plot_annotation(tag_levels = "A") &
   theme(plot.tag = element_text(family = FAM, size = 30, face = "bold"))
 
