@@ -11,12 +11,15 @@
 ### Every essential hub with at least MIN_HM leading-edge links is drawn, so
 ### the default MIN_HM = 1 keeps all of them.
 ###
-###   * outer labels  = essential-hub gene names (italic) + hallmark process
-###                     names (upright bold). Two independent flags are read
-###                     off two independent typographic channels, so neither
-###                     needs a symbol crowding the name:
-###       - purple ink   = essential hub in BOTH clades (near-black otherwise)
-###       - bold weight  = NOT a DepMap pan-essential gene (plain italic otherwise)
+###   * outer labels  = essential-hub gene names (italic, always near-black --
+###                     the name itself never changes colour) + hallmark
+###                     process names (upright bold). Every flag a gene can
+###                     carry is a small diamond after its name, never the
+###                     name's own ink or weight -- one shape, one nomenclature,
+###                     coloured by what it means:
+###       - a FILLED purple diamond  = essential hub in BOTH clades
+###       - an OPEN black diamond    = NOT a DepMap pan-essential gene
+###     A gene can carry either, both (filled then open) or neither.
 ###   * coloured band = the module each gene belongs to (clade-tinted)
 ###   * chords        = gene -> hallmark (leading-edge), coloured by hallmark
 ###
@@ -39,16 +42,18 @@ GAP  <- 1.7     # degrees between two neighbouring process sectors
 GAP_G <- 2.3    # ... and between two gene sectors, which buys the gene names
                 # the arc they need to be set larger than the process names
 LEAD <- 1.04    # minimum white space between two neighbouring labels
-## gene names are italic, as gene symbols are set in print; process names stay
-## upright bold. Rather than pin a symbol onto the name -- which crowds a
-## label that already carries a gene symbol and a rotation -- the two flags
-## a gene can carry are read off the name's own ink and weight:
-##   colour (purple vs near-black) = essential hub in BOTH clades or not
-##   weight (bold-italic vs italic) = NOT pan-essential in DepMap, or is
-## The two are independent, so a gene shows any combination of them and nothing
-## is ever appended to its symbol; a plain italic near-black name is a
-## clade-specific, pan-essential gene, the plainest of the four.
-FNT_GENE <- 3; FNT_GENE_SEL <- 4; FNT_HM <- 2
+## gene names are italic, as gene symbols are set in print, and always the
+## same near-black ink -- nothing about a flag is ever carried by the name
+## itself. Both flags live in small diamonds drawn right after the name:
+FNT_GENE <- 3; FNT_HM <- 2
+MARK_BOTH <- "◆"   # FILLED diamond, purple -- essential hub in both clades
+MARK_SEL  <- "◇"   # OPEN diamond, grey     -- not pan-essential in DepMap
+## One shape family for both flags keeps the nomenclature homogeneous; only
+## the fill and the colour change meaning, never the geometry. Each diamond is
+## drawn as its own small circos.text call, positioned right after whatever
+## came before it via mm_y() (a physical mm distance converted to that track's
+## y-unit) -- growth is outward from the sector's own anchor for every sector,
+## flipped-for-readability or not, so no left/right bookkeeping is needed here.
 CX_MOD <- 3.75   # largest type the module names are allowed to take
 MIN_HM <- 1     # a gene is drawn only if it is leading edge of >= MIN_HM hallmarks
 
@@ -144,26 +149,26 @@ geom <- function(cl, clade_col) {
   edeg <- sdeg - span                                           # trailing edge
   mid  <- (sdeg - span / 2) * pi / 180
 
-  ## no symbol is appended to the name: "shared" and "selective" are carried
-  ## by the label's own colour and weight (see FNT_GENE_SEL above and the
-  ## panel.fun that draws these labels), so the string drawn is the bare
-  ## gene symbol, unrotated and untouched
-  gdisp <- gene_order
+  ## gdisp is used only to reserve the right amount of room in fit(): the name
+  ## plus a space per diamond it will actually carry, in drawing order (filled
+  ## purple "both" diamond first, open "selective" diamond second). Drawing
+  ## itself (panel.fun, below) renders these as separate, separately-coloured
+  ## pieces, not this string -- but the total reach must match what fit() sees.
+  mark_w <- paste0(if_else(genes$grp == "Both",   paste0(" ", MARK_BOTH), ""),
+                   if_else(genes$selective,       paste0(" ", MARK_SEL),  ""))
+  gdisp <- paste0(gene_order, mark_w)
 
   list(d = d, genes = genes, hmord = hmord, sectors = sectors, gaps = gaps,
        labs = c(gdisp, pretty(hmord)),
-       ## face of each sector's own label: bold italic for a selective gene
-       ## (not pan-essential), plain italic otherwise; hallmark names unchanged
-       fnt  = c(if_else(genes$selective, FNT_GENE_SEL, FNT_GENE), rep(FNT_HM, length(hmord))),
-       disp = setNames(c(gdisp, pretty(hmord)), sectors),
+       ## one face for every gene label; hallmark names keep their own
+       fnt  = c(rep(FNT_GENE, nrow(genes)), rep(FNT_HM, length(hmord))),
+       hm_disp = setNames(pretty(hmord), hmord),
        sdeg = setNames(sdeg, sectors), edeg = setNames(edeg, sectors),
        is_g = c(rep(TRUE, nrow(genes)), rep(FALSE, length(hmord))),
-       sel  = setNames(genes$selective, gene_order),
        arc  = (span + gaps[sectors]) * pi / 180,            # label pitch, rad
        mid = mid, ux = cos(mid), uy = sin(mid),
-       ## a gene essential in BOTH clades prints its name in the shared purple
-       ## this paper already uses for "shared" elsewhere; every other gene's
-       ## name stays near-black, so clade identity is carried by the band alone
+       ## per-gene flags, looked up by name when the labels are drawn
+       sel  = setNames(genes$selective,   genes$gene),
        both = setNames(genes$grp == "Both", genes$gene),
        grid.col = c(setNames(rep(clade_col, nrow(genes)), genes$gene),
                     setNames(hm_col[hmord], hmord)),
@@ -229,17 +234,36 @@ panel <- function(cl, clade_col, cex_lab = NA, R_fix = NA, fresh = TRUE) {
     preAllocateTracks = list(list(track.height = mm_h(LBL)),  # 1: outer labels
                              list(track.height = mm_h(9 * SCALE))))   # 2: module band
 
-  ## the names: colour marks a shared (both-clade) essential hub, weight marks
-  ## a selective (non pan-essential) one -- see the header and FNT_GENE_SEL
+  ## the names: a hallmark sector gets one plain label. A gene sector gets its
+  ## name, always near-black, then -- as separate, separately-coloured pieces,
+  ## each placed right after the one before it via mm_y() -- a filled purple
+  ## diamond if it is an essential hub in both clades and/or an open grey
+  ## diamond if it is not pan-essential in DepMap (see MARK_BOTH / MARK_SEL).
   circos.track(track.index = 1, bg.border = NA, panel.fun = function(x, y) {
     si <- CELL_META$sector.index
-    hm <- si %in% hmord
-    circos.text(CELL_META$xcenter, CELL_META$ylim[1], g$disp[si],
-                facing = "clockwise", niceFacing = TRUE, adj = c(0, 0.5),
-                cex  = if (hm) cex_lab[2] else cex_lab[1],
-                font = if (hm) FNT_HM else if (isTRUE(g$sel[si])) FNT_GENE_SEL else FNT_GENE,
-                family = FAM,
-                col  = if (!hm && isTRUE(g$both[si])) col_both else "grey12")
+    if (si %in% hmord) {
+      circos.text(CELL_META$xcenter, CELL_META$ylim[1], g$hm_disp[si],
+                  facing = "clockwise", niceFacing = TRUE, adj = c(0, 0.5),
+                  cex = cex_lab[2], font = FNT_HM, family = FAM, col = "grey12")
+      return(invisible(NULL))
+    }
+    cx <- cex_lab[1]
+    yy <- CELL_META$ylim[1]
+    advance <- function(txt) yy <<- yy + mm_y(strwidth(txt, "inches", cex = cx, font = FNT_GENE) * 25.4)
+    circos.text(CELL_META$xcenter, yy, si, facing = "clockwise", niceFacing = TRUE,
+                adj = c(0, 0.5), cex = cx, font = FNT_GENE, family = FAM, col = "grey12")
+    advance(si)
+    if (isTRUE(g$both[si])) {
+      piece <- paste0(" ", MARK_BOTH)
+      circos.text(CELL_META$xcenter, yy, piece, facing = "clockwise", niceFacing = TRUE,
+                  adj = c(0, 0.5), cex = cx, font = FNT_GENE, family = FAM, col = col_both)
+      advance(piece)
+    }
+    if (isTRUE(g$sel[si])) {
+      piece <- paste0(" ", MARK_SEL)
+      circos.text(CELL_META$xcenter, yy, piece, facing = "clockwise", niceFacing = TRUE,
+                  adj = c(0, 0.5), cex = cx, font = FNT_GENE, family = FAM, col = "grey12")
+    }
   })
 
   ## module bands: every module is labelled, whatever its width. The name is
@@ -297,7 +321,7 @@ panel <- function(cl, clade_col, cex_lab = NA, R_fix = NA, fresh = TRUE) {
     f$R / k, f$xl + f$xr, f$yb + f$yt, f$binds))
 
   title(sprintf("HPV-%s essential hubs", cl), family = FAM,
-        cex.main = 7.0, font.main = 2, col.main = clade_col, line = -2.4)
+        cex.main = 11.5, font.main = 2, col.main = clade_col, line = -3.0)
   circos.clear()
 }
 
@@ -319,26 +343,46 @@ draw_all <- function() {
   panel("A7", col_A7, cex_c, R_c, fresh = FALSE)
   par(mar = c(0.2, 0.2, 4.0, 0.2)); panel("A9", col_A9, cex_c, R_c)
 
-  ## the key runs along the foot of the figure, clear of both circles. Each
-  ## entry shows the exact typographic treatment it explains -- a sample gene
-  ## name in the same ink and weight the figure uses -- instead of an abstract
-  ## symbol, so the key reads as a miniature of the figure rather than a
-  ## separate code to look up
+  ## the key runs along the foot of the figure, clear of both circles: each
+  ## entry is just the diamond and the sentence it means -- no sample gene
+  ## name, since every real gene name in the figure already shows the mark in
+  ## context and a bare placeholder word ("GENE", set as large as a caption
+  ## needs its diamond to read) only shouted over the two short captions it
+  ## was meant to introduce. The scale is solved from the actual string widths
+  ## (same principle fit() uses for the circles) rather than picked by hand,
+  ## so it can never overflow the row or clip a caption.
   par(mar = c(0, 1, 0, 1)); plot.new()
-  key_cex <- 8.6                 # the sample gene name itself
-  cap_cex <- 5.8                 # the caption that follows it
-  key_y   <- 0.52
+  key_y      <- 0.52
+  MARK_RATIO <- 1.12     # the diamond, barely larger than its caption -- big
+                         # enough to read as a shape, not a headline
+  TARGET_W   <- 0.66     # the key occupies about two-thirds of the row,
+                         # centred, still with clear white space either side
+  GAP        <- 0.016    # small breathing room between pieces
   entries <- list(
-    list(x0 = 0.10, label = "GENE", font = 3, col = col_both,
-         caption = "essential hub in both clades"),
-    list(x0 = 0.56, label = "GENE", font = 4, col = "grey12",
-         caption = "not pan-essential in DepMap"))
-  for (e in entries) {
-    text(e$x0, key_y, e$label, font = e$font, col = e$col, family = FAM,
-         cex = key_cex, adj = c(0, 0.5), xpd = NA)
-    text(e$x0 + strwidth(e$label, cex = key_cex, font = e$font) + 0.02, key_y,
-         e$caption, font = 1, col = "grey25", family = FAM,
-         cex = cap_cex, adj = c(0, 0.5), xpd = NA)
+    list(mark = MARK_BOTH, col = col_both, caption = "essential hub in both clades"),
+    list(mark = MARK_SEL,  col = "grey12", caption = "not pan-essential in DepMap"))
+
+  ## every entry as an ordered (text, colour, font, relative size) pair: the
+  ## diamond, then the sentence it names
+  pieces <- function(e, lead) list(
+    list(txt = paste0(lead, e$mark),     col = e$col,    font = FNT_GENE, rel = MARK_RATIO),
+    list(txt = paste0("  ", e$caption), col = "grey20", font = 1,       rel = 1))
+  all_pieces <- c(pieces(entries[[1]], ""), pieces(entries[[2]], "        "))
+
+  ## the scale that makes the whole key exactly TARGET_W wide, solved from the
+  ## actual string widths (same principle fit() uses for the circles) rather
+  ## than picked by hand, then centred in the row
+  w_at_1 <- sum(vapply(all_pieces, function(p)
+    strwidth(p$txt, cex = p$rel, font = p$font), numeric(1)))
+  key_cex <- TARGET_W / w_at_1
+  message(sprintf("[check] legend solved: caption cex %.2f, diamond cex %.2f",
+                  key_cex, key_cex * MARK_RATIO))
+
+  x0 <- (1 - TARGET_W) / 2
+  for (p in all_pieces) {
+    text(x0, key_y, p$txt, font = p$font, col = p$col, family = FAM,
+         cex = key_cex * p$rel, adj = c(0, 0.5), xpd = NA)
+    x0 <- x0 + strwidth(p$txt, cex = key_cex * p$rel, font = p$font) + GAP
   }
 }
 
