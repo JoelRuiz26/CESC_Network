@@ -11,10 +11,14 @@
 ### Every essential hub with at least MIN_HM leading-edge links is drawn, so
 ### the default MIN_HM = 1 keeps all of them.
 ###
-###   * outer labels  = essential-hub gene names + hallmark process names
+###   * outer labels  = essential-hub gene names (italic) + hallmark process
+###                     names (upright bold). Two independent flags are read
+###                     off two independent typographic channels, so neither
+###                     needs a symbol crowding the name:
+###       - purple ink   = essential hub in BOTH clades (near-black otherwise)
+###       - bold weight  = NOT a DepMap pan-essential gene (plain italic otherwise)
 ###   * coloured band = the module each gene belongs to (clade-tinted)
 ###   * chords        = gene -> hallmark (leading-edge), coloured by hallmark
-###   * gene node col = purple if essential hub in BOTH clades, else clade col
 ###
 ### Inputs:
 ###   07_dependency/results/6_5_essential_hub_gene_lists.tsv  (set == complete)
@@ -34,16 +38,17 @@ FAM  <- "Nimbus Sans"
 GAP  <- 1.7     # degrees between two neighbouring process sectors
 GAP_G <- 2.3    # ... and between two gene sectors, which buys the gene names
                 # the arc they need to be set larger than the process names
-LEAD <- 1.09    # minimum white space between two neighbouring labels
+LEAD <- 1.04    # minimum white space between two neighbouring labels
 ## gene names are italic, as gene symbols are set in print; process names stay
-## upright bold. The mark on a gene name says one thing only: the gene is NOT
-## pan-essential (it is outside DepMap's common-essential set). Which clade a
-## gene is essential in is already carried by the colour of its node, so the
-## mark does not repeat it.
-FNT_GENE <- 3; FNT_HM <- 2
-MARK <- "\u25C6"    # the selectivity mark, set on the name's own baseline and
-                    # always on the end of the symbol that faces the circle, so
-                    # the marks read as one ring and never as part of the name
+## upright bold. Rather than pin a symbol onto the name -- which crowds a
+## label that already carries a gene symbol and a rotation -- the two flags
+## a gene can carry are read off the name's own ink and weight:
+##   colour (purple vs near-black) = essential hub in BOTH clades or not
+##   weight (bold-italic vs italic) = NOT pan-essential in DepMap, or is
+## The two are independent, so a gene shows any combination of them and nothing
+## is ever appended to its symbol; a plain italic near-black name is a
+## clade-specific, pan-essential gene, the plainest of the four.
+FNT_GENE <- 3; FNT_GENE_SEL <- 4; FNT_HM <- 2
 CX_MOD <- 3.75   # largest type the module names are allowed to take
 MIN_HM <- 1     # a gene is drawn only if it is leading edge of >= MIN_HM hallmarks
 
@@ -109,17 +114,15 @@ hm_col <- setNames(desat(hcl.colors(length(hm_all), palette = "Dark 3")), hm_all
 
 ## verification: every drawn label must be its gene-set name, spaces for "_"
 stopifnot(identical(pretty(hm_all), gsub("_", " ", hm_all)), !any(grepl("\n", pretty(hm_all))))
-## a marked gene label is its symbol, verbatim, with the mark and one space on
-## one end of it -- whichever end the label's own rotation puts next to the circle
-stopifnot(identical(gsub(paste0("^", MARK, " | ", MARK, "$"), "",
-                         c(paste(MARK, "TP53"), paste("TP53", MARK))),
-                    c("TP53", "TP53")))
 message("[check] ", length(hm_all), " hallmark labels verbatim, single line")
 
 ## ---- the sectors of one panel, before anything is drawn ---------------------
+## the whole figure is drawn ~8% larger than the original frame (in, mm and pt
+## all scale together) purely for legibility; SCALE is the single dial for it
+SCALE <- 1.08
 RLAB <- 0.97   # radius the outer labels start at, in circle radii
-LBL  <- 6      # thickness of the track the outer labels sit in, mm
-EXP  <- 1.08   # the 4 % axis expansion R adds at both ends of a plot range
+LBL  <- 6 * SCALE     # thickness of the track the outer labels sit in, mm
+EXP  <- 1.02   # the 4 % axis expansion R adds at both ends of a plot range
 
 geom <- function(cl, clade_col) {
   d <- map |> filter(clade == cl)
@@ -141,29 +144,28 @@ geom <- function(cl, clade_col) {
   edeg <- sdeg - span                                           # trailing edge
   mid  <- (sdeg - span / 2) * pi / 180
 
-  ## a radial label whose sector sits on the left half of the circle is turned
-  ## round, which moves the first character of the string from the inner end of
-  ## the label to the outer end. The mark is therefore put on whichever end of
-  ## the symbol comes to lie next to the circle, and every mark sits on the
-  ## same ring, at the same distance from the band, all round both panels.
-  degm  <- (sdeg - span / 2) %% 360
-  flip  <- degm >= 90 & degm < 270
-  fg    <- flip[seq_len(nrow(genes))]
-  gdisp <- if_else(genes$selective,
-                   if_else(fg, paste(gene_order, MARK), paste(MARK, gene_order)),
-                   gene_order)
+  ## no symbol is appended to the name: "shared" and "selective" are carried
+  ## by the label's own colour and weight (see FNT_GENE_SEL above and the
+  ## panel.fun that draws these labels), so the string drawn is the bare
+  ## gene symbol, unrotated and untouched
+  gdisp <- gene_order
 
   list(d = d, genes = genes, hmord = hmord, sectors = sectors, gaps = gaps,
        labs = c(gdisp, pretty(hmord)),
-       ## face of each sector's own label, and which block it belongs to
-       fnt  = c(rep(FNT_GENE, nrow(genes)), rep(FNT_HM, length(hmord))),
+       ## face of each sector's own label: bold italic for a selective gene
+       ## (not pan-essential), plain italic otherwise; hallmark names unchanged
+       fnt  = c(if_else(genes$selective, FNT_GENE_SEL, FNT_GENE), rep(FNT_HM, length(hmord))),
        disp = setNames(c(gdisp, pretty(hmord)), sectors),
        sdeg = setNames(sdeg, sectors), edeg = setNames(edeg, sectors),
        is_g = c(rep(TRUE, nrow(genes)), rep(FALSE, length(hmord))),
        sel  = setNames(genes$selective, gene_order),
        arc  = (span + gaps[sectors]) * pi / 180,            # label pitch, rad
        mid = mid, ux = cos(mid), uy = sin(mid),
-       grid.col = c(setNames(if_else(genes$grp == "Both", col_both, clade_col), genes$gene),
+       ## a gene essential in BOTH clades prints its name in the shared purple
+       ## this paper already uses for "shared" elsewhere; every other gene's
+       ## name stays near-black, so clade identity is carried by the band alone
+       both = setNames(genes$grp == "Both", genes$gene),
+       grid.col = c(setNames(rep(clade_col, nrow(genes)), genes$gene),
                     setNames(hm_col[hmord], hmord)),
        chord_col = setNames(adjustcolor(hm_col[d$HM], 0.55), NULL))
 }
@@ -223,19 +225,21 @@ panel <- function(cl, clade_col, cex_lab = NA, R_fix = NA, fresh = TRUE) {
     grid.col = g$grid.col, col = g$chord_col, grid.border = "white",
     transparency = 0.4, link.lwd = 0.3, link.border = adjustcolor("white", 0.4),
     link.sort = TRUE, link.decreasing = TRUE,
-    annotationTrack = "grid", annotationTrackHeight = mm_h(4),
+    annotationTrack = "grid", annotationTrackHeight = mm_h(4 * SCALE),
     preAllocateTracks = list(list(track.height = mm_h(LBL)),  # 1: outer labels
-                             list(track.height = mm_h(9))))   # 2: module band
+                             list(track.height = mm_h(9 * SCALE))))   # 2: module band
 
-  ## the names, each preceded by the selectivity mark when it carries one
+  ## the names: colour marks a shared (both-clade) essential hub, weight marks
+  ## a selective (non pan-essential) one -- see the header and FNT_GENE_SEL
   circos.track(track.index = 1, bg.border = NA, panel.fun = function(x, y) {
     si <- CELL_META$sector.index
     hm <- si %in% hmord
     circos.text(CELL_META$xcenter, CELL_META$ylim[1], g$disp[si],
                 facing = "clockwise", niceFacing = TRUE, adj = c(0, 0.5),
                 cex  = if (hm) cex_lab[2] else cex_lab[1],
-                font = if (hm) FNT_HM else FNT_GENE,
-                family = FAM, col = "grey12")
+                font = if (hm) FNT_HM else if (isTRUE(g$sel[si])) FNT_GENE_SEL else FNT_GENE,
+                family = FAM,
+                col  = if (!hm && isTRUE(g$both[si])) col_both else "grey12")
   })
 
   ## module bands: every module is labelled, whatever its width. The name is
@@ -250,7 +254,7 @@ panel <- function(cl, clade_col, cex_lab = NA, R_fix = NA, fresh = TRUE) {
                               track.index = 2)
   r_mid  <- (r_top + r_bot) / 2
   mm_deg <- r_mid / mm_h(1) * pi / 180          # mm of arc per degree, at the band
-  BAND <- 9                                     # module band thickness, mm
+  BAND <- 9 * SCALE                             # module band thickness, mm
   gp   <- g$gaps[sectors]                       # gap that follows each sector
   for (m in unique(genes$module)) {
     gs   <- genes$gene[genes$module == m]
@@ -300,37 +304,47 @@ panel <- function(cl, clade_col, cex_lab = NA, R_fix = NA, fresh = TRUE) {
 ## ---- combined figure: A7 | A9  +  node legend -------------------------------
 draw_all <- function() {
   par(family = FAM)
-  ## The two panels sit side by side and the frame is kept close to a landscape
-  ## 16:9, because that is what makes the type as large as it can be for a
-  ## reader who has the whole figure in front of them: a label is only as big as
-  ## the smaller of (frame width / figure width) and (frame height / figure
-  ## height) makes it, and a tall figure throws the first of those away. At this
-  ## aspect the width of a panel and the height of the row run out at the same
-  ## moment, so no radius is left unused in either direction.
-  layout(matrix(c(1, 2, 3, 3), nrow = 2, byrow = TRUE), heights = c(9.1, 0.9))
-  ## both panels are labelled at the same size: the region is opened once, each
-  ## panel is solved on it, and the smaller of the two type sizes is the one
-  ## drawn, so nothing in the figure is set in two different sizes
+  ## The two panels are stacked over a thin band that carries the key. The solved
+  ## drawing is about 2.65 radii wide and 3.09 high, so a stacked pair reaches
+  ## its largest circle when the frame is 2 x 3.09 / 2.65 = 2.33 times as tall as
+  ## it is wide. Beyond that ratio the extra height buys nothing and only
+  ## stretches the figure, so the frame is set at it and the band is added on top.
+  layout(matrix(c(1, 2, 3), nrow = 3), heights = c(4.85, 4.85, 0.62))
   par(mar = c(0.2, 0.2, 4.0, 0.2)); plot.new()
   g7 <- geom("A7", col_A7); g9 <- geom("A9", col_A9)
-  cex_c <- pmin(fit(g7)$cex, fit(g9)$cex)     # c(genes, processes), both panels
+  cex_c <- pmin(fit(g7)$cex, fit(g9)$cex)
   R_c   <- min(fit(g7, cex_c)$R, fit(g9, cex_c)$R)
+  message(sprintf("[check] type solved: genes %.2f | processes %.2f | radius %.0f mm | panel %.1f x %.1f in",
+                  cex_c[1], cex_c[2], R_c, par("pin")[1], par("pin")[2]))
   panel("A7", col_A7, cex_c, R_c, fresh = FALSE)
   par(mar = c(0.2, 0.2, 4.0, 0.2)); panel("A9", col_A9, cex_c, R_c)
 
+  ## the key runs along the foot of the figure, clear of both circles. Each
+  ## entry shows the exact typographic treatment it explains -- a sample gene
+  ## name in the same ink and weight the figure uses -- instead of an abstract
+  ## symbol, so the key reads as a miniature of the figure rather than a
+  ## separate code to look up
   par(mar = c(0, 1, 0, 1)); plot.new()
-  legend(x = 0.02, y = 0.98, title = "Essential-hub node", horiz = TRUE, xpd = NA,
-         legend = c("Both clades", "HPV-A7 only", "HPV-A9 only"),
-         pt.bg = c(col_both, col_A7, col_A9), pch = 21, pt.cex = 9.2, col = "white",
-         bty = "n", cex = 5.0, title.font = 2, text.width = 0.158)
-  legend(x = 0.56, y = 0.98, title = "Gene mark", xpd = NA,
-         legend = paste(MARK, " Not pan-essential in DepMap"),
-         bty = "n", cex = 5.0, title.font = 2, text.col = "grey12")
+  key_cex <- 8.6                 # the sample gene name itself
+  cap_cex <- 5.8                 # the caption that follows it
+  key_y   <- 0.52
+  entries <- list(
+    list(x0 = 0.10, label = "GENE", font = 3, col = col_both,
+         caption = "essential hub in both clades"),
+    list(x0 = 0.56, label = "GENE", font = 4, col = "grey12",
+         caption = "not pan-essential in DepMap"))
+  for (e in entries) {
+    text(e$x0, key_y, e$label, font = e$font, col = e$col, family = FAM,
+         cex = key_cex, adj = c(0, 0.5), xpd = NA)
+    text(e$x0 + strwidth(e$label, cex = key_cex, font = e$font) + 0.02, key_y,
+         e$caption, font = 1, col = "grey25", family = FAM,
+         cex = cap_cex, adj = c(0, 0.5), xpd = NA)
+  }
 }
 
 out_png <- file.path(fig_dir, "Figure_5_leading_edge_circos.png")
 out_pdf <- file.path(fig_dir, "Figure_5_leading_edge_circos.pdf")
-W <- 40; H <- 25.5                              # the frame, inches
+W <- 25 * SCALE; H <- 60 * SCALE                # the frame, inches (see SCALE above)
 png(out_png, width = W, height = H, units = "in", res = 400, bg = "white", type = "cairo"); draw_all(); dev.off()
 cairo_pdf(out_pdf, width = W, height = H, bg = "white"); draw_all(); dev.off()
 message("[OK] saved ", out_png)
