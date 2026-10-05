@@ -20,6 +20,16 @@ figures/*.sh
 # the manuscript and its supplementary material stay local
 Article_writting/
 
+# ARACNe input expression matrices and their cohort metadata, versioned by
+# explicit request (everything else under these dirs stays local)
+!03_preprocessing/2_7_Full_counts_A7_annot.tsv
+!03_preprocessing/2_8_Full_counts_A9_annot.tsv
+!03_preprocessing/validation_uganda/2_7_Full_counts_A7_annot.tsv
+!03_preprocessing/validation_uganda/2_8_Full_counts_A9_annot.tsv
+!03_preprocessing/validation_uganda/2_4_Factors.tsv
+!02_cohort_data/1_Output_rds/2_2_CESC_TCGA_GTEx_metadata_clade.rds
+!02_cohort_data/validation_uganda/1_Output/1_1_HTMCP_clinical_HPV_HIV_table.tsv
+
 # editor, session and build scratch
 .claude/
 .Rproj.user/
