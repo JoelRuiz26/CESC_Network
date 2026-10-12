@@ -2,80 +2,87 @@
 ### 04_gsea_hallmark_generic.R
 ###
 ### Generic rank-based GSEA (Gene Set Enrichment Analysis) against the
-### MSigDB Hallmark gene sets. Takes ANY differential-expression table as
-### input -- it only needs a gene-symbol column and a ranking-statistic
-### column (e.g. limma's t, or logFC) -- so it is not tied to one specific
-### comparison; call run_gsea_hallmark() on whatever DEG table you have.
+### literature-curated "Cancer Hallmark" gene sets -- NOT MSigDB's Hallmark
+### collection. Takes ANY differential-expression table as input -- it only
+### needs a gene-symbol column and a ranking-statistic column (e.g. limma's
+### t, or logFC) -- so it is not tied to one specific comparison.
 ###
-### Gene sets: MSigDB Hallmark (collection "H", 50 gene sets). This is the
-### SAME collection already used elsewhere in this repository
-### (02_hallmark_enrichment.R here, and
-### 09_functional_similarity_degs/05_gsea_hallmark.R) -- the curated,
-### non-redundant "Hallmark Molecular Signatures" built by Liberzon et al.
-### 2015 (Cell Systems, doi:10.1016/j.cels.2015.12.004) by computationally
-### merging thousands of overlapping "founder" gene sets from the other
-### MSigDB collections (C1-C8) into 50 representative sets, one per
-### well-defined biological process/state. This is the collection the
-### manuscript was finally written around, after an earlier side-by-side
-### comparison against a larger, less curated candidate set (~600 "core"
-### cancer genes, and a ~3,000-gene list compiled directly from a
-### Hallmarks-of-Cancer review): MSigDB Hallmark was preferred because it
-### is versioned, citable, already split into 50 coherent, non-redundant
-### sets (rather than one flat gene list), and directly comparable across
-### every other enrichment already run in this project.
-###
-### Gene sets are never downloaded by hand: the msigdbr package fetches
-### them programmatically and ships them version-pinned with the package
-### itself (msigdbr v26.1.0 here -> MSigDB db_version "2026.1.Hs"), so the
-### exact gene-set definitions are fully reproducible from the R package
-### version alone (Dolgalev I, msigdbr: MSigDB Gene Sets for Multiple
-### Organisms in a Tidy Data Format, CRAN).
+### Gene sets: Menyhart O, Jayasekara Kothalawala W, Gyorffy B. "A gene set
+### enrichment analysis for cancer hallmarks." J Pharm Anal. 2025;15(5):
+### 101065. doi:10.1016/j.jpha.2024.101065 (companion web tool:
+### cancerhallmarks.com). The authors reconciled 7 independent hallmark-gene
+### resources against Hanahan & Weinberg's 10 hallmarks of cancer and
+### release two gene sets per hallmark:
+###   "core"       genes backed by >=2 of the 7 source resources
+###                (n = 1,574 genes total) -- the higher-confidence,
+###                cross-database CONSENSUS set, used here by default.
+###   "integrated" genes backed by >=1 resource, i.e. the union of all 7
+###                (n = 6,763 genes total) -- a looser, larger set.
+### Both are plain-text GMT-style files (one line per hallmark: hallmark
+### name, then its member gene symbols, tab-separated) served directly by
+### cancerhallmarks.com; fetched here on the fly with readLines() -- no
+### manual download and no account/API key needed.
 ###
 ### Usage: source this file, then e.g.
 ###   deg <- readr::read_tsv("~/path/to/your_deg_table.tsv")
-###   run_gsea_hallmark(deg, gene_col = "gene", stat_col = "t", label = "my_comparison")
-### -> results/04_gsea_hallmark_<label>.tsv
+###   run_gsea_hallmarks(deg, gene_col = "gene", stat_col = "t", label = "my_comparison")
+### -> results/04_gsea_hallmarks_<label>.tsv
 ### ============================================================
 suppressPackageStartupMessages({
-  library(dplyr); library(tibble); library(readr); library(clusterProfiler); library(msigdbr)
+  library(dplyr); library(tibble); library(readr); library(clusterProfiler)
 })
 
 set.seed(123)
 out_dir <- "~/CESC_Network/06_modules/results"
 
-## -- Hallmark gene sets (H collection, 50 sets), fetched via msigdbr and
-## reshaped into the two-column TERM2GENE format clusterProfiler expects
-t2g <- msigdbr(species = "Homo sapiens", collection = "H") |>
-  dplyr::select(gs_name, gene_symbol) |>
-  dplyr::distinct()
-cat(sprintf("[Hallmark] %d gene sets (%d gene-set memberships)\n",
-            dplyr::n_distinct(t2g$gs_name), nrow(t2g)))
+HALLMARK_URLS <- c(
+  core       = "https://cancerhallmarks.com/download_file/Menyhart_JPA_CancerHallmarks_core.txt",
+  integrated = "https://cancerhallmarks.com/download_file/Menyhart_JPA_CancerHallmarks_integrated.txt"
+)
 
-## -- Generic GSEA runner. `deg` needs a gene-symbol column (`gene_col`)
-## and a numeric ranking statistic (`stat_col`); ties on gene symbol keep
-## the first row. Returns (and saves) the full GSEA result table.
-run_gsea_hallmark <- function(deg, gene_col = "gene", stat_col = "t", label = "run") {
+## -- Fetch one of the two hallmark gene sets and reshape it into the
+## two-column TERM2GENE format clusterProfiler expects (gs_name, gene_symbol)
+get_cancer_hallmarks <- function(geneset = c("core", "integrated")) {
+  geneset <- match.arg(geneset)
+  lines <- readLines(HALLMARK_URLS[[geneset]], warn = FALSE)
+  bind_rows(lapply(lines, function(ln) {
+    tok <- strsplit(ln, "\t")[[1]]
+    tok <- tok[nzchar(tok)]
+    tibble(gs_name = tok[1], gene_symbol = tok[-1])
+  })) |> distinct()
+}
+
+t2g <- get_cancer_hallmarks("core")
+cat(sprintf("[Cancer hallmarks: core] %d hallmark categories, %d unique genes\n",
+            n_distinct(t2g$gs_name), n_distinct(t2g$gene_symbol)))
+
+## -- Generic GSEA runner. `deg` needs a gene-symbol column (`gene_col`) and
+## a numeric ranking statistic (`stat_col`); ties on gene symbol keep the
+## first row. maxGSSize is raised well above clusterProfiler's 500 default
+## because these hallmark categories are large (up to ~3,574 genes for the
+## "integrated" set). Returns (and saves) the full GSEA result table.
+run_gsea_hallmarks <- function(deg, gene_col = "gene", stat_col = "t", label = "run") {
   rnk <- deg |>
-    dplyr::filter(!is.na(.data[[stat_col]])) |>
-    dplyr::distinct(.data[[gene_col]], .keep_all = TRUE) |>
-    dplyr::arrange(dplyr::desc(.data[[stat_col]])) |>
+    filter(!is.na(.data[[stat_col]])) |>
+    distinct(.data[[gene_col]], .keep_all = TRUE) |>
+    arrange(desc(.data[[stat_col]])) |>
     (\(d) setNames(d[[stat_col]], d[[gene_col]]))()
 
   set.seed(123)
   gs <- GSEA(geneList = rnk, TERM2GENE = t2g, pvalueCutoff = 1, eps = 0, seed = TRUE,
-             pAdjustMethod = "BH", minGSSize = 10, maxGSSize = 500)
+             pAdjustMethod = "BH", minGSSize = 10, maxGSSize = 5000)
 
   res <- as.data.frame(gs) |>
-    tibble::as_tibble() |>
-    dplyr::mutate(HM = gsub("_", " ", sub("^HALLMARK_", "", ID)), run = label) |>
-    dplyr::arrange(p.adjust)
+    as_tibble() |>
+    mutate(run = label) |>
+    arrange(p.adjust)
 
-  readr::write_tsv(res, file.path(out_dir, sprintf("04_gsea_hallmark_%s.tsv", label)))
-  cat(sprintf("[%s] %d/%d Hallmark terms significant (adj.P<0.05)\n",
+  write_tsv(res, file.path(out_dir, sprintf("04_gsea_hallmarks_%s.tsv", label)))
+  cat(sprintf("[%s] %d/%d hallmark categories significant (adj.P<0.05)\n",
               label, sum(res$p.adjust < 0.05), nrow(res)))
   res
 }
 
 ## ---- example (edit and uncomment to run) ----
 # deg <- readr::read_tsv("~/path/to/your_deg_table.tsv")
-# run_gsea_hallmark(deg, gene_col = "gene", stat_col = "t", label = "my_comparison")
+# run_gsea_hallmarks(deg, gene_col = "gene", stat_col = "t", label = "my_comparison")
