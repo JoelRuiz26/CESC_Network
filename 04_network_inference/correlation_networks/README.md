@@ -26,6 +26,9 @@ Nothing here renormalises. Subsamples are column cuts of those two files.
 | `03_spearman_networks.R` | the 200 Spearman networks |
 | `04_pairwise_metrics.R` | the four pairwise metrics over all 19,900 network pairs per method, plus the QAP test |
 | `05_spearman_full_networks.R` | the two full-cohort Spearman networks |
+| `06_qap_contrasts.R` | the QAP test split into the two admissible contrasts |
+| `07_overlap_control.R` | regresses out the patient-overlap confound |
+| `08_figure_internal_validation.R` | the publication figure |
 
 ## Edge criterion (identical for both methods and both clades)
 
@@ -111,6 +114,55 @@ The QAP statistic is always `inter − intra`, so a clade effect is negative for
 the three similarities and positive for KS D. `p = 0.0002` is the floor for
 B = 5000 permutations.
 
+### The two admissible contrasts — `figure/qap_contrasts.csv`
+
+The single statistic above (inter minus the pooled intra) invites the reading
+that A7:A7 is being compared with A9:A9. **That comparison is not admissible.**
+Two A7 subsamples share 55–58 of 60 patients, because A7 has only 65; two A9
+subsamples share 8–29. Any difference between those two groups is dominated by
+the sampling design, not by clade.
+
+The admissible contrasts are each intra group against inter, and they are what
+the figure draws as brackets:
+
+| metric | A7:A7 vs A7:A9 | | A9:A9 vs A7:A9 | |
+|---|---|---|---|---|
+| | *P* | *d* | *P* | *d* |
+| Jaccard | <10⁻³ | −14.78 | <10⁻³ | −2.96 |
+| Degree ρ | <10⁻³ | −22.33 | <10⁻³ | −5.56 |
+| ARI | <10⁻³ | −5.08 | <10⁻³ | −2.55 |
+| KS D | <10⁻³ | +4.96 | <10⁻³ | +3.82 |
+
+### The overlap control — `figure/overlap_control.csv`
+
+Inter-clade pairs share **zero** patients by construction: A7 and A9 are
+disjoint patient sets. So every intra-vs-inter contrast starts with an overlap
+advantage, and the permutation test does not remove it — permuting labels
+destroys clade structure but not the fact that same-clade networks were drawn
+from one patient pool.
+
+Within A9 the shared count varies enough (8–29 of 60) to regress it out and
+extrapolate to zero shared patients. It survives on all four metrics:
+
+| metric | intra-A9 observed | at 0 shared [95% CI] | inter | survives |
+|---|---|---|---|---|
+| Jaccard | 0.4014 | 0.3325 [0.3261, 0.3390] | 0.3003 | yes |
+| Degree ρ | 0.6508 | 0.5767 [0.5732, 0.5802] | 0.5289 | yes |
+| ARI | 0.5037 | 0.4627 [0.4545, 0.4708] | 0.3871 | yes |
+| KS D | 0.0262 | 0.0299 [0.0273, 0.0325] | 0.0990 | yes |
+
+**A7 cannot be controlled this way** and the figure marks its bracket with a
+dagger. Its pairs share 55–58 of 60, so extrapolating to zero is a 55-patient
+extrapolation outside the observed range. Its slope is reported instead
+(0.0297 Jaccard per shared patient for Spearman), which is why the absolute
+A7 value is not interpretable.
+
+For contrast, the same control applied to the ARACNe networks
+(`05_topology`/leave-x-out analysis) removes the effect entirely: intra-A9
+Jaccard 0.0486 observed, 0.0303 extrapolated, against 0.0324 inter — a ratio
+of 0.93. The clade signal is present at the co-expression level and is lost to
+ARACNe's sparsification.
+
 ### Significance test
 
 The clade label of each of the 200 networks is permuted B = 5000 times keeping
@@ -119,12 +171,23 @@ pairwise matrix. **The permutation unit is the network, not the pair** — the
 19,900 pairwise values are not independent, and treating them as such is the
 pseudo-replication the test exists to avoid.
 
-### Read intra-A7 vs intra-A9 with care
+### Never read A7:A7 against A9:A9
 
-`intra-A7` exceeds `intra-A9` on every metric, and that is a sampling artefact,
-not biology: A7 has 65 patients and each subsample takes 60, so any two A7
-subsamples share at least 55 of 60 patients (92%). A9 has 202, so two A9
-subsamples share only 12–29. The valid contrast is **intra vs inter**.
+`A7:A7` exceeds `A9:A9` on every metric and that is the sampling design, not
+biology — see the two sections above. The valid contrasts are each intra group
+against inter, controlled for overlap where the design permits it.
+
+## Figure — `figure/`
+
+`Figure_Spearman_internal_validation.pdf` (vector, 7.2 × 6.0 in) and a 600 dpi
+PNG, from `08_figure_internal_validation.R`.
+
+Palette `#2E6DA4` / `#CC0000` / `#8C8C8C`, validated for the lightness band,
+CVD separation (worst adjacent pair ΔE 14.5 deuteranopia, 24.4 tritanopia),
+normal-vision ΔE 24.4 and contrast against the surface. The third slot is a
+deliberate neutral — `A7 : A9` is the reference group, not a third category —
+and group identity is carried by the x axis, never by colour alone. No legend,
+because the groups *are* the x categories.
 
 ## Known limitation of the preprocessing
 
