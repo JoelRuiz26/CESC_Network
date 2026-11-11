@@ -58,10 +58,17 @@ metrics <- data.table(
            "Degree-distribution distance, KS D"),
   tag  = LETTERS[1:4])
 
-fmt <- function(p, dag = FALSE)
-  sprintf("paste(italic(P) %s%s)",
-          if (p <= 2.1e-4) "< 10^-3" else sprintf("== %.3g", p),
-          if (dag) ", '  †'" else "")
+## The exact P the permutation returned, in scientific form. No "< 10^-3":
+## that hides the resolution of the test. When the value sits at the floor
+## 1/(B+1) -- no permutation as extreme as the observation -- the caption says
+## so and gives the z of the null, which is the number that carries the
+## information once the P value is resolution-limited.
+fmt <- function(p, dag = FALSE) {
+  e <- floor(log10(p)); m <- sub("\\.0$", "", sprintf("%.1f", p / 10^e))
+  lab <- if (p >= 1e-3) sprintf("== %.3g", p)
+         else sprintf("== %s %%*%% 10^%d", m, e)
+  sprintf("paste(italic(P) %s%s)", lab, if (dag) ", '  †'" else "")
+}
 
 thm <- theme_classic(base_family = "Times New Roman", base_size = 9) +
   theme(

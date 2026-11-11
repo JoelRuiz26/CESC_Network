@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 ############################################################
-# 06_qap_contrasts.R
+# 44_qap_contrasts.R
 #
 # The QAP test restated as the TWO contrasts the design actually asks about:
 #
@@ -13,19 +13,27 @@
 # dominated by that, so the earlier single statistic -- inter minus the pooled
 # intra -- invited exactly the misreading a reviewer would flag.
 #
-# Test. The clade label of each of the 200 networks is permuted B = 5000 times
+# Test. The clade label of each of the 200 networks is permuted B = 20000 times
 # keeping the 100/100 split and each contrast is recomputed from the same fixed
 # pairwise matrix. The permutation unit is the NETWORK, not the pair: the
 # 19,900 pairwise values are not independent.
 #
 # Effect size is Cohen's d between the two groups of that contrast only, with
 # the pooled s.d. of those two groups.
+#
+# On the P value. A permutation test cannot return anything below 1/(B+1): if
+# no permutation reaches the observed difference the answer is the floor, and
+# raising B only lowers the floor. So the table reports the exact empirical
+# value AND, for the cases that sit at the floor, how far out the observation
+# is: n_ge (permutations at least as extreme), perm_mean / perm_sd of the null,
+# and perm_z = (|obs| - mean) / sd. The z is the informative number when the
+# P value is resolution-limited; p_gauss is its normal-tail equivalent, given
+# only as a reference and never as the primary statistic.
 
 suppressPackageStartupMessages({ library(data.table) })
-REPO <- path.expand("~/CESC_Network")
-BASE <- file.path(REPO, "04_network_inference", "correlation_networks")
-OUT  <- file.path(BASE, "figure"); dir.create(OUT, showWarnings = FALSE)
-set.seed(42); NREP <- 100L; B <- 5000L
+BASE <- "/STORAGE/csbig/jruiz/cesc_network/ARACNE_AP/Leave_x_out"
+OUT  <- file.path(BASE, "43_figure_paper"); dir.create(OUT, showWarnings = FALSE)
+set.seed(42); NREP <- 100L; B <- 20000L
 clade <- rep(c("A7", "A9"), each = NREP)
 
 contrasts_qap <- function(M, labels, B) {
@@ -52,7 +60,12 @@ contrasts_qap <- function(M, labels, B) {
                n_intra = sum(!is.na(iv)), n_inter = sum(!is.na(ev)),
                mean_intra = mean(iv, na.rm = TRUE), mean_inter = mean(ev, na.rm = TRUE),
                diff = obs[[i]],
+               n_ge = sum(abs(perm[i, ]) >= abs(obs[[i]])),
                QAP_p = (sum(abs(perm[i, ]) >= abs(obs[[i]])) + 1) / (B + 1),
+               perm_mean = mean(perm[i, ]), perm_sd = sd(perm[i, ]),
+               perm_z = (abs(obs[[i]]) - mean(perm[i, ])) / sd(perm[i, ]),
+               p_gauss = 2 * pnorm((abs(obs[[i]]) - mean(perm[i, ])) / sd(perm[i, ]),
+                                   lower.tail = FALSE),
                cohen_d = (mean(ev, na.rm = TRUE) - mean(iv, na.rm = TRUE)) / pooled)
   }))
   out
@@ -60,17 +73,20 @@ contrasts_qap <- function(M, labels, B) {
 
 res <- list()
 for (meth in c("spearman", "pearson")) {
-  MM <- readRDS(file.path(BASE, "pairwise_metrics", sprintf("matrices_%s.rds", meth)))
+  MM <- readRDS(file.path(BASE, "29_full_panel", sprintf("matrices_%s.rds", meth)))
   for (met in c("Jaccard", "Spearman", "ARI", "KS")) {
     M <- MM[[switch(met, Jaccard = "JAC", Spearman = "SPD", ARI = "ARI", KS = "KS")]]
     r <- contrasts_qap(M, clade, B)
     r[, `:=`(method = meth, metric = met)]
     res[[paste(meth, met)]] <- r
     cat(sprintf("[%s] %-9s %s\n", meth, met,
-        paste(sprintf("%s: p=%.4g d=%+.2f", r$contrast, r$QAP_p, r$cohen_d), collapse = " | ")))
+        paste(sprintf("%s: p=%.4g (%d/%d) z=%.1f d=%+.2f",
+                      r$contrast, r$QAP_p, r$n_ge, B, r$perm_z, r$cohen_d),
+              collapse = " | ")))
   }
 }
 R <- rbindlist(res)[, .(method, metric, contrast, n_intra, n_inter,
-                        mean_intra, mean_inter, diff, QAP_p, cohen_d)]
+                        mean_intra, mean_inter, diff, n_ge, B_perm = B, QAP_p,
+                        perm_mean, perm_sd, perm_z, p_gauss, cohen_d)]
 fwrite(R, file.path(OUT, "qap_contrasts.csv"))
 cat("\n-> ", file.path(OUT, "qap_contrasts.csv"), "\n")
