@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 ############################################################
-# 08_figure_internal_validation.R
+# 43_figure_spearman_paper.R
 #
 # Publication figure: internal validation of the 200 Spearman leave-x-out
 # networks. Four metrics, three pair groups, violin + box, with the two
@@ -30,20 +30,20 @@
 # normal-vision dE 24.4 and contrast. The third slot is a deliberate neutral:
 # A7:A9 is the reference group, and identity is carried by the x axis, never
 # by colour alone. No legend, because the groups ARE the x categories. The
-# direction of each metric rides in the panel title as an arrow instead of a
-# subtitle line repeating "higher = more similar".
+# box takes the same hue as its violin, opaque over the translucent body, with
+# a white median bar; only the P value rides on each bracket -- the effect
+# sizes live in qap_contrasts.csv and belong in the text, not on the axis.
 
 options(bitmapType = "cairo")
 suppressPackageStartupMessages({
   library(data.table); library(ggplot2); library(patchwork)
 })
 
-REPO <- path.expand("~/CESC_Network")
-BASE <- file.path(REPO, "04_network_inference", "correlation_networks")
-OUT  <- file.path(BASE, "figure"); dir.create(OUT, showWarnings = FALSE)
+BASE <- "/STORAGE/csbig/jruiz/cesc_network/ARACNE_AP/Leave_x_out"
+OUT  <- file.path(BASE, "43_figure_paper"); dir.create(OUT, showWarnings = FALSE)
 METHOD <- "spearman"
 
-PD <- fread(file.path(BASE, "pairwise_metrics", "pairwise_metrics_long.csv.gz"))[method_key == METHOD]
+PD <- fread(file.path(BASE, "29_full_panel", "pairwise_long_allmethods.csv"))[method_key == METHOD]
 CT <- fread(file.path(OUT, "qap_contrasts.csv"))[method == METHOD]
 
 lev <- c("intra-A7", "intra-A9", "inter A7-A9")
@@ -52,16 +52,15 @@ col <- c("A7 : A7" = "#2E6DA4", "A9 : A9" = "#CC0000", "A7 : A9" = "#8C8C8C")
 
 metrics <- data.table(
   mkey = c("Jaccard", "Spearman", "ARI", "KS"),
-  lab  = c("Edge Jaccard index  ↑",
-           "Degree-sequence correlation ρ  ↑",
-           "Module agreement, ARI  ↑",
-           "Degree-distribution distance, KS D  ↓"),
+  lab  = c("Edge Jaccard index",
+           "Degree-sequence correlation ρ",
+           "Module agreement, ARI",
+           "Degree-distribution distance, KS D"),
   tag  = LETTERS[1:4])
 
-fmt <- function(p, d, dag = FALSE)
-  sprintf("paste(italic(P) %s, '  ', italic(d) == '%s'%s)",
+fmt <- function(p, dag = FALSE)
+  sprintf("paste(italic(P) %s%s)",
           if (p <= 2.1e-4) "< 10^-3" else sprintf("== %.3g", p),
-          sub("-", "−", sprintf("%.2f", d)),
           if (dag) ", '  †'" else "")
 
 thm <- theme_classic(base_family = "Times New Roman", base_size = 9) +
@@ -83,31 +82,34 @@ panels <- lapply(seq_len(nrow(metrics)), function(i) {
   c7 <- CT[metric == m$mkey & grepl("^A7", contrast)]
   c9 <- CT[metric == m$mkey & grepl("^A9", contrast)]
   lo <- min(d$val); hi <- max(d$val); R <- hi - lo
-  y9 <- hi + 0.07 * R; y7 <- hi + 0.20 * R; tick <- 0.025 * R
+  y9 <- hi + 0.05 * R; y7 <- hi + 0.16 * R; tick <- 0.022 * R
   ## ticks stay inside the data range: the brackets must not stretch the axis
   ## into territory the metric never reaches (Jaccard above 1, say)
   brk <- pretty(c(lo, hi), n = 4); brk <- brk[brk >= lo - 0.02 * R & brk <= hi + 0.02 * R]
 
   ggplot(d, aes(g2, val, fill = g2)) +
     geom_violin(trim = TRUE, alpha = 0.5, linewidth = 0.25, colour = "grey25", width = 0.85) +
-    geom_boxplot(width = 0.13, outlier.shape = NA, linewidth = 0.3,
-                 fill = "white", colour = "grey15") +
+    geom_boxplot(width = 0.14, outlier.shape = NA, linewidth = 0.3,
+                 colour = "grey15") +
+    stat_summary(fun = median, fun.min = median, fun.max = median,
+                 geom = "crossbar", width = 0.14, linewidth = 0.3,
+                 colour = "white", fatten = 0) +
     ## bracket A9:A9 vs A7:A9
     annotate("segment", x = 2, xend = 3, y = y9, yend = y9, linewidth = 0.3) +
     annotate("segment", x = 2, xend = 2, y = y9, yend = y9 - tick, linewidth = 0.3) +
     annotate("segment", x = 3, xend = 3, y = y9, yend = y9 - tick, linewidth = 0.3) +
     annotate("text", x = 2.5, y = y9 + 0.022 * R, size = 2.65, parse = TRUE,
              family = "Times New Roman", colour = "grey15", vjust = 0,
-             label = fmt(c9$QAP_p, c9$cohen_d)) +
+             label = fmt(c9$QAP_p)) +
     ## bracket A7:A7 vs A7:A9
     annotate("segment", x = 1, xend = 3, y = y7, yend = y7, linewidth = 0.3) +
     annotate("segment", x = 1, xend = 1, y = y7, yend = y7 - tick, linewidth = 0.3) +
     annotate("segment", x = 3, xend = 3, y = y7, yend = y7 - tick, linewidth = 0.3) +
     annotate("text", x = 2, y = y7 + 0.022 * R, size = 2.65, parse = TRUE,
              family = "Times New Roman", colour = "grey15", vjust = 0,
-             label = fmt(c7$QAP_p, c7$cohen_d, dag = TRUE)) +
+             label = fmt(c7$QAP_p, dag = TRUE)) +
     scale_fill_manual(values = col) +
-    scale_y_continuous(breaks = brk, expand = expansion(mult = c(0.05, 0.30))) +
+    scale_y_continuous(breaks = brk, expand = expansion(mult = c(0.05, 0.24))) +
     labs(title = m$lab, tag = m$tag) + thm
 })
 
