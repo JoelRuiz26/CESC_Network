@@ -2,37 +2,44 @@
 ############################################################
 # 43_figure_spearman_paper.R
 #
-# Publication figure: internal validation of the 200 Spearman leave-x-out
+# Publication figure: internal validation of the Spearman leave-x-out
 # networks. Four metrics, three pair groups, violin + box, with the two
 # contrasts the design actually tests drawn as brackets.
 #
-# Why two brackets and not one statistic. The earlier version reported a
-# single QAP value per metric, inter minus the pooled intra, which invites the
-# reading that A7:A7 is being compared with A9:A9. That comparison is not
-# admissible: two A7 subsamples share 55-58 of 60 patients (A7 has only 65),
-# two A9 subsamples share 8-29. The admissible contrasts are each intra group
-# against inter, and those are what the brackets show.
+# THE STATISTIC. Not the QAP of 44_qap_contrasts.R. That test permuted the
+# clade label of the 200 finished networks, which assumes the networks are
+# exchangeable under H0; they are not, because A7 has only 65 patients and two
+# A7 subsamples of 60 therefore share 55-58 of them, while cross-clade pairs
+# share none. Permuting network labels breaks that overlap structure, so its
+# null was far too flat and every P value hit the 1/(B+1) floor.
 #
-# The dagger on the A7 bracket is not decoration. Inter-clade pairs share zero
-# patients by construction, so every intra-vs-inter contrast starts with an
-# overlap advantage. Within A9 the shared count varies enough (8-29) to
-# regress it out: extrapolated to zero shared patients intra-A9 still beats
-# inter on all four metrics (45_overlap_control.R). Within A7 it does not vary
-# enough to extrapolate, so that contrast cannot be cleared the same way and
-# the figure says so.
+# The test behind these brackets permutes the clade label of the PATIENTS
+# (46_patient_label_null.R): the 267 tumours are split at random into a
+# pseudo-A7 of 65 and a pseudo-A9 of 202, the leave-x-out subsampling and the
+# networks are rebuilt, and the four metrics are recomputed. B = 100, so the
+# floor is P = 1/101 = 0.0099. Overlap structure is preserved exactly; only
+# clade identity is destroyed.
 #
-# Statistics: 44_qap_contrasts.R. Permutation of the clade label of each of
-# the 200 networks, B = 5000, 100/100 split preserved. The permutation unit is
-# the network, not the pair.
+# WHAT THE GREY BAND IS. The dashed line and band at each group are the mean
+# and s.d. of that group's metric across the 100 permutations -- where the
+# group sits when the clade labels mean nothing. Panel A is the reason the
+# figure needed it: for A7 the band covers the observed violin, so the 0.70
+# Jaccard is patient overlap, not clade. The brackets and the bands say the
+# same thing twice, once as a number and once as a picture.
 #
 # Design: palette #2E6DA4 / #CC0000 / #8C8C8C -- validated for the lightness
 # band, CVD separation (worst adjacent deuteranopia dE 14.5, tritan 24.4),
 # normal-vision dE 24.4 and contrast. The third slot is a deliberate neutral:
 # A7:A9 is the reference group, and identity is carried by the x axis, never
 # by colour alone. No legend, because the groups ARE the x categories. The
-# box takes the same hue as its violin, opaque over the translucent body, with
-# a white median bar; only the P value rides on each bracket -- the effect
-# sizes live in qap_contrasts.csv and belong in the text, not on the axis.
+# box takes the hue of its violin with a white median bar.
+#
+# Note on n. The violins show every pair among the 100 + 100 networks. The
+# test is run on a 20 + 20 design, because each permutation has to rebuild its
+# networks from scratch and 100 permutations at 100 + 100 would be weeks. The
+# observed statistic is computed on the same 20 + 20 so that it is compared
+# with a null of matching variance; the group means barely move (Jaccard
+# intra-A7 0.6953 at 20 networks, 0.6987 at 100).
 
 options(bitmapType = "cairo")
 suppressPackageStartupMessages({
@@ -44,7 +51,8 @@ OUT  <- file.path(BASE, "43_figure_paper"); dir.create(OUT, showWarnings = FALSE
 METHOD <- "spearman"
 
 PD <- fread(file.path(BASE, "29_full_panel", "pairwise_long_allmethods.csv"))[method_key == METHOD]
-CT <- fread(file.path(OUT, "qap_contrasts.csv"))[method == METHOD]
+PV <- fread(file.path(BASE, "46_patient_null", "patient_null_pvalues.csv"))
+NS <- fread(file.path(BASE, "46_patient_null", "null_stats.csv"))
 
 lev <- c("intra-A7", "intra-A9", "inter A7-A9")
 PD[, g2 := factor(group, levels = lev, labels = c("A7 : A7", "A9 : A9", "A7 : A9"))]
@@ -58,17 +66,10 @@ metrics <- data.table(
            "Degree-distribution distance, KS D"),
   tag  = LETTERS[1:4])
 
-## The exact P the permutation returned, in scientific form. No "< 10^-3":
-## that hides the resolution of the test. When the value sits at the floor
-## 1/(B+1) -- no permutation as extreme as the observation -- the caption says
-## so and gives the z of the null, which is the number that carries the
-## information once the P value is resolution-limited.
-fmt <- function(p, dag = FALSE) {
-  e <- floor(log10(p)); m <- sub("\\.0$", "", sprintf("%.1f", p / 10^e))
-  lab <- if (p >= 1e-3) sprintf("== %.3g", p)
-         else sprintf("== %s %%*%% 10^%d", m, e)
-  sprintf("paste(italic(P) %s%s)", lab, if (dag) ", '  †'" else "")
-}
+## P as the test returns it. At the 1/(B+1) floor the exact value is printed
+## and the caption says no permutation reached the observation; above it, two
+## significant digits. No "< 10^-3": that hides the resolution of the test.
+fmt <- function(p) sprintf("paste(italic(P) == %s)", formatC(p, format = "fg", digits = 2))
 
 thm <- theme_classic(base_family = "Times New Roman", base_size = 9) +
   theme(
@@ -86,18 +87,26 @@ thm <- theme_classic(base_family = "Times New Roman", base_size = 9) +
 panels <- lapply(seq_len(nrow(metrics)), function(i) {
   m <- metrics[i]
   d <- PD[, .(g2, val = get(m$mkey))][!is.na(val)]
-  c7 <- CT[metric == m$mkey & grepl("^A7", contrast)]
-  c9 <- CT[metric == m$mkey & grepl("^A9", contrast)]
-  lo <- min(d$val); hi <- max(d$val); R <- hi - lo
+  pv <- PV[metric == m$mkey]
+  ns <- NS[metric == m$mkey]
+  nb <- data.table(g2 = factor(levels(d$g2), levels = levels(d$g2)),
+                   mu = c(mean(ns$mean_g7), mean(ns$mean_g9), mean(ns$mean_inter)),
+                   s  = c(sd(ns$mean_g7),   sd(ns$mean_g9),   sd(ns$mean_inter)))
+  lo <- min(d$val, nb$mu - nb$s); hi <- max(d$val, nb$mu + nb$s); R <- hi - lo
   y9 <- hi + 0.05 * R; y7 <- hi + 0.16 * R; tick <- 0.022 * R
-  ## ticks stay inside the data range: the brackets must not stretch the axis
-  ## into territory the metric never reaches (Jaccard above 1, say)
   brk <- pretty(c(lo, hi), n = 4); brk <- brk[brk >= lo - 0.02 * R & brk <= hi + 0.02 * R]
 
   ggplot(d, aes(g2, val, fill = g2)) +
+    ## where each group sits when the clade labels are random.  Drawn as a
+    ## crossbar on the discrete axis -- a rect with numeric x would force a
+    ## continuous scale and collide with the factor the violins use.
+    geom_crossbar(data = nb, inherit.aes = FALSE,
+                  aes(x = g2, y = mu, ymin = mu - s, ymax = mu + s),
+                  width = 0.9, fill = "grey45", alpha = 0.18,
+                  colour = "grey20", linetype = "22", linewidth = 0.25,
+                  fatten = 1) +
     geom_violin(trim = TRUE, alpha = 0.5, linewidth = 0.25, colour = "grey25", width = 0.85) +
-    geom_boxplot(width = 0.14, outlier.shape = NA, linewidth = 0.3,
-                 colour = "grey15") +
+    geom_boxplot(width = 0.14, outlier.shape = NA, linewidth = 0.3, colour = "grey15") +
     stat_summary(fun = median, fun.min = median, fun.max = median,
                  geom = "crossbar", width = 0.14, linewidth = 0.3,
                  colour = "white", fatten = 0) +
@@ -107,14 +116,14 @@ panels <- lapply(seq_len(nrow(metrics)), function(i) {
     annotate("segment", x = 3, xend = 3, y = y9, yend = y9 - tick, linewidth = 0.3) +
     annotate("text", x = 2.5, y = y9 + 0.022 * R, size = 2.65, parse = TRUE,
              family = "Times New Roman", colour = "grey15", vjust = 0,
-             label = fmt(c9$QAP_p)) +
+             label = fmt(pv$p_g9)) +
     ## bracket A7:A7 vs A7:A9
     annotate("segment", x = 1, xend = 3, y = y7, yend = y7, linewidth = 0.3) +
     annotate("segment", x = 1, xend = 1, y = y7, yend = y7 - tick, linewidth = 0.3) +
     annotate("segment", x = 3, xend = 3, y = y7, yend = y7 - tick, linewidth = 0.3) +
     annotate("text", x = 2, y = y7 + 0.022 * R, size = 2.65, parse = TRUE,
              family = "Times New Roman", colour = "grey15", vjust = 0,
-             label = fmt(c7$QAP_p, dag = TRUE)) +
+             label = fmt(pv$p_g7)) +
     scale_fill_manual(values = col) +
     scale_y_continuous(breaks = brk, expand = expansion(mult = c(0.05, 0.24))) +
     labs(title = m$lab, tag = m$tag) + thm

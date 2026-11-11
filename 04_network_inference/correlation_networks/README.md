@@ -24,11 +24,12 @@ Nothing here renormalises. Subsamples are column cuts of those two files.
 | `01_generate_submatrices.sh` | 100 leave-x-out subsamples per clade, n = 60 each (A7 65→60, A9 202→60), fixed seeds |
 | `02_pearson_networks.R` | the 200 Pearson networks |
 | `03_spearman_networks.R` | the 200 Spearman networks |
-| `04_pairwise_metrics.R` | the four pairwise metrics over all 19,900 network pairs per method, plus the QAP test |
+| `04_pairwise_metrics.R` | the four pairwise metrics over all 19,900 network pairs per method |
 | `05_spearman_full_networks.R` | the two full-cohort Spearman networks |
-| `06_qap_contrasts.R` | the QAP test split into the two admissible contrasts |
-| `07_overlap_control.R` | regresses out the patient-overlap confound |
+| `06_qap_contrasts.R` | **superseded** — label permutation over the finished networks; kept for the record, see *Why the QAP was wrong* |
+| `07_overlap_control.R` | regresses the patient-overlap confound out of the A9 contrast; supporting evidence |
 | `08_figure_internal_validation.R` | the publication figure |
+| `09_patient_label_null.R` | **the test the figure reports** — permutes the clade label of the patients and rebuilds the networks |
 
 ## Edge criterion (identical for both methods and both clades)
 
@@ -114,24 +115,53 @@ The QAP statistic is always `inter − intra`, so a clade effect is negative for
 the three similarities and positive for KS D. `p = 0.0002` is the floor for
 B = 5000 permutations.
 
-### The two admissible contrasts — `figure/qap_contrasts.csv`
+### The test — `patient_null/patient_null_pvalues.csv`
 
-The single statistic above (inter minus the pooled intra) invites the reading
-that A7:A7 is being compared with A9:A9. **That comparison is not admissible.**
-Two A7 subsamples share 55–58 of 60 patients, because A7 has only 65; two A9
-subsamples share 8–29. Any difference between those two groups is dominated by
-the sampling design, not by clade.
+Each intra group is contrasted against inter; `A7:A7` against `A9:A9` is
+**not** admissible, because two A7 subsamples share 55–58 of 60 patients (A7
+has only 65) while two A9 subsamples share 8–29. The statistic is
+`mean(inter) − mean(intra)`, as before.
 
-The admissible contrasts are each intra group against inter, and they are what
-the figure draws as brackets:
+The null is built by permuting the clade label of the **patients**
+(`09_patient_label_null.R`): the 267 tumours are split at random into a
+pseudo-A7 of 65 and a pseudo-A9 of 202 — the real sizes — and then the
+leave-x-out subsampling, the networks and the four metrics are rebuilt from
+scratch. Overlap structure is preserved exactly; only clade identity is
+destroyed. B = 100, 20 + 20 networks per permutation, so the P floor is
+1/101 = 0.0099. `z` is `(observed − null mean) / null s.d.`
 
 | metric | A7:A7 vs A7:A9 | | A9:A9 vs A7:A9 | |
 |---|---|---|---|---|
-| | *P* | *d* | *P* | *d* |
-| Jaccard | <10⁻³ | −14.78 | <10⁻³ | −2.96 |
-| Degree ρ | <10⁻³ | −22.33 | <10⁻³ | −5.56 |
-| ARI | <10⁻³ | −5.08 | <10⁻³ | −2.55 |
-| KS D | <10⁻³ | +4.96 | <10⁻³ | +3.82 |
+| | *P* | *z* | *P* | *z* |
+| Jaccard | 0.33 | −0.55 | 0.14 | −1.16 |
+| Degree ρ | **0.0099** | −4.33 | **0.0099** | −3.57 |
+| ARI | 0.55 | +0.15 | **0.0099** | −2.80 |
+| KS D | **0.0099** | +4.37 | **0.0099** | +4.48 |
+
+`0.0099` is the floor: no permutation out of 100 reached the observation.
+
+**Edge identity does not carry a clade signal.** Jaccard fails in both clades,
+and the ARI of A7 fails too. With clades assigned at random the intra-A7
+Jaccard averages **0.7197**, slightly *above* the observed 0.6953: that 0.70 is
+the 55–58 shared patients, not the clade.
+
+**Topology does.** Degree-sequence correlation and the KS distance between
+degree distributions survive in both clades, and module agreement survives in
+A9. The clade changes which genes are hubs and how the degree mass is
+distributed, not the exact list of surviving edges — which is the part the
+subsampling design inflates.
+
+### Why the QAP was wrong — `figure/qap_contrasts.csv`
+
+The earlier test (`06_qap_contrasts.R`) permuted the clade label of the 200
+finished networks. That assumes the 200 are exchangeable under H0. They are
+not: the overlap structure above is baked into them, and permuting their
+labels destroys it. Its null was therefore far too flat — for the Jaccard of
+A7, mean 0.00004 ± 0.011 against a correct null of −0.3888 ± 0.0159 — so every
+contrast hit the 1/(B+1) floor regardless of the data. It reported
+*P* = 5 × 10⁻⁵ and *d* = −14.8 for the Jaccard contrast that the correct null
+cannot distinguish from chance. The file is kept so the difference is on the
+record; do not quote its P values.
 
 ### The overlap control — `figure/overlap_control.csv`
 
@@ -151,25 +181,21 @@ extrapolate to zero shared patients. It survives on all four metrics:
 | ARI | 0.5037 | 0.4627 [0.4545, 0.4708] | 0.3871 | yes |
 | KS D | 0.0262 | 0.0299 [0.0273, 0.0325] | 0.0990 | yes |
 
-**A7 cannot be controlled this way** and the figure marks its bracket with a
-dagger. Its pairs share 55–58 of 60, so extrapolating to zero is a 55-patient
-extrapolation outside the observed range. Its slope is reported instead
-(0.0297 Jaccard per shared patient for Spearman), which is why the absolute
-A7 value is not interpretable.
+**A7 cannot be controlled this way.** Its pairs share 55–58 of 60, so
+extrapolating to zero is a 55-patient extrapolation outside the observed
+range. Its slope is reported instead (0.0297 Jaccard per shared patient for
+Spearman).
+
+This regression is now supporting evidence rather than the main control: the
+patient-label null above handles the same confound for both clades at once,
+without extrapolating. Where the two can be compared they agree — A9 survives
+on all four metrics under both.
 
 For contrast, the same control applied to the ARACNe networks
 (`05_topology`/leave-x-out analysis) removes the effect entirely: intra-A9
 Jaccard 0.0486 observed, 0.0303 extrapolated, against 0.0324 inter — a ratio
 of 0.93. The clade signal is present at the co-expression level and is lost to
 ARACNe's sparsification.
-
-### Significance test
-
-The clade label of each of the 200 networks is permuted B = 5000 times keeping
-the 100/100 split, and the group means are recomputed from the same fixed
-pairwise matrix. **The permutation unit is the network, not the pair** — the
-19,900 pairwise values are not independent, and treating them as such is the
-pseudo-replication the test exists to avoid.
 
 ### Never read A7:A7 against A9:A9
 
@@ -181,6 +207,11 @@ against inter, controlled for overlap where the design permits it.
 
 `Figure_Spearman_internal_validation.pdf` (vector, 7.2 × 6.0 in) and a 600 dpi
 PNG, from `08_figure_internal_validation.R`.
+
+The dashed grey band at each group is the mean ± s.d. of that group across the
+100 patient-label permutations — where the group sits when clade means
+nothing. In panel A the band covers the A7 violin, which is the picture of
+*P* = 0.33. The brackets carry the P values of the table above.
 
 Palette `#2E6DA4` / `#CC0000` / `#8C8C8C`, validated for the lightness band,
 CVD separation (worst adjacent pair ΔE 14.5 deuteranopia, 24.4 tritanopia),
