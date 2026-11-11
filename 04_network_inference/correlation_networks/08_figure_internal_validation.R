@@ -97,14 +97,19 @@ panels <- lapply(seq_len(nrow(metrics)), function(i) {
   brk <- pretty(c(lo, hi), n = 4); brk <- brk[brk >= lo - 0.02 * R & brk <= hi + 0.02 * R]
 
   ggplot(d, aes(g2, val, fill = g2)) +
-    ## where each group sits when the clade labels are random.  Drawn as a
-    ## crossbar on the discrete axis -- a rect with numeric x would force a
-    ## continuous scale and collide with the factor the violins use.
+    ## Where each group sits when the clade labels are random: a borderless
+    ## shadow for mean +/- s.d. and one dashed line at the mean. Drawn with
+    ## crossbar because a rect with numeric x would force a continuous scale
+    ## and collide with the factor the violins use; the outline is removed
+    ## (colour = NA) so the band does not read as a second boxplot, and the
+    ## mean line is a degenerate crossbar with ymin = ymax.
     geom_crossbar(data = nb, inherit.aes = FALSE,
                   aes(x = g2, y = mu, ymin = mu - s, ymax = mu + s),
-                  width = 0.9, fill = "grey45", alpha = 0.18,
-                  colour = "grey20", linetype = "22", linewidth = 0.25,
-                  fatten = 1) +
+                  width = 0.98, fill = "grey55", alpha = 0.17, colour = NA) +
+    geom_crossbar(data = nb, inherit.aes = FALSE,
+                  aes(x = g2, y = mu, ymin = mu, ymax = mu),
+                  width = 0.98, fill = NA, colour = "grey30",
+                  linetype = "22", linewidth = 0.3) +
     geom_violin(trim = TRUE, alpha = 0.5, linewidth = 0.25, colour = "grey25", width = 0.85) +
     geom_boxplot(width = 0.14, outlier.shape = NA, linewidth = 0.3, colour = "grey15") +
     stat_summary(fun = median, fun.min = median, fun.max = median,
