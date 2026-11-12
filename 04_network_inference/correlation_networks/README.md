@@ -29,7 +29,9 @@ Nothing here renormalises. Subsamples are column cuts of those two files.
 | `06_qap_contrasts.R` | **superseded** — label permutation over the finished networks; kept for the record, see *Why the QAP was wrong* |
 | `07_overlap_control.R` | regresses the patient-overlap confound out of the A9 contrast; supporting evidence |
 | `08_figure_internal_validation.R` | the publication figure |
-| `09_patient_label_null.R` | **the test the figure reports** — permutes the clade label of the patients and rebuilds the networks |
+| `09_patient_label_null.R` | **the test the figures report** — permutes the clade label of the patients and rebuilds the networks |
+| `10_pearson_full_networks.R` | the two full-cohort Pearson networks |
+| `11_figure_null_distribution.R` | the permutation-null figure |
 
 ## Edge criterion (identical for both methods and both clades)
 
@@ -48,10 +50,18 @@ Per-network edge and node counts: `pairwise_metrics/network_stats_*.csv`.
 
 `Gene1`, `Gene2`, `rho`, sorted by |rho| descending.
 
-| clade | n | threshold \|rho\| | edges | connected nodes | % of 15,282 | mean degree | % negative |
-|---|---|---|---|---|---|---|---|
-| A7 | 65 | 0.681088 | 91,278 | 8,387 | 54.9 | 21.8 | 6.9 |
-| A9 | 202 | 0.421280 | 1,064,581 | 14,813 | 96.9 | 143.7 | 18.6 |
+| method | clade | n | threshold | edges | connected nodes | % of 15,282 | mean degree | % negative |
+|---|---|---|---|---|---|---|---|---|
+| Spearman | A7 | 65 | 0.681088 | 91,278 | 8,387 | 54.9 | 21.8 | 6.9 |
+| Spearman | A9 | 202 | 0.421280 | 1,064,581 | 14,813 | 96.9 | 143.7 | 18.6 |
+| Pearson | A7 | 65 | 0.681088 | 178,529 | 9,022 | 59.0 | 39.6 | 23.3 |
+| Pearson | A9 | 202 | 0.421280 | 1,248,435 | 14,811 | 96.9 | 168.6 | 22.8 |
+
+Pearson files carry `r` where the Spearman ones carry `rho`; the threshold
+formula is the same, so at equal `n` the two methods are cut at the same
+number. Pearson keeps more edges in both clades and three times as many
+negative ones — it is the raw linear correlation, with no rank transform to
+damp the influence of a few extreme samples.
 
 ### Do not compare these two by edge count or density
 
@@ -205,13 +215,20 @@ against inter, controlled for overlap where the design permits it.
 
 ## Figure — `figure/`
 
-`Figure_Spearman_internal_validation.pdf` (vector, 7.2 × 6.0 in) and a 600 dpi
-PNG, from `08_figure_internal_validation.R`.
+Two figures, one question each.
 
-The dashed grey band at each group is the mean ± s.d. of that group across the
-100 patient-label permutations — where the group sits when clade means
-nothing. In panel A the band covers the A7 violin, which is the picture of
-*P* = 0.33. The brackets carry the P values of the table above.
+`Figure_Spearman_internal_validation.pdf` — **descriptive**: how alike are
+networks within a clade and between clades. Violins of every pair among the
+100 + 100 networks, with the two brackets and their P values.
+
+`Figure_Spearman_permutation_null.pdf` — **inferential**: where those P values
+come from. One histogram per contrast — the 100 patient-label permutations —
+with the observed statistic drawn on it. A line inside its own histogram is a
+contrast the subsampling design produces by itself; panel A is the Jaccard,
+and both its lines sit inside.
+
+An earlier version put the null as a band inside the violins. One panel, two
+questions, and the band read as a second boxplot.
 
 Palette `#2E6DA4` / `#CC0000` / `#8C8C8C`, validated for the lightness band,
 CVD separation (worst adjacent pair ΔE 14.5 deuteranopia, 24.4 tritanopia),

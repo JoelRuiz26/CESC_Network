@@ -1,0 +1,3 @@
+clade,n_muestras,n_genes,pares_evaluados,umbral_abs_r,aristas,nodos_conectados,pct_genes_conectados,grado_promedio,aristas_negativas,pct_negativas,r_min_abs,r_max_abs
+A7,65,15282,116762121,0.681088,178529,9022,59.04,39.58,41547,23.27,0.681088,0.99998
+A9,202,15282,116762121,0.42128,1248435,14811,96.92,168.58,284546,22.79,0.42128,0.999967

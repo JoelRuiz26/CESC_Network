@@ -20,12 +20,12 @@
 # floor is P = 1/101 = 0.0099. Overlap structure is preserved exactly; only
 # clade identity is destroyed.
 #
-# WHAT THE GREY BAND IS. The dashed line and band at each group are the mean
-# and s.d. of that group's metric across the 100 permutations -- where the
-# group sits when the clade labels mean nothing. Panel A is the reason the
-# figure needed it: for A7 the band covers the observed violin, so the 0.70
-# Jaccard is patient overlap, not clade. The brackets and the bands say the
-# same thing twice, once as a number and once as a picture.
+# ONE FIGURE, ONE QUESTION. This figure answers the descriptive one: how alike
+# are networks within a clade and between clades. The inferential one -- is
+# that gap bigger than chance -- has its own figure, 48_figure_null_distribution.R,
+# which draws the permutation null with the observed statistic on top. An
+# earlier version drew the null as a band inside these violins; two questions
+# in one panel, and it read as a second boxplot.
 #
 # Design: palette #2E6DA4 / #CC0000 / #8C8C8C -- validated for the lightness
 # band, CVD separation (worst adjacent deuteranopia dE 14.5, tritan 24.4),
@@ -52,7 +52,6 @@ METHOD <- "spearman"
 
 PD <- fread(file.path(BASE, "29_full_panel", "pairwise_long_allmethods.csv"))[method_key == METHOD]
 PV <- fread(file.path(BASE, "46_patient_null", "patient_null_pvalues.csv"))
-NS <- fread(file.path(BASE, "46_patient_null", "null_stats.csv"))
 
 lev <- c("intra-A7", "intra-A9", "inter A7-A9")
 PD[, g2 := factor(group, levels = lev, labels = c("A7 : A7", "A9 : A9", "A7 : A9"))]
@@ -88,28 +87,11 @@ panels <- lapply(seq_len(nrow(metrics)), function(i) {
   m <- metrics[i]
   d <- PD[, .(g2, val = get(m$mkey))][!is.na(val)]
   pv <- PV[metric == m$mkey]
-  ns <- NS[metric == m$mkey]
-  nb <- data.table(g2 = factor(levels(d$g2), levels = levels(d$g2)),
-                   mu = c(mean(ns$mean_g7), mean(ns$mean_g9), mean(ns$mean_inter)),
-                   s  = c(sd(ns$mean_g7),   sd(ns$mean_g9),   sd(ns$mean_inter)))
-  lo <- min(d$val, nb$mu - nb$s); hi <- max(d$val, nb$mu + nb$s); R <- hi - lo
+  lo <- min(d$val); hi <- max(d$val); R <- hi - lo
   y9 <- hi + 0.05 * R; y7 <- hi + 0.16 * R; tick <- 0.022 * R
   brk <- pretty(c(lo, hi), n = 4); brk <- brk[brk >= lo - 0.02 * R & brk <= hi + 0.02 * R]
 
   ggplot(d, aes(g2, val, fill = g2)) +
-    ## Where each group sits when the clade labels are random: a borderless
-    ## shadow for mean +/- s.d. and one dashed line at the mean. Drawn with
-    ## crossbar because a rect with numeric x would force a continuous scale
-    ## and collide with the factor the violins use; the outline is removed
-    ## (colour = NA) so the band does not read as a second boxplot, and the
-    ## mean line is a degenerate crossbar with ymin = ymax.
-    geom_crossbar(data = nb, inherit.aes = FALSE,
-                  aes(x = g2, y = mu, ymin = mu - s, ymax = mu + s),
-                  width = 0.98, fill = "grey55", alpha = 0.17, colour = NA) +
-    geom_crossbar(data = nb, inherit.aes = FALSE,
-                  aes(x = g2, y = mu, ymin = mu, ymax = mu),
-                  width = 0.98, fill = NA, colour = "grey30",
-                  linetype = "22", linewidth = 0.3) +
     geom_violin(trim = TRUE, alpha = 0.5, linewidth = 0.25, colour = "grey25", width = 0.85) +
     geom_boxplot(width = 0.14, outlier.shape = NA, linewidth = 0.3, colour = "grey15") +
     stat_summary(fun = median, fun.min = median, fun.max = median,
@@ -134,9 +116,20 @@ panels <- lapply(seq_len(nrow(metrics)), function(i) {
     labs(title = m$lab, tag = m$tag) + thm
 })
 
-fig <- wrap_plots(panels, nrow = 2, ncol = 2)
+## The band needs naming inside the figure: an unexplained graphical element
+## is worse than none. One line under the grid, not a legend box.
+fig <- wrap_plots(panels, nrow = 2, ncol = 2) +
+  plot_annotation(
+    caption = paste0(
+      "Each point is a pair of networks: all pairs among the 100 + 100 ",
+      "leave-x-out networks.  Brackets give the permutation P for each intra ",
+      "group against inter,\nfrom the patient-label null of Figure S; ",
+      "0.0099 is its floor, 0 of 100 permutations."),
+    theme = theme(plot.caption = element_text(size = 7, hjust = 0, colour = "grey25",
+                                              family = "Times New Roman",
+                                              margin = margin(t = 6))))
 ggsave(file.path(OUT, "Figure_Spearman_internal_validation.pdf"), fig,
-       width = 7.2, height = 6.0, device = cairo_pdf)
+       width = 7.2, height = 6.25, device = cairo_pdf)
 ggsave(file.path(OUT, "Figure_Spearman_internal_validation.png"), fig,
-       width = 7.2, height = 6.0, dpi = 600, bg = "white")
+       width = 7.2, height = 6.25, dpi = 600, bg = "white")
 cat("listo ->", OUT, "\n")
